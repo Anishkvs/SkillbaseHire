@@ -1,78 +1,812 @@
 {% extends "base.html" %}
-{% block title %}Browse Jobs — SkillBaseHire{% endblock %}
-
+{% block title %}Find Jobs — SkillBaseHire{% endblock %}
 {% block content %}
-<div class="page-header">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- ── Hero ── -->
+<section class="jb-hero">
   <div class="container">
-    <h1>Find Your Next Role</h1>
-    <p>Browse {{ jobs | length }} open position{{ 's' if jobs | length != 1 else '' }}{% if search %} matching "{{ search }}"{% endif %}</p>
+    <div class="jb-hero-inner">
+      <h1 class="jb-hero-title">Find Your <span class="jb-hero-accent">Perfect Role</span></h1>
+      <p class="jb-hero-sub">Match your verified skills to opportunities that value what you know.</p>
+      <div class="jb-search-card">
+        <div class="jb-search-row">
+          <div class="jb-search-field">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="searchInput" placeholder="Job title, skill, or company" onkeydown="if(event.key==='Enter')applyFilters()">
+          </div>
+          <div class="jb-search-field jb-loc-field">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            <input type="text" id="locationInput" placeholder="Location or Remote" autocomplete="off"
+              oninput="showLocationAC(this.value)" onkeydown="navLocationAC(event)" onblur="setTimeout(()=>closeAC(),150)">
+            <div class="jb-autocomplete" id="locationAC"></div>
+          </div>
+          <button class="btn btn-primary jb-search-btn" onclick="applyFilters()">Search Jobs</button>
+        </div>
+        <div class="jb-chips-row">
+          <span class="jb-chips-label">Popular:</span>
+          <div class="jb-chips" id="heroChips">
+            <button class="jb-chip" data-skill="React" onclick="toggleHeroChip(this)">React</button>
+            <button class="jb-chip" data-skill="Python" onclick="toggleHeroChip(this)">Python</button>
+            <button class="jb-chip" data-skill="TypeScript" onclick="toggleHeroChip(this)">TypeScript</button>
+            <button class="jb-chip" data-skill="Node.js" onclick="toggleHeroChip(this)">Node.js</button>
+            <button class="jb-chip" data-skill="AWS" onclick="toggleHeroChip(this)">AWS</button>
+            <button class="jb-chip" data-skill="Machine Learning" onclick="toggleHeroChip(this)">ML</button>
+            <button class="jb-chip" data-skill="SQL" onclick="toggleHeroChip(this)">SQL</button>
+          </div>
+          <label class="jb-vtoggle">
+            <input type="checkbox" id="heroVerified" onchange="syncVerified('hero')">
+            <span>Verified matches only</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Two-column layout ── -->
+<div class="container jb-layout">
+
+  <!-- Sidebar -->
+  <aside class="jb-sidebar" id="sidebar">
+    <div class="jb-sidebar-head">
+      <span>Filters</span>
+      <button class="jb-reset" onclick="resetFilters()">Reset all</button>
+    </div>
+
+    <div class="jb-fg">
+      <div class="jb-switch-row">
+        <span>Verified matches only</span>
+        <label class="jb-sw">
+          <input type="checkbox" id="sideVerified" onchange="syncVerified('side')">
+          <span class="jb-sw-track"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="jb-fg">
+      <div class="jb-fg-title">Required Skills</div>
+      <div class="jb-skill-list" id="skillCheckList"></div>
+    </div>
+
+    <div class="jb-fg">
+      <div class="jb-fg-title">Experience (years)</div>
+      <div class="jb-range-vals"><span id="expMinL">0</span>–<span id="expMaxL">10</span> yrs</div>
+      <div class="jb-track" id="expTrack">
+        <div class="jb-fill" id="expFill"></div>
+        <div class="jb-thumb" id="expTL"></div>
+        <div class="jb-thumb" id="expTR"></div>
+      </div>
+    </div>
+
+    <div class="jb-fg">
+      <div class="jb-fg-title">Salary (k/yr USD)</div>
+      <div class="jb-range-vals">$<span id="salMinL">0</span>k–$<span id="salMaxL">300</span>k</div>
+      <div class="jb-track" id="salTrack">
+        <div class="jb-fill" id="salFill"></div>
+        <div class="jb-thumb" id="salTL"></div>
+        <div class="jb-thumb" id="salTR"></div>
+      </div>
+    </div>
+
+    <div class="jb-fg" style="border-bottom:none;margin-bottom:.5rem">
+      <div class="jb-fg-title">Job Type</div>
+      <div id="typeCheckList">
+        <label class="jb-check"><input type="checkbox" value="Full-time" onchange="applyFilters()"><span>Full-time</span></label>
+        <label class="jb-check"><input type="checkbox" value="Part-time" onchange="applyFilters()"><span>Part-time</span></label>
+        <label class="jb-check"><input type="checkbox" value="Contract" onchange="applyFilters()"><span>Contract</span></label>
+        <label class="jb-check"><input type="checkbox" value="Internship" onchange="applyFilters()"><span>Internship</span></label>
+        <label class="jb-check"><input type="checkbox" value="Freelance" onchange="applyFilters()"><span>Freelance</span></label>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" style="width:100%" onclick="applyFilters()">Apply Filters</button>
+  </aside>
+
+  <!-- Results -->
+  <div class="jb-results">
+    <div class="jb-results-bar">
+      <div class="jb-results-left">
+        <span class="jb-count" id="resultsCount">Loading…</span>
+        <div class="jb-active-tags" id="activeTags"></div>
+      </div>
+      <div class="jb-results-right">
+        <button class="jb-filter-btn" id="filterToggleBtn" onclick="openFilterDrawer()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+          Filters
+        </button>
+        <select class="jb-sort" id="sortSel" onchange="applyFilters()">
+          <option value="match">Best Match</option>
+          <option value="recent">Most Recent</option>
+          <option value="salary">Salary: High → Low</option>
+        </select>
+      </div>
+    </div>
+    <div class="jb-jobs-list" id="jobsList"></div>
+    <div class="jb-empty" id="emptyState" style="display:none">
+      <div class="jb-empty-icon">🔍</div>
+      <h3>No matching jobs found</h3>
+      <p>Try adjusting your search terms or clearing some filters.</p>
+      <button class="btn btn-primary" onclick="resetFilters()">Clear All Filters</button>
+    </div>
   </div>
 </div>
 
-<div class="container jobs-page">
-  <!-- Search form -->
-  <form class="search-form" method="get" action="{{ url_for('jobs') }}" style="margin-bottom:2rem">
-    <div class="form-group" style="flex:2">
-      <label class="form-label">Search</label>
-      <input class="form-control" type="text" name="q" value="{{ search }}" placeholder="Job title, skill, or company">
-    </div>
-    <div class="form-group" style="flex:1">
-      <label class="form-label">Location</label>
-      <input class="form-control" type="text" name="location" value="{{ location }}" placeholder="City or Remote">
-    </div>
-    <div class="form-group" style="flex:1">
-      <label class="form-label">Type</label>
-      <select class="form-select" name="type">
-        <option value="">All Types</option>
-        {% for t in ['Full-time','Part-time','Contract','Internship','Freelance'] %}
-          <option value="{{ t }}" {{ 'selected' if job_type == t else '' }}>{{ t }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div style="padding-bottom:0;display:flex;align-items:flex-end;gap:.5rem">
-      <button type="submit" class="btn btn-primary">Search</button>
-      {% if search or location or job_type %}
-        <a href="{{ url_for('jobs') }}" class="btn btn-outline">Clear</a>
-      {% endif %}
-    </div>
-  </form>
+<!-- ── Detail Panel ── -->
+<div class="jb-overlay" id="detailOverlay" onclick="closeDetail()"></div>
+<aside class="jb-detail" id="detailPanel">
+  <div style="padding:1rem 1rem 0;display:flex;justify-content:flex-end">
+    <button class="jb-detail-close" onclick="closeDetail()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="jb-detail-body" id="detailBody"></div>
+</aside>
 
-  {% if jobs %}
-    <div class="jobs-grid">
-      {% for job in jobs %}
-        <a href="{{ url_for('job_detail', job_id=job.id) }}" class="job-card-link">
-          <div class="job-card">
-            <div class="job-card-header">
-              <div class="company-logo">{{ job.company_name[0].upper() }}</div>
-              <div class="job-card-info">
-                <h3>{{ job.title }}</h3>
-                <p>{{ job.company_name }} · {{ job.location }}</p>
-              </div>
-              <span class="badge badge-gray">{{ job.job_type }}</span>
-            </div>
-            <p class="job-description-preview">{{ job.description[:120] }}…</p>
-            {% if job.skills_list %}
-              <div class="job-skills">
-                {% for skill in job.skills_list.split(', ')[:5] %}
-                  <span class="skill-tag">{{ skill }}</span>
-                {% endfor %}
-              </div>
-            {% endif %}
-            <div class="job-card-footer">
-              <span class="job-salary">{{ job | salary }}</span>
-              <span class="job-date">{{ job.created_at | timeago }}</span>
-            </div>
-          </div>
-        </a>
-      {% endfor %}
+<!-- ── Apply Modal ── -->
+<div class="jb-modal-back" id="applyBack" onclick="closeApply(event)">
+  <div class="jb-modal" id="applyBox" onclick="event.stopPropagation()">
+    <div id="applyContent"></div>
+    <div class="jb-apply-success" id="applySuccess" style="display:none">
+      <div class="jb-success-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h3>Application Sent!</h3>
+      <p>Your application has been submitted. Good luck!</p>
+      <button class="btn btn-primary" onclick="closeApply(null,true)">Done</button>
     </div>
-  {% else %}
-    <div class="empty-state">
-      <div class="empty-icon">🔍</div>
-      <h3>No jobs found</h3>
-      <p>Try adjusting your search or clearing filters.</p>
-      <a href="{{ url_for('jobs') }}" class="btn btn-primary">Clear Filters</a>
-    </div>
-  {% endif %}
+  </div>
 </div>
+
+<!-- ── Toast ── -->
+<div class="jb-toast" id="saveToast">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toastMsg">Job saved!</span>
+</div>
+
+<!-- ── Mobile Filter Drawer ── -->
+<div class="jb-drawer-back" id="drawerBack" onclick="closeFilterDrawer()"></div>
+<div class="jb-drawer" id="filterDrawer">
+  <div class="jb-drawer-head">
+    <span>Filters</span>
+    <button onclick="closeFilterDrawer()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="jb-drawer-body" id="drawerBody"></div>
+</div>
+
+<script>
+/* ── Mock Data ── */
+const JOBS = [
+  {
+    id:1, title:"Senior Frontend Engineer", company:"Stripe", mark:"S", color:"#635BFF",
+    location:"Remote · USA", type:"Full-time", expRange:[4,6], salRange:[120,160],
+    posted:"2d ago", postedSort:2, match:94,
+    signals:[{label:"Fast Responder",color:"green"},{label:"Skill-first",color:"blue"}],
+    reqSkills:["React","TypeScript","CSS","GraphQL"],
+    verifiedIn:["React","TypeScript","CSS"], missingIn:["GraphQL"],
+    desc:"Build and scale Stripe's customer-facing dashboard with a world-class team. You'll work across the React/TypeScript stack to deliver fast, reliable UX for millions of businesses worldwide.",
+    requirements:["5+ years of frontend development","Expert-level React & TypeScript","Strong CSS fundamentals","Experience with REST/GraphQL APIs","Passion for performance optimization"],
+    perks:["Equity","Remote-first","Health + Dental + Vision","Home office stipend","$2k learning budget"],
+    saved:false
+  },
+  {
+    id:2, title:"Full Stack Engineer", company:"Notion", mark:"N", color:"#1a1a1a",
+    location:"San Francisco, CA", type:"Full-time", expRange:[3,5], salRange:[130,170],
+    posted:"1d ago", postedSort:1, match:88,
+    signals:[{label:"Growing Team",color:"purple"},{label:"Skill-first",color:"blue"}],
+    reqSkills:["React","Node.js","PostgreSQL","TypeScript"],
+    verifiedIn:["React","Node.js","TypeScript"], missingIn:["PostgreSQL"],
+    desc:"Join Notion's core product team to build features used by 30M+ users. Own full-stack features from design to deployment and shape how the world organizes its knowledge.",
+    requirements:["3+ years full stack experience","Proficiency in React and Node.js","Experience with relational databases","Strong system design fundamentals"],
+    perks:["Equity","Flexible PTO","Health insurance","Team offsites","Notion stipend"],
+    saved:false
+  },
+  {
+    id:3, title:"Machine Learning Engineer", company:"Cohere", mark:"C", color:"#FF5C35",
+    location:"Remote · Canada", type:"Full-time", expRange:[3,7], salRange:[140,200],
+    posted:"4d ago", postedSort:4, match:71,
+    signals:[{label:"AI-native",color:"orange"},{label:"Research-forward",color:"blue"}],
+    reqSkills:["Python","PyTorch","Machine Learning","Transformers"],
+    verifiedIn:["Python"], missingIn:["PyTorch","Machine Learning","Transformers"],
+    desc:"Work on cutting-edge NLP and LLM infrastructure at one of the world's leading AI companies. Help build the next generation of enterprise AI tools used by Fortune 500 companies.",
+    requirements:["3+ years ML engineering","Strong Python skills","Deep learning framework experience","Familiarity with transformer architectures","Research publication is a plus"],
+    perks:["Equity","Research time","GPU credits","Health + Dental","Conference budget"],
+    saved:false
+  },
+  {
+    id:4, title:"Backend Engineer – Platform", company:"Vercel", mark:"V", color:"#000000",
+    location:"Remote · Global", type:"Full-time", expRange:[4,8], salRange:[130,180],
+    posted:"3d ago", postedSort:3, match:82,
+    signals:[{label:"Fast Responder",color:"green"},{label:"Remote-first",color:"teal"}],
+    reqSkills:["Node.js","TypeScript","AWS","PostgreSQL"],
+    verifiedIn:["Node.js","TypeScript"], missingIn:["AWS","PostgreSQL"],
+    desc:"Help build the infrastructure powering frontend deployment for millions of developers. Work on distributed systems, serverless functions, and edge computing at global scale.",
+    requirements:["4+ years backend/platform engineering","Strong Node.js & TypeScript","Cloud infrastructure (AWS/GCP)","Distributed systems experience","Interest in developer tooling"],
+    perks:["Equity","Fully remote","Health + Dental","Vercel Pro lifetime","$1.5k equipment budget"],
+    saved:false
+  },
+  {
+    id:5, title:"React Native Developer", company:"Linear", mark:"L", color:"#5E6AD2",
+    location:"Remote · USA/Europe", type:"Full-time", expRange:[2,5], salRange:[100,150],
+    posted:"5d ago", postedSort:5, match:78,
+    signals:[{label:"Small Team",color:"purple"},{label:"High Impact",color:"blue"}],
+    reqSkills:["React","React Native","TypeScript","CSS"],
+    verifiedIn:["React","TypeScript","CSS"], missingIn:["React Native"],
+    desc:"Build Linear's mobile apps for iOS and Android used by thousands of engineering teams. Ship beautiful, fast native experiences that feel native on every platform.",
+    requirements:["2+ years React Native experience","Strong React & TypeScript","iOS/Android deployment","Eye for design and detail"],
+    perks:["Equity","Remote-first","Top-tier equipment","Linear subscription","Health insurance"],
+    saved:false
+  },
+  {
+    id:6, title:"Data Engineer", company:"Figma", mark:"F", color:"#A259FF",
+    location:"San Francisco, CA", type:"Full-time", expRange:[3,6], salRange:[125,175],
+    posted:"6d ago", postedSort:6, match:65,
+    signals:[{label:"Data-driven",color:"orange"},{label:"Collaborative",color:"green"}],
+    reqSkills:["Python","SQL","AWS","dbt"],
+    verifiedIn:["Python"], missingIn:["SQL","AWS","dbt"],
+    desc:"Build the data infrastructure that powers Figma's product decisions. Design scalable pipelines, data models, and analytics foundations for a product used by millions of designers.",
+    requirements:["3+ years data engineering","Strong SQL & Python","Experience with dbt","AWS or GCP data services","Stakeholder communication skills"],
+    perks:["Equity","Health + Dental + Vision","Annual learning stipend","Hybrid work","Catered meals"],
+    saved:false
+  },
+  {
+    id:7, title:"DevOps / Platform Engineer", company:"PlanetScale", mark:"P", color:"#3B82F6",
+    location:"Remote · USA", type:"Contract", expRange:[4,8], salRange:[110,160],
+    posted:"7d ago", postedSort:7, match:58,
+    signals:[{label:"Contract-to-Hire",color:"teal"}],
+    reqSkills:["AWS","Kubernetes","Go","SQL"],
+    verifiedIn:[], missingIn:["AWS","Kubernetes","Go","SQL"],
+    desc:"Maintain and scale PlanetScale's database-as-a-service infrastructure. Work with Kubernetes, AWS, and internal platform tooling to keep millions of databases running reliably.",
+    requirements:["4+ years DevOps/SRE","Kubernetes & Helm proficiency","AWS or similar cloud","Go or Rust preferred","Strong observability/monitoring skills"],
+    perks:["Competitive hourly rate","Remote-first","Full-time conversion possible"],
+    saved:false
+  },
+  {
+    id:8, title:"Frontend Engineer – Growth", company:"Loom", mark:"L", color:"#FF5C35",
+    location:"New York, NY", type:"Full-time", expRange:[2,4], salRange:[100,140],
+    posted:"1d ago", postedSort:1, match:86,
+    signals:[{label:"Fast Responder",color:"green"},{label:"A/B Testing",color:"blue"}],
+    reqSkills:["React","TypeScript","CSS","Node.js"],
+    verifiedIn:["React","TypeScript","CSS","Node.js"], missingIn:[],
+    desc:"Drive growth at Loom by building experiments, optimizing conversion funnels, and shipping high-impact features to increase activation and retention for millions of users.",
+    requirements:["2+ years frontend experience","Strong React/TypeScript","A/B testing framework experience","Data-informed decision making","Bias for fast shipping"],
+    perks:["Equity","Flexible remote","Health benefits","Team offsites"],
+    saved:false
+  },
+  {
+    id:9, title:"Python Backend Engineer", company:"HuggingFace", mark:"H", color:"#FFD21E",
+    location:"Remote · Europe/USA", type:"Full-time", expRange:[3,6], salRange:[110,160],
+    posted:"2d ago", postedSort:2, match:79,
+    signals:[{label:"Open Source",color:"orange"},{label:"Research-forward",color:"blue"}],
+    reqSkills:["Python","Node.js","PostgreSQL","AWS"],
+    verifiedIn:["Python","Node.js"], missingIn:["PostgreSQL","AWS"],
+    desc:"Help build the platform used by 1M+ ML researchers and engineers worldwide. Work on APIs, model hosting infrastructure, and developer-facing tooling at the heart of the open-source AI ecosystem.",
+    requirements:["3+ years Python backend engineering","REST API design & development","Database design with PostgreSQL","Cloud deployment experience","Open-source contribution is a plus"],
+    perks:["Equity","Fully remote","Health insurance","Conference budget","Open-source contribution time"],
+    saved:false
+  },
+  {
+    id:10, title:"iOS Engineer", company:"Airbnb", mark:"A", color:"#FF385C",
+    location:"San Francisco, CA", type:"Full-time", expRange:[3,6], salRange:[140,190],
+    posted:"3d ago", postedSort:3, match:42,
+    signals:[{label:"High Growth",color:"green"},{label:"Mentorship",color:"purple"}],
+    reqSkills:["Swift","iOS","React Native","TypeScript"],
+    verifiedIn:[], missingIn:["Swift","iOS","React Native","TypeScript"],
+    desc:"Build world-class iOS experiences for Airbnb's app used by hundreds of millions of travelers. Work with a talented team on features that redefine how people discover and book unique stays.",
+    requirements:["3+ years native iOS development","Strong Swift skills","Experience with modern iOS frameworks","Performance optimization experience","Collaborative, product-minded approach"],
+    perks:["Equity","Health + Dental + Vision","Travel credits","Food & commuter benefits","Learning budget"],
+    saved:false
+  }
+];
+
+/* ── State ── */
+const state = {
+  search:'', location:'', verified:false,
+  skills:[], types:[], heroSkills:[],
+  expMin:0, expMax:10, salMin:0, salMax:300, sort:'match'
+};
+const LOCS = ["Remote","San Francisco, CA","New York, NY","Austin, TX","Seattle, WA","Boston, MA","Chicago, IL","Los Angeles, CA","London, UK","Berlin, Germany","Bangalore, India","Toronto, Canada"];
+const SIG_COLORS = {
+  green:{bg:'#DCFCE7',text:'#166534'}, blue:{bg:'#DBEAFE',text:'#1E40AF'},
+  purple:{bg:'#EDE9FE',text:'#5B21B6'}, orange:{bg:'#FFF7ED',text:'#9A3412'},
+  teal:{bg:'#CCFBF1',text:'#134E4A'}
+};
+let acIdx = -1, expSlider, salSlider, currentDetailId = null;
+
+/* ── Init ── */
+function init() {
+  initSkillCheckboxes();
+  expSlider = initRange('expTrack','expFill','expTL','expTR',0,10,1,'expMinL','expMaxL',
+    (lo,hi)=>{state.expMin=lo;state.expMax=hi;});
+  salSlider = initRange('salTrack','salFill','salTL','salTR',0,300,10,'salMinL','salMaxL',
+    (lo,hi)=>{state.salMin=lo;state.salMax=hi;});
+  applyFilters();
+  buildDrawer();
+}
+
+function initSkillCheckboxes() {
+  const skills = [...new Set(JOBS.flatMap(j=>j.reqSkills))].sort();
+  document.getElementById('skillCheckList').innerHTML = skills.map(s=>
+    `<label class="jb-check"><input type="checkbox" value="${s}" onchange="applyFilters()"><span>${s}</span></label>`
+  ).join('');
+}
+
+/* ── Render ── */
+function matchRing(pct) {
+  const c = pct>=90?'#10B981':pct>=70?'#0F766E':pct>=50?'#F59E0B':'#EF4444';
+  return `<div class="jb-ring-wrap">
+    <svg class="jb-ring" viewBox="0 0 36 36">
+      <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E5E7EB" stroke-width="2.8"/>
+      <circle cx="18" cy="18" r="15.9" fill="none" stroke="${c}" stroke-width="2.8"
+        stroke-dasharray="${pct} ${100-pct}" stroke-dashoffset="25" stroke-linecap="round"/>
+    </svg>
+    <span class="jb-ring-pct" style="color:${c}">${pct}%</span>
+  </div>`;
+}
+
+function signalPill(s) {
+  const c = SIG_COLORS[s.color]||SIG_COLORS.blue;
+  return `<span class="jb-signal" style="background:${c.bg};color:${c.text}">${s.label}</span>`;
+}
+
+function skillTags(job) {
+  return job.reqSkills.map(s=>
+    job.verifiedIn.includes(s)
+      ? `<span class="jb-skill-v">✓ ${s}</span>`
+      : `<span class="jb-skill-m">+ ${s}</span>`
+  ).join('');
+}
+
+function renderCard(job) {
+  const bg = job.color+'22';
+  return `<div class="jb-card" id="card-${job.id}">
+    <div class="jb-card-top">
+      <div class="jb-company-mark" style="background:${bg};color:${job.color}">${job.mark}</div>
+      <div class="jb-card-main">
+        <div class="jb-card-title-row">
+          <h3 class="jb-card-title">${job.title}</h3>
+          <button class="jb-bookmark${job.saved?' saved':''}" onclick="toggleSave(${job.id},event)" title="${job.saved?'Unsave':'Save'}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="${job.saved?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+          </button>
+        </div>
+        <div class="jb-card-meta">${job.company} · ${job.location} · <span class="jb-type-badge">${job.type}</span></div>
+        <div class="jb-card-meta2">${job.expRange[0]}–${job.expRange[1]} yrs · $${job.salRange[0]}k–$${job.salRange[1]}k/yr</div>
+      </div>
+      ${matchRing(job.match)}
+    </div>
+    <div class="jb-signals">${job.signals.map(signalPill).join('')}</div>
+    <div class="jb-skills-row">${skillTags(job)}</div>
+    <div class="jb-card-foot">
+      <span class="jb-posted">${job.posted}</span>
+      <div class="jb-card-actions">
+        <button class="btn btn-outline btn-sm" onclick="openDetail(${job.id})">View Details</button>
+        <button class="btn btn-primary btn-sm" onclick="openApply(${job.id})">Apply</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderJobList(jobs) {
+  const list = document.getElementById('jobsList');
+  const empty = document.getElementById('emptyState');
+  if (!jobs.length) { list.innerHTML=''; empty.style.display=''; return; }
+  empty.style.display='none';
+  list.innerHTML = jobs.map(renderCard).join('');
+}
+
+/* ── Filters ── */
+function applyFilters() {
+  state.search = document.getElementById('searchInput').value.toLowerCase().trim();
+  state.location = document.getElementById('locationInput').value.toLowerCase().trim();
+  state.verified = document.getElementById('sideVerified').checked;
+  state.sort = document.getElementById('sortSel').value;
+  state.skills = [...document.querySelectorAll('#skillCheckList input:checked')].map(i=>i.value);
+  state.types = [...document.querySelectorAll('#typeCheckList input:checked')].map(i=>i.value);
+
+  let filtered = JOBS.filter(job => {
+    if (state.search) {
+      const hay = (job.title+' '+job.company+' '+job.reqSkills.join(' ')).toLowerCase();
+      if (!hay.includes(state.search)) return false;
+    }
+    if (state.heroSkills.length) {
+      if (!state.heroSkills.some(s=>job.reqSkills.some(r=>r.toLowerCase().includes(s.toLowerCase())))) return false;
+    }
+    if (state.location) {
+      if (!job.location.toLowerCase().includes(state.location) && !job.location.toLowerCase().includes('remote')) {
+        if (!job.location.toLowerCase().includes(state.location)) return false;
+      }
+    }
+    if (state.verified && job.verifiedIn.length===0) return false;
+    if (state.skills.length && !state.skills.some(s=>job.reqSkills.includes(s))) return false;
+    if (job.expRange[0] > state.expMax || job.expRange[1] < state.expMin) return false;
+    if (job.salRange[0] > state.salMax || job.salRange[1] < state.salMin) return false;
+    if (state.types.length && !state.types.includes(job.type)) return false;
+    return true;
+  });
+
+  if (state.sort==='match') filtered.sort((a,b)=>b.match-a.match);
+  else if (state.sort==='recent') filtered.sort((a,b)=>a.postedSort-b.postedSort);
+  else if (state.sort==='salary') filtered.sort((a,b)=>b.salRange[1]-a.salRange[1]);
+
+  renderJobList(filtered);
+  updateCount(filtered.length);
+  updateActiveTags();
+}
+
+function resetFilters() {
+  document.getElementById('searchInput').value='';
+  document.getElementById('locationInput').value='';
+  document.getElementById('sideVerified').checked=false;
+  document.getElementById('heroVerified').checked=false;
+  document.querySelectorAll('#skillCheckList input').forEach(i=>i.checked=false);
+  document.querySelectorAll('#typeCheckList input').forEach(i=>i.checked=false);
+  document.querySelectorAll('.jb-chip.active').forEach(b=>{b.classList.remove('active');});
+  state.heroSkills=[];
+  expSlider.reset(); salSlider.reset();
+  applyFilters();
+}
+
+function updateCount(n) {
+  document.getElementById('resultsCount').textContent = n+' job'+(n!==1?'s':'');
+}
+
+function updateActiveTags() {
+  const tags = [];
+  if (state.search) tags.push({label:`"${state.search}"`,key:'search'});
+  if (state.heroSkills.length) state.heroSkills.forEach(s=>tags.push({label:s,key:'hero:'+s}));
+  if (state.verified) tags.push({label:'Verified only',key:'verified'});
+  state.skills.forEach(s=>tags.push({label:s,key:'skill:'+s}));
+  state.types.forEach(t=>tags.push({label:t,key:'type:'+t}));
+  if (state.expMin>0||state.expMax<10) tags.push({label:`${state.expMin}–${state.expMax}yrs`,key:'exp'});
+  if (state.salMin>0||state.salMax<300) tags.push({label:`$${state.salMin}k–$${state.salMax}k`,key:'sal'});
+
+  document.getElementById('activeTags').innerHTML = tags.map(t=>
+    `<span class="jb-active-tag">${t.label}
+      <button onclick="removeTag('${t.key}')">×</button>
+    </span>`
+  ).join('');
+}
+
+function removeTag(key) {
+  if (key==='search'){document.getElementById('searchInput').value='';}
+  else if (key==='verified'){document.getElementById('sideVerified').checked=false;document.getElementById('heroVerified').checked=false;}
+  else if (key==='exp'){expSlider.reset();}
+  else if (key==='sal'){salSlider.reset();}
+  else if (key.startsWith('hero:')){
+    const s=key.slice(5);
+    state.heroSkills=state.heroSkills.filter(x=>x!==s);
+    document.querySelectorAll('.jb-chip').forEach(b=>{if(b.dataset.skill===s)b.classList.remove('active');});
+  }
+  else if (key.startsWith('skill:')){
+    const s=key.slice(6);
+    document.querySelectorAll('#skillCheckList input').forEach(i=>{if(i.value===s)i.checked=false;});
+  }
+  else if (key.startsWith('type:')){
+    const t=key.slice(5);
+    document.querySelectorAll('#typeCheckList input').forEach(i=>{if(i.value===t)i.checked=false;});
+  }
+  applyFilters();
+}
+
+/* ── Hero chips ── */
+function toggleHeroChip(btn) {
+  const skill = btn.dataset.skill;
+  btn.classList.toggle('active');
+  if (btn.classList.contains('active')) { if(!state.heroSkills.includes(skill)) state.heroSkills.push(skill); }
+  else { state.heroSkills = state.heroSkills.filter(s=>s!==skill); }
+  applyFilters();
+}
+
+/* ── Verified sync ── */
+function syncVerified(source) {
+  const val = source==='hero'
+    ? document.getElementById('heroVerified').checked
+    : document.getElementById('sideVerified').checked;
+  document.getElementById('heroVerified').checked = val;
+  document.getElementById('sideVerified').checked = val;
+  state.verified = val;
+  applyFilters();
+}
+
+/* ── Location autocomplete ── */
+function showLocationAC(val) {
+  acIdx=-1;
+  const ac=document.getElementById('locationAC');
+  if(!val.trim()){ac.classList.remove('open');ac.innerHTML='';return;}
+  const matches=LOCS.filter(l=>l.toLowerCase().includes(val.toLowerCase())).slice(0,6);
+  if(!matches.length){ac.classList.remove('open');ac.innerHTML='';return;}
+  ac.innerHTML=matches.map((l,i)=>`<div class="jb-ac-item" onmousedown="selectLoc('${l}')" data-idx="${i}">${l}</div>`).join('');
+  ac.classList.add('open');
+}
+function navLocationAC(ev) {
+  const ac=document.getElementById('locationAC');
+  const items=[...ac.querySelectorAll('.jb-ac-item')];
+  if(!items.length) return;
+  if(ev.key==='ArrowDown'){ev.preventDefault();acIdx=Math.min(acIdx+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('active',i===acIdx));}
+  else if(ev.key==='ArrowUp'){ev.preventDefault();acIdx=Math.max(acIdx-1,0);items.forEach((el,i)=>el.classList.toggle('active',i===acIdx));}
+  else if(ev.key==='Enter'&&acIdx>=0){selectLoc(items[acIdx].textContent);ev.preventDefault();}
+  else if(ev.key==='Escape'){closeAC();}
+  else if(ev.key==='Enter'){applyFilters();}
+}
+function selectLoc(val) {
+  document.getElementById('locationInput').value=val;
+  closeAC();
+  applyFilters();
+}
+function closeAC() {
+  const ac=document.getElementById('locationAC');
+  ac.classList.remove('open'); ac.innerHTML=''; acIdx=-1;
+}
+
+/* ── Dual-range slider ── */
+function initRange(trackId,fillId,tlId,trId,minVal,maxVal,step,minLabelId,maxLabelId,onChange) {
+  const track=document.getElementById(trackId),fill=document.getElementById(fillId);
+  const tl=document.getElementById(tlId),tr=document.getElementById(trId);
+  let low=minVal, high=maxVal;
+  const range=maxVal-minVal;
+
+  function updateUI() {
+    const lp=(low-minVal)/range*100, rp=(high-minVal)/range*100;
+    fill.style.left=lp+'%'; fill.style.width=(rp-lp)+'%';
+    tl.style.left=lp+'%'; tr.style.left=rp+'%';
+    document.getElementById(minLabelId).textContent=low;
+    document.getElementById(maxLabelId).textContent=high;
+    onChange(low,high);
+  }
+
+  function startDrag(thumb,e) {
+    e.preventDefault();
+    const rect=track.getBoundingClientRect();
+    const isLeft=thumb===tl;
+    function move(ev) {
+      const cx=ev.touches?ev.touches[0].clientX:ev.clientX;
+      let pct=Math.max(0,Math.min(1,(cx-rect.left)/rect.width));
+      let val=Math.round((minVal+pct*range)/step)*step;
+      if(isLeft){low=Math.max(minVal,Math.min(val,high-step));}
+      else{high=Math.min(maxVal,Math.max(val,low+step));}
+      updateUI();
+    }
+    function up(){
+      document.removeEventListener('mousemove',move);
+      document.removeEventListener('mouseup',up);
+      document.removeEventListener('touchmove',move);
+      document.removeEventListener('touchend',up);
+      applyFilters();
+    }
+    document.addEventListener('mousemove',move);
+    document.addEventListener('mouseup',up);
+    document.addEventListener('touchmove',move,{passive:false});
+    document.addEventListener('touchend',up);
+  }
+
+  tl.addEventListener('mousedown',e=>startDrag(tl,e));
+  tr.addEventListener('mousedown',e=>startDrag(tr,e));
+  tl.addEventListener('touchstart',e=>startDrag(tl,e),{passive:false});
+  tr.addEventListener('touchstart',e=>startDrag(tr,e),{passive:false});
+  updateUI();
+  return {
+    getValue:()=>({low,high}),
+    reset:()=>{low=minVal;high=maxVal;updateUI();}
+  };
+}
+
+/* ── Save / Bookmark ── */
+function toggleSave(id, ev) {
+  ev.stopPropagation();
+  const job=JOBS.find(j=>j.id===id);
+  if(!job) return;
+  job.saved=!job.saved;
+  const card=document.getElementById('card-'+id);
+  if(card){
+    const btn=card.querySelector('.jb-bookmark');
+    btn.classList.toggle('saved',job.saved);
+    btn.querySelector('svg').setAttribute('fill',job.saved?'currentColor':'none');
+    btn.title=job.saved?'Unsave':'Save';
+  }
+  if(currentDetailId===id) {
+    const dp=document.getElementById('detailBody');
+    const bk=dp.querySelector('.jb-bookmark-lg');
+    if(bk){bk.classList.toggle('saved',job.saved);bk.innerHTML=bookmarkLgInner(job);}
+  }
+  showToast(job.saved?'Job saved!':'Job removed from saved.');
+}
+
+function bookmarkLgInner(job) {
+  return `<svg width="18" height="18" viewBox="0 0 24 24" fill="${job.saved?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>${job.saved?'Saved':'Save'}`;
+}
+
+function showToast(msg) {
+  const t=document.getElementById('saveToast');
+  document.getElementById('toastMsg').textContent=msg;
+  t.classList.add('show');
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+/* ── Detail Panel ── */
+function openDetail(id) {
+  const job=JOBS.find(j=>j.id===id);
+  if(!job) return;
+  currentDetailId=id;
+  const bg=job.color+'22';
+  document.getElementById('detailBody').innerHTML=`
+    <div class="jb-dp-hero">
+      <div class="jb-dp-mark" style="background:${bg};color:${job.color}">${job.mark}</div>
+      <div style="flex:1;min-width:0">
+        <h2 class="jb-dp-title">${job.title}</h2>
+        <div class="jb-dp-meta">${job.company} · ${job.location}</div>
+        <div class="jb-dp-meta2">${job.type} · ${job.expRange[0]}–${job.expRange[1]} yrs · $${job.salRange[0]}k–$${job.salRange[1]}k</div>
+      </div>
+      ${matchRing(job.match)}
+    </div>
+    <div class="jb-dp-signals">${job.signals.map(signalPill).join('')}</div>
+
+    <div class="jb-dp-section">
+      <h4>About the Role</h4>
+      <p>${job.desc}</p>
+    </div>
+    <div class="jb-dp-section">
+      <h4>Requirements</h4>
+      <ul class="jb-dp-list">${job.requirements.map(r=>`<li>${r}</li>`).join('')}</ul>
+    </div>
+    <div class="jb-dp-section">
+      <h4>Your Skill Match</h4>
+      <div class="jb-dp-skills">
+        ${job.reqSkills.map(s=>job.verifiedIn.includes(s)
+          ?`<span class="jb-skill-v">✓ ${s}</span>`
+          :`<span class="jb-skill-m">+ ${s}</span>`).join('')}
+      </div>
+    </div>
+    <div class="jb-dp-section">
+      <h4>Perks &amp; Benefits</h4>
+      <div class="jb-dp-perks">${job.perks.map(p=>`<span class="jb-perk">${p}</span>`).join('')}</div>
+    </div>
+    <div class="jb-dp-actions">
+      <button class="btn btn-primary" style="flex:1;padding:.75rem 0" onclick="openApply(${job.id})">Apply Now</button>
+      <button class="jb-bookmark-lg${job.saved?' saved':''}" onclick="toggleSave(${job.id},event)">${bookmarkLgInner(job)}</button>
+    </div>`;
+  document.getElementById('detailOverlay').classList.add('open');
+  document.getElementById('detailPanel').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeDetail() {
+  document.getElementById('detailOverlay').classList.remove('open');
+  document.getElementById('detailPanel').classList.remove('open');
+  document.body.style.overflow='';
+  currentDetailId=null;
+}
+
+/* ── Apply Modal ── */
+function openApply(id) {
+  const job=JOBS.find(j=>j.id===id);
+  if(!job) return;
+  const bg=job.color+'22';
+  document.getElementById('applyContent').innerHTML=`
+    <div class="jb-modal-head">
+      <div class="jb-modal-job">
+        <div class="jb-md-mark" style="background:${bg};color:${job.color}">${job.mark}</div>
+        <div>
+          <div class="jb-md-title">Apply to ${job.title}</div>
+          <div class="jb-md-company">${job.company} · ${job.location}</div>
+        </div>
+      </div>
+      <button class="jb-close-modal" onclick="closeApply()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="jb-modal-body">
+      <div class="jb-modal-grid">
+        <div class="jb-mf"><label>Full Name</label><input class="form-control" value="Sandra" readonly></div>
+        <div class="jb-mf"><label>Email</label><input class="form-control" value="sandra@example.com" readonly></div>
+      </div>
+      <div class="jb-mf" style="margin-top:.875rem">
+        <label>Verified Skills</label>
+        <div class="jb-modal-skills">
+          ${job.verifiedIn.length
+            ? job.verifiedIn.map(s=>`<span class="jb-skill-v">✓ ${s}</span>`).join('')
+            : `<span class="jb-no-skills">No verified skills for this role yet. <a href="/skills" style="color:var(--primary)">Take an exam →</a></span>`}
+          ${job.missingIn.length?`<span class="jb-missing-note">Missing: ${job.missingIn.join(', ')}</span>`:''}
+        </div>
+      </div>
+      <div class="jb-mf" style="margin-top:.875rem">
+        <label>Resume / CV</label>
+        <div class="jb-upload-zone" onclick="document.getElementById('rf${job.id}').click()">
+          <input type="file" id="rf${job.id}" accept=".pdf,.doc,.docx" style="display:none" onchange="setResumeName(this,'rc${job.id}')">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span class="jb-upload-text">Click to upload or drag &amp; drop</span>
+          <span class="jb-upload-hint">PDF, DOC, DOCX up to 5MB</span>
+          <span class="jb-upload-chosen" id="rc${job.id}"></span>
+        </div>
+      </div>
+      <div class="jb-mf" style="margin-top:.875rem">
+        <label>Cover Message <span class="jb-optional">(optional)</span></label>
+        <textarea class="form-control" rows="4" placeholder="Why are you excited about this role?"></textarea>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:1.25rem;padding:.75rem 0" onclick="submitApply()">Submit Application</button>
+    </div>`;
+  document.getElementById('applySuccess').style.display='none';
+  document.getElementById('applyContent').style.display='';
+  document.getElementById('applyBack').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function setResumeName(input, labelId) {
+  if(input.files.length) document.getElementById(labelId).textContent=input.files[0].name;
+}
+
+function submitApply() {
+  document.getElementById('applyContent').style.display='none';
+  document.getElementById('applySuccess').style.display='';
+}
+
+function closeApply(ev, done) {
+  if(ev && ev.target!==document.getElementById('applyBack') && !done) return;
+  document.getElementById('applyBack').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+/* ── Mobile Filter Drawer ── */
+function buildDrawer() {
+  document.getElementById('drawerBody').innerHTML = `
+    <div class="jb-fg">
+      <div class="jb-switch-row">
+        <span>Verified matches only</span>
+        <label class="jb-sw"><input type="checkbox" id="dVerified" onchange="syncDrawerVerified()"><span class="jb-sw-track"></span></label>
+      </div>
+    </div>
+    <div class="jb-fg">
+      <div class="jb-fg-title">Job Type</div>
+      <div id="dTypeList">
+        ${['Full-time','Part-time','Contract','Internship','Freelance'].map(t=>
+          `<label class="jb-check"><input type="checkbox" value="${t}" class="dtype-cb"><span>${t}</span></label>`
+        ).join('')}
+      </div>
+    </div>
+    <div class="jb-fg" style="border-bottom:none">
+      <div class="jb-fg-title">Required Skills</div>
+      <div id="dSkillList">${[...new Set(JOBS.flatMap(j=>j.reqSkills))].sort().map(s=>
+        `<label class="jb-check"><input type="checkbox" value="${s}" class="dskill-cb"><span>${s}</span></label>`
+      ).join('')}</div>
+    </div>`;
+}
+function syncDrawerVerified() {
+  const val=document.getElementById('dVerified').checked;
+  document.getElementById('sideVerified').checked=val;
+  document.getElementById('heroVerified').checked=val;
+  state.verified=val;
+  applyFilters();
+}
+function openFilterDrawer() {
+  document.getElementById('dVerified').checked=state.verified;
+  state.skills.forEach(s=>{
+    const cb=document.querySelector(`#dSkillList input[value="${s}"]`);
+    if(cb) cb.checked=true;
+  });
+  document.getElementById('filterDrawer').classList.add('open');
+  document.getElementById('drawerBack').classList.add('open');
+}
+function closeFilterDrawer() {
+  // sync drawer selections back to sidebar
+  const dSkills=[...document.querySelectorAll('.dskill-cb:checked')].map(i=>i.value);
+  dSkills.forEach(s=>{
+    const cb=document.querySelector(`#skillCheckList input[value="${s}"]`);
+    if(cb) cb.checked=true;
+  });
+  const dTypes=[...document.querySelectorAll('.dtype-cb:checked')].map(i=>i.value);
+  dTypes.forEach(t=>{
+    document.querySelectorAll('#typeCheckList input').forEach(i=>{if(i.value===t)i.checked=true;});
+  });
+  applyFilters();
+  document.getElementById('filterDrawer').classList.remove('open');
+  document.getElementById('drawerBack').classList.remove('open');
+}
+
+document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('keydown', ev=>{
+  if(ev.key==='Escape'){closeDetail();closeApply(null,true);}
+});
+</script>
 {% endblock %}

@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% block title %}Recruiter Dashboard — SkillBaseHire{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container page-header-inner">
+    <div>
+      <h1>{{ profile.company }} Dashboard</h1>
+      <p>Welcome back, {{ user.name }}</p>
+    </div>
+    <div style="display:flex;gap:.75rem">
+      <a href="{{ url_for('search_candidates') }}" class="btn btn-outline">Find Candidates</a>
+      <a href="{{ url_for('post_job') }}" class="btn btn-primary">+ Post a Job</a>
+    </div>
+  </div>
+</div>
+
+<div class="container" style="padding:2.5rem 1.5rem">
+
+  <!-- Stats -->
+  <div class="stats-grid" style="margin-bottom:2rem">
+    <div class="stat-card">
+      <div class="number">{{ stats.total_jobs }}</div>
+      <div class="label">Total Jobs Posted</div>
+    </div>
+    <div class="stat-card">
+      <div class="number">{{ stats.active_jobs }}</div>
+      <div class="label">Active Listings</div>
+    </div>
+    <div class="stat-card">
+      <div class="number">{{ stats.total_applications }}</div>
+      <div class="label">Total Applications</div>
+    </div>
+    <div class="stat-card stat-card-highlight">
+      <div class="number">{{ stats.new_applications }}</div>
+      <div class="label">New — Needs Review</div>
+    </div>
+  </div>
+
+  <div class="recruiter-grid">
+
+    <!-- My Jobs -->
+    <div class="card" style="grid-column:1/-1">
+      <div class="card-header">
+        <h2 class="card-title">My Job Postings</h2>
+        <a href="{{ url_for('post_job') }}" class="btn btn-sm btn-primary">+ New Job</a>
+      </div>
+      {% if my_jobs %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Job Title</th>
+                <th>Location</th>
+                <th>Type</th>
+                <th>Applications</th>
+                <th>Status</th>
+                <th>Posted</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for job in my_jobs %}
+                <tr>
+                  <td><strong>{{ job.title }}</strong></td>
+                  <td>{{ job.location }}</td>
+                  <td><span class="badge badge-gray">{{ job.job_type }}</span></td>
+                  <td>
+                    <a href="{{ url_for('job_applications', job_id=job.id) }}" class="apps-count">
+                      {{ job.app_count }} applicant{{ 's' if job.app_count != 1 else '' }}
+                    </a>
+                  </td>
+                  <td>
+                    {% if job.active %}
+                      <span class="badge badge-success">Active</span>
+                    {% else %}
+                      <span class="badge badge-gray">Paused</span>
+                    {% endif %}
+                  </td>
+                  <td style="color:var(--text-muted);font-size:.85rem">{{ job.created_at | timeago }}</td>
+                  <td>
+                    <div style="display:flex;gap:.5rem">
+                      <a href="{{ url_for('job_applications', job_id=job.id) }}" class="btn btn-sm btn-outline">View Apps</a>
+                      <form action="{{ url_for('toggle_job', job_id=job.id) }}" method="post" style="display:inline">
+                        <button type="submit" class="btn btn-sm {{ 'btn-ghost' if job.active else 'btn-outline' }}">
+                          {{ 'Pause' if job.active else 'Activate' }}
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-icon">📝</div>
+          <h3>No jobs posted yet</h3>
+          <p>Post your first job to start receiving applications.</p>
+          <a href="{{ url_for('post_job') }}" class="btn btn-primary">Post a Job</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Recent Applications -->
+    {% if recent_apps %}
+    <div class="card" style="grid-column:1/-1">
+      <div class="card-header">
+        <h2 class="card-title">Recent Applications</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Candidate</th>
+              <th>Job</th>
+              <th>Status</th>
+              <th>Applied</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for app in recent_apps %}
+              <tr>
+                <td>
+                  <div style="font-weight:600">{{ app.candidate_name }}</div>
+                  <div style="font-size:.8rem;color:var(--text-muted)">{{ app.candidate_email }}</div>
+                </td>
+                <td>{{ app.job_title }}</td>
+                <td>
+                  <span class="app-status status-{{ app.status }}">{{ app.status | capitalize }}</span>
+                </td>
+                <td style="color:var(--text-muted);font-size:.85rem">{{ app.applied_at | timeago }}</td>
+                <td>
+                  <a href="{{ url_for('job_applications', job_id=app.job_id) }}" class="btn btn-sm btn-outline">View</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

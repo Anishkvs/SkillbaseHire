@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}Candidate Sign Up — SkillBaseHire{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <a href="{{ url_for('home') }}" class="auth-brand-link">
+        <svg width="28" height="28" viewBox="0 0 22 22" fill="none"><polygon points="11,2 20,7 20,15 11,20 2,15 2,7" fill="#4F46E5" opacity=".2" stroke="#4F46E5" stroke-width="1.5"/><polygon points="11,6 16,9 16,13 11,16 6,13 6,9" fill="#4F46E5"/></svg>
+        SkillBaseHire
+      </a>
+    </div>
+
+    <h1 class="auth-title">Create your account</h1>
+    <p class="auth-subtitle">Start your skill-first job search today</p>
+
+    <form method="post" action="{{ url_for('candidate_signup') }}">
+      <div class="form-group">
+        <label class="form-label" for="name">Full Name</label>
+        <input class="form-control" type="text" id="name" name="name" placeholder="Jane Doe" required autocomplete="name">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="email">Email Address</label>
+        <input class="form-control" type="email" id="email" name="email" placeholder="jane@example.com" required autocomplete="email">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <input class="form-control" type="password" id="password" name="password" placeholder="Min. 6 characters" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="confirm_password">Confirm Password</label>
+          <input class="form-control" type="password" id="confirm_password" name="confirm_password" placeholder="Repeat password" required>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full" style="margin-top:.5rem">
+        Create Candidate Account
+      </button>
+    </form>
+
+    <div class="auth-divider"><span>or</span></div>
+
+    <a href="{{ url_for('recruiter_signup') }}" class="btn btn-outline btn-full">Sign up as Recruiter instead</a>
+
+    <p class="auth-footer">
+      Already have an account? <a href="{{ url_for('candidate_login') }}">Log in</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

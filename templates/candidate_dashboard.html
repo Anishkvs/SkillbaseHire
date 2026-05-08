@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+{% block title %}My Dashboard — SkillBaseHire{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container page-header-inner">
+    <div>
+      <h1>Welcome back, {{ user.name }}! 👋</h1>
+      <p>Here's your skill-first job search overview</p>
+    </div>
+    <div style="display:flex;gap:.75rem">
+      <a href="{{ url_for('skills_page') }}" class="btn btn-outline">+ Verify Skills</a>
+      <a href="{{ url_for('jobs') }}" class="btn btn-primary">Browse Jobs</a>
+    </div>
+  </div>
+</div>
+
+<div class="container dashboard-layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <!-- Profile card -->
+    <div class="sidebar-card">
+      <div class="profile-header">
+        <div class="avatar avatar-lg">{{ user.name[0].upper() }}</div>
+        <div>
+          <div style="font-weight:700;font-size:1rem">{{ user.name }}</div>
+          <div style="font-size:.8125rem;color:var(--text-muted)">{{ profile.headline or 'Add a headline' }}</div>
+        </div>
+      </div>
+      {% if profile.location %}
+        <div class="profile-meta-item">📍 {{ profile.location }}</div>
+      {% endif %}
+      {% if profile.linkedin %}
+        <div class="profile-meta-item"><a href="{{ profile.linkedin }}" target="_blank">LinkedIn ↗</a></div>
+      {% endif %}
+      {% if profile.github %}
+        <div class="profile-meta-item"><a href="{{ profile.github }}" target="_blank">GitHub ↗</a></div>
+      {% endif %}
+      <a href="{{ url_for('candidate_profile') }}" class="btn btn-outline btn-sm btn-full" style="margin-top:1rem">Edit Profile</a>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="sidebar-card">
+      <div class="sidebar-stat">
+        <div class="sidebar-stat-num">{{ applications | length }}</div>
+        <div class="sidebar-stat-label">Applications</div>
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-stat">
+        <div class="sidebar-stat-num">{{ my_skills | selectattr('verified', 'equalto', 1) | list | length }}</div>
+        <div class="sidebar-stat-label">Verified Skills</div>
+      </div>
+      <div class="sidebar-divider"></div>
+      <div class="sidebar-stat">
+        <div class="sidebar-stat-num">{{ my_skills | length }}</div>
+        <div class="sidebar-stat-label">Total Skills</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <div class="dashboard-main">
+
+    <!-- Recommended Jobs -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">Recommended for You</h2>
+        <a href="{{ url_for('jobs') }}" class="btn btn-sm btn-outline">View All</a>
+      </div>
+      {% if recommended %}
+        <div class="recommended-list">
+          {% for job in recommended %}
+            <div class="recommended-item">
+              <div class="company-logo company-logo-sm">{{ job.company_name[0].upper() }}</div>
+              <div class="recommended-info">
+                <a href="{{ url_for('job_detail', job_id=job.id) }}" class="recommended-title">{{ job.title }}</a>
+                <div class="recommended-meta">{{ job.company_name }} · {{ job.location }} · {{ job.job_type }}</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:.75rem;flex-shrink:0">
+                {% if job.skill_match > 0 %}
+                  <span class="match-badge">{{ job.skill_match }} skill{{ 's' if job.skill_match != 1 }} match</span>
+                {% endif %}
+                <a href="{{ url_for('apply_job', job_id=job.id) }}" class="btn btn-sm btn-primary">Apply</a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state" style="padding:2rem">
+          <div class="empty-icon">🎯</div>
+          <h3>Add skills to get recommendations</h3>
+          <p>Verify skills to see matched job recommendations here.</p>
+          <a href="{{ url_for('skills_page') }}" class="btn btn-primary">Explore Skills</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- My Skills -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">My Skills</h2>
+        <a href="{{ url_for('skills_page') }}" class="btn btn-sm btn-outline">+ Add Skills</a>
+      </div>
+      {% if my_skills %}
+        <div class="skills-chips">
+          {% for skill in my_skills %}
+            <div class="skill-chip {{ 'skill-chip-verified' if skill.verified else '' }}">
+              {% if skill.verified %}
+                <span class="verified-icon">✓</span>
+              {% endif %}
+              {{ skill.name }}
+              {% if skill.verified %}
+                <span class="skill-score">{{ skill.score }}%</span>
+              {% else %}
+                <a href="{{ url_for('verify_skill', skill_id=skill.id) }}" class="verify-link" title="Take quiz to verify">Verify</a>
+              {% endif %}
+              <form action="{{ url_for('remove_skill', skill_id=skill.id) }}" method="post" style="display:inline" onsubmit="return confirm('Remove {{ skill.name }}?')">
+                <button type="submit" class="remove-skill-btn" title="Remove">×</button>
+              </form>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state" style="padding:1.5rem">
+          <p style="margin:0 0 1rem;color:var(--text-muted)">No skills added yet. Add and verify skills to stand out.</p>
+          <a href="{{ url_for('skills_page') }}" class="btn btn-primary btn-sm">Add Skills</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Applications -->
+    <div class="card">
+      <div class="card-header">
+        <h2 class="card-title">My Applications</h2>
+      </div>
+      {% if applications %}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Job</th>
+                <th>Company</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Applied</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for app in applications %}
+                <tr>
+                  <td><strong>{{ app.title }}</strong></td>
+                  <td>{{ app.company_name }}</td>
+                  <td><span class="badge badge-gray">{{ app.job_type }}</span></td>
+                  <td>
+                    <span class="app-status status-{{ app.status }}">
+                      {{ app.status | capitalize }}
+                    </span>
+                  </td>
+                  <td style="color:var(--text-muted);font-size:.85rem">{{ app.applied_at | timeago }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state" style="padding:2rem">
+          <div class="empty-icon">📋</div>
+          <h3>No applications yet</h3>
+          <p>Start applying to jobs that match your skills.</p>
+          <a href="{{ url_for('jobs') }}" class="btn btn-primary">Browse Jobs</a>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

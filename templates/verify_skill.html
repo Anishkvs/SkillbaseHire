@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Verify {{ skill.name }} — SkillBaseHire{% endblock %}
+
+{% block content %}
+<div class="quiz-page">
+  <div class="quiz-container">
+    <a href="{{ url_for('skills_page') }}" class="back-link">← All Skills</a>
+
+    <div class="quiz-header">
+      <span class="badge badge-primary">{{ skill.category }}</span>
+      <h1 style="font-size:1.5rem;font-weight:800;margin:.75rem 0 .375rem">{{ skill.name }} Assessment</h1>
+      <p style="color:var(--text-muted)">Answer {{ questions | length }} questions. Score 66%+ to earn a verified badge.</p>
+    </div>
+
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width:0%"></div>
+    </div>
+
+    <form method="post" action="{{ url_for('verify_skill', skill_id=skill.id) }}" id="quizForm">
+      {% for q in questions %}
+        {% set q_idx = loop.index0 %}
+        <div class="quiz-question">
+          <div class="quiz-q-number">Question {{ loop.index }} of {{ questions | length }}</div>
+          <h3>{{ q.q }}</h3>
+          <div class="quiz-options">
+            {% for opt in q.options %}
+              <label class="quiz-option">
+                <input type="radio" name="q{{ q_idx }}" value="{{ loop.index0 }}" required>
+                <span>{{ opt }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+
+      <div style="display:flex;gap:.75rem;margin-top:2rem">
+        <button type="submit" class="btn btn-primary btn-lg">Submit &amp; Get Badge</button>
+        <a href="{{ url_for('skills_page') }}" class="btn btn-outline btn-lg">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  const total = {{ questions | length }};
+  function updateProgress() {
+    let answered = 0;
+    for (let i = 0; i < total; i++) {
+      if (document.querySelector('input[name="q' + i + '"]:checked')) answered++;
+    }
+    document.getElementById('progressFill').style.width = (answered / total * 100) + '%';
+  }
+  document.querySelectorAll('input[type="radio"]').forEach(r => r.addEventListener('change', updateProgress));
+</script>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Skill Assessments — SkillBaseHire{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container page-header-inner">
+    <div>
+      <h1>Skill Assessments</h1>
+      <p>Verify your skills with short quizzes and earn badges recruiters trust</p>
+    </div>
+    {% if not session.get('user_id') %}
+      <a href="{{ url_for('candidate_signup') }}" class="btn btn-primary">Sign Up to Track Skills</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="container" style="padding:2.5rem 1.5rem">
+  {% if session.get('role') == 'candidate' %}
+    <div class="skills-legend">
+      <span class="skill-legend-item"><span class="skill-dot dot-verified"></span> Verified</span>
+      <span class="skill-legend-item"><span class="skill-dot dot-added"></span> Added (unverified)</span>
+      <span class="skill-legend-item"><span class="skill-dot dot-default"></span> Not added</span>
+    </div>
+  {% endif %}
+
+  {% for category, skills in skills_by_category.items() %}
+    <div class="skills-category">
+      <h2 class="skills-category-title">
+        <span class="cat-dot"></span> {{ category }}
+        <span class="cat-count">{{ skills | length }} skills</span>
+      </h2>
+      <div class="skills-grid">
+        {% for skill in skills %}
+          <div class="skill-card {{ 'verified-skill' if skill.verified else ('added-skill' if skill.added else '') }}">
+            <div class="skill-card-header">
+              <h4>{{ skill.name }}</h4>
+              {% if skill.verified %}
+                <span class="badge badge-success">✓ Verified</span>
+              {% elif skill.added %}
+                <span class="badge badge-primary">Added</span>
+              {% endif %}
+            </div>
+            {% if skill.description %}
+              <p class="skill-desc">{{ skill.description }}</p>
+            {% endif %}
+            {% if session.get('role') == 'candidate' %}
+              <div class="skill-card-actions">
+                {% if skill.verified %}
+                  <a href="{{ url_for('verify_skill', skill_id=skill.id) }}" class="btn btn-sm btn-outline">Retake Quiz</a>
+                {% elif skill.added %}
+                  <a href="{{ url_for('verify_skill', skill_id=skill.id) }}" class="btn btn-sm btn-primary">Take Quiz</a>
+                {% else %}
+                  <form action="{{ url_for('add_skill', skill_id=skill.id) }}" method="post" style="display:inline">
+                    <button type="submit" class="btn btn-sm btn-outline">+ Add</button>
+                  </form>
+                  <a href="{{ url_for('verify_skill', skill_id=skill.id) }}" class="btn btn-sm btn-primary">Verify Now</a>
+                {% endif %}
+              </div>
+            {% else %}
+              <div class="skill-card-actions">
+                {% if not session.get('user_id') %}
+                  <a href="{{ url_for('candidate_signup') }}" class="btn btn-sm btn-outline">Sign up to verify</a>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

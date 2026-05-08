@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}SkillBaseHire — Skill-First Hiring Platform{% endblock %}
+
+{% block content %}
+
+<!-- Hero -->
+<section class="hero">
+  <div class="container hero-inner">
+    <div class="hero-content">
+      <div class="hero-badge">✦ Verified Skill-Based Hiring</div>
+      <h1>Get hired faster<br>with <span class="hero-accent">proven skills</span></h1>
+      <p>Take skill assessments, earn verified badges, and get matched with companies that value what you can actually do.</p>
+
+      <form class="hero-search" action="{{ url_for('jobs') }}" method="get">
+        <div class="hero-search-field">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" name="q" placeholder="Job title, skill, or company">
+        </div>
+        <div class="hero-search-divider"></div>
+        <div class="hero-search-field">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <input type="text" name="location" placeholder="Location or remote">
+        </div>
+        <button type="submit" class="btn btn-primary">Search Jobs</button>
+      </form>
+
+      <div class="hero-cta">
+        {% if not session.get('user_id') %}
+          <a href="{{ url_for('candidate_signup') }}" class="btn btn-white btn-lg">Get Started Free</a>
+          <a href="{{ url_for('skills_page') }}" class="btn btn-ghost-white btn-lg">Verify My Skills →</a>
+        {% else %}
+          <a href="{{ url_for('jobs') }}" class="btn btn-white btn-lg">Browse All Jobs</a>
+          <a href="{{ url_for('skills_page') }}" class="btn btn-ghost-white btn-lg">Verify Skills →</a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="preview-card preview-card-main">
+        <div class="preview-match">96% Match</div>
+        <h3>Senior Frontend Engineer</h3>
+        <p>Stripe · Remote · $120K–$160K</p>
+        <div class="preview-tags">
+          <span class="preview-tag verified">✓ React</span>
+          <span class="preview-tag verified">✓ TypeScript</span>
+          <span class="preview-tag">Node.js</span>
+        </div>
+        <div class="preview-actions">
+          <button class="btn btn-sm btn-primary-light">Apply Now</button>
+        </div>
+      </div>
+      <div class="preview-card preview-card-sm">
+        <div class="preview-badge-row">
+          <span class="preview-verified-badge">✓ Python Verified</span>
+          <span class="preview-score">Score: 92%</span>
+        </div>
+        <p class="preview-sub">Badge added to your profile</p>
+      </div>
+      <div class="preview-card preview-card-sm">
+        <p class="preview-sub-label">New application from</p>
+        <div class="preview-candidate-row">
+          <div class="preview-avatar">AK</div>
+          <div>
+            <strong>Arjun Kumar</strong>
+            <p>4 verified skills · React, Python +2</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Bar -->
+<div class="stats-bar">
+  <div class="container stats-inner">
+    <div class="stat-item">
+      <div class="stat-number">{{ stats.jobs }}+</div>
+      <div class="stat-label">Active Jobs</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-number">{{ stats.candidates }}+</div>
+      <div class="stat-label">Verified Candidates</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-number">{{ stats.companies }}+</div>
+      <div class="stat-label">Companies Hiring</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item">
+      <div class="stat-number">40+</div>
+      <div class="stat-label">Skill Assessments</div>
+    </div>
+  </div>
+</div>
+
+<!-- Featured Jobs -->
+<section class="section">
+  <div class="container">
+    <div class="section-header">
+      <h2>Latest Opportunities</h2>
+      <p>Discover roles matched to your verified skill set</p>
+    </div>
+
+    {% if jobs %}
+      <div class="jobs-grid">
+        {% for job in jobs %}
+          <a href="{{ url_for('job_detail', job_id=job.id) }}" class="job-card-link">
+            <div class="job-card">
+              <div class="job-card-header">
+                <div class="company-logo">{{ job.company_name[0].upper() }}</div>
+                <div class="job-card-info">
+                  <h3>{{ job.title }}</h3>
+                  <p>{{ job.company_name }} · {{ job.location }}</p>
+                </div>
+                <span class="badge badge-gray">{{ job.job_type }}</span>
+              </div>
+              {% if job.skills_list %}
+                <div class="job-skills">
+                  {% for skill in job.skills_list.split(', ')[:4] %}
+                    <span class="skill-tag">{{ skill }}</span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+              <div class="job-card-footer">
+                <span class="job-salary">{{ job | salary }}</span>
+                <span class="job-date">{{ job.created_at | timeago }}</span>
+              </div>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+      <div style="text-align:center; margin-top:2.5rem">
+        <a href="{{ url_for('jobs') }}" class="btn btn-outline btn-lg">View All Jobs →</a>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">💼</div>
+        <h3>No jobs posted yet</h3>
+        <p>Be the first to post a job on SkillBaseHire.</p>
+        <a href="{{ url_for('recruiter_signup') }}" class="btn btn-primary">Post a Job</a>
+      </div>
+    {% endif %}
+  </div>
+</section>
+
+<!-- How it Works -->
+<section class="section how-section">
+  <div class="container">
+    <div class="section-header">
+      <h2>How it Works</h2>
+      <p>Three steps from skills to your next role</p>
+    </div>
+    <div class="steps-grid">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h3>Build Your Profile</h3>
+        <p>Sign up as a candidate and create your skill-first profile in minutes.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h3>Verify Your Skills</h3>
+        <p>Take short assessments to earn verified skill badges that stand out to recruiters.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h3>Get Matched & Hired</h3>
+        <p>Apply to jobs with your verified profile. Recruiters find you by skill, not just experience.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <div class="container">
+    <h2>Ready to get skill-verified?</h2>
+    <p>Join thousands of candidates and companies on SkillBaseHire</p>
+    <div class="cta-buttons">
+      {% if not session.get('user_id') %}
+        <a href="{{ url_for('candidate_signup') }}" class="btn btn-white btn-lg">Create Candidate Profile</a>
+        <a href="{{ url_for('recruiter_signup') }}" class="btn btn-outline-white btn-lg">Post Jobs as Recruiter</a>
+      {% else %}
+        <a href="{{ url_for('jobs') }}" class="btn btn-white btn-lg">Browse Jobs</a>
+        <a href="{{ url_for('skills_page') }}" class="btn btn-outline-white btn-lg">Verify Skills</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}

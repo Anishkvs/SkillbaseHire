@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Post a Job — SkillBaseHire{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container page-header-inner">
+    <div>
+      <h1>Post a Job</h1>
+      <p>Posting for <strong>{{ profile.company }}</strong></p>
+    </div>
+    <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-outline">← Dashboard</a>
+  </div>
+</div>
+
+<div class="container" style="max-width:800px;padding:2.5rem 1.5rem">
+  <form method="post" action="{{ url_for('post_job') }}">
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="form-section-title">Job Details</div>
+      <div class="form-group">
+        <label class="form-label" for="title">Job Title <span class="required">*</span></label>
+        <input class="form-control" type="text" id="title" name="title"
+               placeholder="e.g. Senior Backend Engineer" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="location">Location <span class="required">*</span></label>
+          <input class="form-control" type="text" id="location" name="location"
+                 placeholder="e.g. Bangalore or Remote" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="job_type">Job Type</label>
+          <select class="form-select" id="job_type" name="job_type">
+            <option value="Full-time">Full-time</option>
+            <option value="Part-time">Part-time</option>
+            <option value="Contract">Contract</option>
+            <option value="Internship">Internship</option>
+            <option value="Freelance">Freelance</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="salary_min">Min Salary (₹/year)</label>
+          <input class="form-control" type="number" id="salary_min" name="salary_min"
+                 placeholder="e.g. 800000" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="salary_max">Max Salary (₹/year)</label>
+          <input class="form-control" type="number" id="salary_max" name="salary_max"
+                 placeholder="e.g. 1500000" min="0">
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="form-section-title">Job Description</div>
+      <div class="form-group">
+        <label class="form-label" for="description">Description <span class="required">*</span></label>
+        <textarea class="form-control" id="description" name="description" rows="6"
+                  placeholder="Describe the role, responsibilities, team, and what makes this opportunity exciting..." required></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="requirements">Requirements &amp; Qualifications</label>
+        <textarea class="form-control" id="requirements" name="requirements" rows="4"
+                  placeholder="List the experience, qualifications, and must-have qualities..."></textarea>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="form-section-title">Required Skills</div>
+      <p class="form-hint" style="margin-bottom:1.25rem">Select skills required for this role. Candidates with matching verified skills will be highlighted.</p>
+      {% set categories = all_skills | groupby('category') %}
+      {% for category, cat_skills in categories %}
+        <div class="skill-select-group">
+          <div class="skill-select-category">{{ category }}</div>
+          <div class="skill-checkboxes">
+            {% for skill in cat_skills %}
+              <label class="skill-checkbox-label">
+                <input type="checkbox" name="skills" value="{{ skill.id }}">
+                <span>{{ skill.name }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div style="display:flex;gap:.75rem">
+      <button type="submit" class="btn btn-primary btn-lg">Publish Job</button>
+      <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-outline btn-lg">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Recruiter Login — SkillBaseHire{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <a href="{{ url_for('home') }}" class="auth-brand-link">
+        <svg width="28" height="28" viewBox="0 0 22 22" fill="none"><polygon points="11,2 20,7 20,15 11,20 2,15 2,7" fill="#4F46E5" opacity=".2" stroke="#4F46E5" stroke-width="1.5"/><polygon points="11,6 16,9 16,13 11,16 6,13 6,9" fill="#4F46E5"/></svg>
+        SkillBaseHire
+      </a>
+    </div>
+
+    <div class="auth-role-badge">For Recruiters</div>
+    <h1 class="auth-title">Welcome back</h1>
+    <p class="auth-subtitle">Log in to your recruiter account</p>
+
+    <form method="post" action="{{ url_for('recruiter_login') }}">
+      <div class="form-group">
+        <label class="form-label" for="email">Email Address</label>
+        <input class="form-control" type="email" id="email" name="email"
+               value="{{ email or '' }}" placeholder="john@company.com" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="password">Password</label>
+        <input class="form-control" type="password" id="password" name="password"
+               placeholder="Your password" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full" style="margin-top:.5rem">
+        Log In as Recruiter
+      </button>
+    </form>
+
+    <div class="auth-divider"><span>or</span></div>
+
+    <a href="{{ url_for('candidate_login') }}" class="btn btn-outline btn-full">Log in as Candidate</a>
+
+    <p class="auth-footer">
+      Don't have an account? <a href="{{ url_for('recruiter_signup') }}">Sign up free</a>
+    </p>
+  </div>
+</div>
+{% endblock %}

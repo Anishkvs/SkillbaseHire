@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Browse Jobs — SkillBaseHire{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container">
+    <h1>Find Your Next Role</h1>
+    <p>Browse {{ jobs | length }} open position{{ 's' if jobs | length != 1 else '' }}{% if search %} matching "{{ search }}"{% endif %}</p>
+  </div>
+</div>
+
+<div class="container jobs-page">
+  <!-- Search form -->
+  <form class="search-form" method="get" action="{{ url_for('jobs') }}" style="margin-bottom:2rem">
+    <div class="form-group" style="flex:2">
+      <label class="form-label">Search</label>
+      <input class="form-control" type="text" name="q" value="{{ search }}" placeholder="Job title, skill, or company">
+    </div>
+    <div class="form-group" style="flex:1">
+      <label class="form-label">Location</label>
+      <input class="form-control" type="text" name="location" value="{{ location }}" placeholder="City or Remote">
+    </div>
+    <div class="form-group" style="flex:1">
+      <label class="form-label">Type</label>
+      <select class="form-select" name="type">
+        <option value="">All Types</option>
+        {% for t in ['Full-time','Part-time','Contract','Internship','Freelance'] %}
+          <option value="{{ t }}" {{ 'selected' if job_type == t else '' }}>{{ t }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="padding-bottom:0;display:flex;align-items:flex-end;gap:.5rem">
+      <button type="submit" class="btn btn-primary">Search</button>
+      {% if search or location or job_type %}
+        <a href="{{ url_for('jobs') }}" class="btn btn-outline">Clear</a>
+      {% endif %}
+    </div>
+  </form>
+
+  {% if jobs %}
+    <div class="jobs-grid">
+      {% for job in jobs %}
+        <a href="{{ url_for('job_detail', job_id=job.id) }}" class="job-card-link">
+          <div class="job-card">
+            <div class="job-card-header">
+              <div class="company-logo">{{ job.company_name[0].upper() }}</div>
+              <div class="job-card-info">
+                <h3>{{ job.title }}</h3>
+                <p>{{ job.company_name }} · {{ job.location }}</p>
+              </div>
+              <span class="badge badge-gray">{{ job.job_type }}</span>
+            </div>
+            <p class="job-description-preview">{{ job.description[:120] }}…</p>
+            {% if job.skills_list %}
+              <div class="job-skills">
+                {% for skill in job.skills_list.split(', ')[:5] %}
+                  <span class="skill-tag">{{ skill }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+            <div class="job-card-footer">
+              <span class="job-salary">{{ job | salary }}</span>
+              <span class="job-date">{{ job.created_at | timeago }}</span>
+            </div>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🔍</div>
+      <h3>No jobs found</h3>
+      <p>Try adjusting your search or clearing filters.</p>
+      <a href="{{ url_for('jobs') }}" class="btn btn-primary">Clear Filters</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

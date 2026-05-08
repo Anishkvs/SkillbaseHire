@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}{{ job.title }} at {{ job.company_name }} — SkillBaseHire{% endblock %}
+
+{% block content %}
+<div class="container" style="padding:2.5rem 1.5rem">
+  <div class="job-detail-layout">
+
+    <!-- Left: Main content -->
+    <div class="job-detail-main">
+      <a href="{{ url_for('jobs') }}" class="back-link">← Back to Jobs</a>
+
+      <div class="card" style="margin-top:1rem">
+        <div class="job-detail-header">
+          <div class="company-logo company-logo-lg">{{ job.company_name[0].upper() }}</div>
+          <div>
+            <h1 style="font-size:1.5rem;font-weight:800;margin:0 0 .375rem">{{ job.title }}</h1>
+            <div class="job-detail-meta">
+              <span>🏢 {{ job.company_name }}</span>
+              <span>📍 {{ job.location }}</span>
+              <span class="badge badge-gray">{{ job.job_type }}</span>
+              <span style="color:var(--success);font-weight:600">{{ job | salary }}</span>
+            </div>
+            <div style="font-size:.8125rem;color:var(--text-muted);margin-top:.375rem">Posted {{ job.created_at | timeago }}</div>
+          </div>
+        </div>
+
+        {% if job_skills %}
+          <div style="margin:1.5rem 0">
+            <div class="section-mini-title">Required Skills</div>
+            <div class="job-skills" style="margin-top:.5rem">
+              {% for skill in job_skills %}
+                {% set is_verified = skill.name in my_verified_names %}
+                {% set is_added = skill.name in my_skill_names %}
+                <span class="skill-tag {{ 'verified' if is_verified else ('added' if is_added else '') }}">
+                  {% if is_verified %}✓ {% elif is_added %}+ {% endif %}{{ skill.name }}
+                </span>
+              {% endfor %}
+            </div>
+            {% if session.get('role') == 'candidate' and my_skill_names %}
+              <p style="font-size:.8125rem;color:var(--text-muted);margin-top:.5rem">
+                ✓ = verified in your profile &nbsp;·&nbsp; + = in your profile (unverified)
+              </p>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        <div class="job-section">
+          <div class="section-mini-title">About this Role</div>
+          <div class="job-body">{{ job.description | replace('\n', '<br>') | safe }}</div>
+        </div>
+
+        {% if job.requirements %}
+          <div class="job-section">
+            <div class="section-mini-title">Requirements</div>
+            <div class="job-body">{{ job.requirements | replace('\n', '<br>') | safe }}</div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Right: Apply card -->
+    <div class="job-detail-sidebar">
+      <div class="card apply-card">
+        {% if session.get('role') == 'candidate' %}
+          {% if already_applied %}
+            <div class="badge badge-success" style="width:100%;justify-content:center;padding:.75rem;font-size:.875rem">✓ Applied</div>
+            <p style="text-align:center;font-size:.875rem;color:var(--text-muted);margin:.75rem 0 0">You've already applied for this position.</p>
+          {% else %}
+            <a href="{{ url_for('apply_job', job_id=job.id) }}" class="btn btn-primary btn-full btn-lg">Apply Now</a>
+          {% endif %}
+        {% elif not session.get('user_id') %}
+          <a href="{{ url_for('candidate_login') }}" class="btn btn-primary btn-full btn-lg">Login to Apply</a>
+          <p style="text-align:center;font-size:.8125rem;color:var(--text-muted);margin:.75rem 0 0">
+            New? <a href="{{ url_for('candidate_signup') }}">Create free account</a>
+          </p>
+        {% endif %}
+
+        <div class="apply-card-details">
+          <div class="apply-detail-row">
+            <span>Job Type</span>
+            <strong>{{ job.job_type }}</strong>
+          </div>
+          <div class="apply-detail-row">
+            <span>Location</span>
+            <strong>{{ job.location }}</strong>
+          </div>
+          <div class="apply-detail-row">
+            <span>Salary</span>
+            <strong>{{ job | salary }}</strong>
+          </div>
+        </div>
+      </div>
+
+      {% if job.company_bio or job.website %}
+        <div class="card" style="margin-top:1rem">
+          <div class="section-mini-title">About {{ job.company_name }}</div>
+          {% if job.company_bio %}
+            <p style="font-size:.9rem;color:var(--text-muted);margin:.5rem 0">{{ job.company_bio }}</p>
+          {% endif %}
+          {% if job.website %}
+            <a href="{{ job.website }}" target="_blank" class="btn btn-outline btn-sm btn-full" style="margin-top:.5rem">Visit Website ↗</a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Applications for {{ job.title }} — SkillBaseHire{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container page-header-inner">
+    <div>
+      <h1>{{ job.title }}</h1>
+      <p>{{ applications | length }} application{{ 's' if applications | length != 1 else '' }} · {{ job.location }} · {{ job.job_type }}</p>
+    </div>
+    <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-outline">← Dashboard</a>
+  </div>
+</div>
+
+<div class="container" style="padding:2.5rem 1.5rem">
+  {% if applications %}
+    <div class="applications-list">
+      {% for app in applications %}
+        <div class="app-card">
+          <div class="app-card-header">
+            <div class="avatar">{{ app.candidate_name[0].upper() }}</div>
+            <div class="app-candidate-info">
+              <h3>{{ app.candidate_name }}</h3>
+              <div class="app-meta">
+                {{ app.candidate_email }}
+                {% if app.headline %} · {{ app.headline }}{% endif %}
+                {% if app.candidate_location %} · 📍 {{ app.candidate_location }}{% endif %}
+              </div>
+              {% if app.skills %}
+                <div class="app-skills">
+                  {% for skill in app.skills %}
+                    <span class="skill-tag {{ 'verified' if skill.verified else 'unverified' }}">
+                      {{ '✓ ' if skill.verified else '' }}{{ skill.name }}
+                    </span>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            <div class="app-actions">
+              <span class="app-status status-{{ app.status }}">{{ app.status | capitalize }}</span>
+              <div style="font-size:.8125rem;color:var(--text-muted);text-align:right">{{ app.applied_at | timeago }}</div>
+              {% if app.linkedin %}
+                <a href="{{ app.linkedin }}" target="_blank" class="btn btn-sm btn-outline">LinkedIn</a>
+              {% endif %}
+              {% if app.github %}
+                <a href="{{ app.github }}" target="_blank" class="btn btn-sm btn-outline">GitHub</a>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if app.cover_letter %}
+            <div class="cover-letter">
+              <div class="cover-letter-label">Cover Letter</div>
+              <p>{{ app.cover_letter }}</p>
+            </div>
+          {% endif %}
+
+          <div class="app-status-form">
+            <span class="status-label">Update status:</span>
+            <form action="{{ url_for('update_app_status', app_id=app.id) }}" method="post" style="display:flex;gap:.5rem;flex-wrap:wrap">
+              {% for status, label in [('applied','Applied'), ('reviewing','Reviewing'), ('shortlisted','Shortlisted'), ('rejected','Rejected')] %}
+                <button type="submit" name="status" value="{{ status }}"
+                        class="btn btn-sm {{ 'btn-primary' if app.status == status else 'btn-outline' }}">
+                  {{ label }}
+                </button>
+              {% endfor %}
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">📬</div>
+      <h3>No applications yet</h3>
+      <p>Share the job link to attract candidates.</p>
+      <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

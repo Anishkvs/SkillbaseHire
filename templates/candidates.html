@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Find Candidates — SkillBaseHire{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="container page-header-inner">
+    <div>
+      <h1>Find Candidates</h1>
+      <p>{{ candidates | length }} candidate{{ 's' if candidates | length != 1 else '' }} found</p>
+    </div>
+    <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-outline">← Dashboard</a>
+  </div>
+</div>
+
+<div class="container candidates-page">
+  <!-- Filters -->
+  <form class="search-form" method="get" action="{{ url_for('search_candidates') }}" style="margin-bottom:2rem">
+    <div class="form-group" style="flex:2">
+      <label class="form-label">Search</label>
+      <input class="form-control" type="text" name="q" value="{{ search }}" placeholder="Name or headline">
+    </div>
+    <div class="form-group" style="flex:1">
+      <label class="form-label">Location</label>
+      <input class="form-control" type="text" name="location" value="{{ location_filter }}" placeholder="City or Remote">
+    </div>
+    <div class="form-group" style="flex:1">
+      <label class="form-label">Skill</label>
+      <select class="form-select" name="skill">
+        <option value="">Any Skill</option>
+        {% for s in all_skills %}
+          <option value="{{ s.name }}" {{ 'selected' if skill_filter == s.name else '' }}>{{ s.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div style="display:flex;align-items:flex-end;gap:.5rem">
+      <label class="verified-filter-label">
+        <input type="checkbox" name="verified" value="1" {{ 'checked' if verified_only else '' }}>
+        Verified only
+      </label>
+      <button type="submit" class="btn btn-primary">Filter</button>
+      {% if search or skill_filter or location_filter or verified_only %}
+        <a href="{{ url_for('search_candidates') }}" class="btn btn-outline">Clear</a>
+      {% endif %}
+    </div>
+  </form>
+
+  {% if candidates %}
+    <div class="candidates-grid">
+      {% for c in candidates %}
+        <div class="candidate-card">
+          <div class="avatar">{{ c.name[0].upper() }}</div>
+          <div class="candidate-info">
+            <h3>{{ c.name }}</h3>
+            {% if c.headline %}
+              <div class="headline">{{ c.headline }}</div>
+            {% endif %}
+            {% if c.location %}
+              <div class="location">📍 {{ c.location }}</div>
+            {% endif %}
+            {% if c.verified_count > 0 %}
+              <div class="verified-count">✓ {{ c.verified_count }} verified skill{{ 's' if c.verified_count != 1 else '' }}</div>
+            {% endif %}
+            {% if c.skills %}
+              <div class="candidate-skills">
+                {% for skill in c.skills %}
+                  <span class="skill-tag {{ 'verified' if skill.verified else 'unverified' }}">
+                    {{ '✓ ' if skill.verified else '' }}{{ skill.name }}
+                  </span>
+                {% endfor %}
+                {% if c.total_skills > c.skills | length %}
+                  <span class="more-skills">+{{ c.total_skills - (c.skills | length) }} more</span>
+                {% endif %}
+              </div>
+            {% endif %}
+          </div>
+          <div class="candidate-actions">
+            <div style="font-size:.8125rem;color:var(--text-muted)">Joined {{ c.created_at | timeago }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">👥</div>
+      <h3>No candidates found</h3>
+      <p>Try adjusting your search filters.</p>
+      <a href="{{ url_for('search_candidates') }}" class="btn btn-primary">Clear Filters</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}SkillBaseHire{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<header class="navbar">
+  <div class="container navbar-inner">
+    <a href="{{ url_for('home') }}" class="navbar-brand">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><polygon points="11,2 20,7 20,15 11,20 2,15 2,7" fill="#4F46E5" opacity=".2" stroke="#4F46E5" stroke-width="1.5"/><polygon points="11,6 16,9 16,13 11,16 6,13 6,9" fill="#4F46E5"/></svg>
+      SkillBaseHire
+    </a>
+
+    <nav class="navbar-menu" id="navMenu">
+      <a href="{{ url_for('jobs') }}" class="{{ 'active' if request.endpoint == 'jobs' else '' }}">Find Jobs</a>
+      <a href="{{ url_for('skills_page') }}" class="{{ 'active' if request.endpoint == 'skills_page' else '' }}">Skills</a>
+      {% if session.get('role') == 'recruiter' %}
+        <a href="{{ url_for('post_job') }}">Post Job</a>
+        <a href="{{ url_for('search_candidates') }}">Candidates</a>
+      {% endif %}
+    </nav>
+
+    <div class="navbar-actions">
+      {% if session.get('user_id') %}
+        <div class="nav-user-info">
+          <div class="nav-avatar">{{ session.get('name','?')[0].upper() }}</div>
+          <span class="nav-name">{{ session.get('name','') }}</span>
+        </div>
+        {% if session.get('role') == 'candidate' %}
+          <a href="{{ url_for('candidate_dashboard') }}" class="btn btn-sm btn-primary">Dashboard</a>
+        {% else %}
+          <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-sm btn-primary">Dashboard</a>
+        {% endif %}
+        <form action="{{ url_for('logout') }}" method="post" style="display:inline">
+          <button type="submit" class="btn btn-sm btn-outline">Logout</button>
+        </form>
+      {% else %}
+        <a href="{{ url_for('candidate_login') }}" class="btn btn-sm btn-outline">Candidate Login</a>
+        <a href="{{ url_for('recruiter_login') }}" class="btn btn-sm btn-primary">For Recruiters</a>
+      {% endif %}
+    </div>
+
+    <button class="navbar-toggle" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-container" id="flashContainer">
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">
+          <span>{{ message }}</span>
+          <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+        </div>
+      {% endfor %}
+    </div>
+    <script>
+      setTimeout(() => {
+        const c = document.getElementById('flashContainer');
+        if (c) c.style.opacity = '0', setTimeout(() => c.remove(), 400);
+      }, 4000);
+    </script>
+  {% endif %}
+{% endwith %}
+
+<main>{% block content %}{% endblock %}</main>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <div class="footer-logo">
+        <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><polygon points="11,2 20,7 20,15 11,20 2,15 2,7" fill="#818CF8" opacity=".3" stroke="#818CF8" stroke-width="1.5"/><polygon points="11,6 16,9 16,13 11,16 6,13 6,9" fill="#818CF8"/></svg>
+        SkillBaseHire
+      </div>
+      <p>Connecting talent with opportunity<br>through verified skills.</p>
+    </div>
+    <div class="footer-links">
+      <div>
+        <h4>Candidates</h4>
+        <a href="{{ url_for('jobs') }}">Browse Jobs</a>
+        <a href="{{ url_for('skills_page') }}">Verify Skills</a>
+        <a href="{{ url_for('candidate_signup') }}">Create Profile</a>
+        <a href="{{ url_for('candidate_login') }}">Login</a>
+      </div>
+      <div>
+        <h4>Recruiters</h4>
+        <a href="{{ url_for('recruiter_signup') }}">Post Jobs</a>
+        <a href="{{ url_for('search_candidates') }}">Find Talent</a>
+        <a href="{{ url_for('recruiter_login') }}">Login</a>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="container">
+      <p>© 2024 SkillBaseHire. Built for skill-first hiring.</p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

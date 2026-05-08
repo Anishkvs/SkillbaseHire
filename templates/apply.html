@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Apply for {{ job.title }} — SkillBaseHire{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:700px;padding:2.5rem 1.5rem">
+  <a href="{{ url_for('job_detail', job_id=job.id) }}" class="back-link">← Back to Job</a>
+
+  <div class="card" style="margin-top:1rem">
+    <div class="apply-job-header">
+      <div class="company-logo">{{ job.company_name[0].upper() }}</div>
+      <div>
+        <h1 style="font-size:1.25rem;font-weight:800;margin:0 0 .25rem">Applying for: {{ job.title }}</h1>
+        <p style="margin:0;color:var(--text-muted);font-size:.9rem">{{ job.company_name }} · {{ job.location }}</p>
+      </div>
+    </div>
+
+    {% if job_skills %}
+      <div style="margin:1.5rem 0;padding:1rem;background:var(--bg);border-radius:var(--radius)">
+        <div class="section-mini-title" style="margin-bottom:.75rem">Skill Match</div>
+        <div class="job-skills">
+          {% for skill in job_skills %}
+            {% if skill.name in my_skills %}
+              {% if my_skills[skill.name] %}
+                <span class="skill-tag verified">✓ {{ skill.name }}</span>
+              {% else %}
+                <span class="skill-tag unverified">+ {{ skill.name }}</span>
+              {% endif %}
+            {% else %}
+              <span class="skill-tag" style="opacity:.5">{{ skill.name }}</span>
+            {% endif %}
+          {% endfor %}
+        </div>
+        <p style="font-size:.8rem;color:var(--text-muted);margin:.5rem 0 0">
+          ✓ Verified &nbsp;·&nbsp; + In profile (unverified) &nbsp;·&nbsp; Gray = not in your profile
+        </p>
+      </div>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('apply_job', job_id=job.id) }}">
+      <div class="form-group">
+        <label class="form-label" for="cover_letter">Cover Letter <span style="color:var(--text-muted);font-weight:400">(optional)</span></label>
+        <textarea class="form-control" id="cover_letter" name="cover_letter" rows="7"
+                  placeholder="Tell the recruiter why you're a great fit for this role. Mention relevant experience, skills, and why you're excited about this opportunity..."></textarea>
+        <div class="form-hint">A personalised message increases your chances significantly.</div>
+      </div>
+
+      <div style="display:flex;gap:.75rem;margin-top:1.5rem">
+        <button type="submit" class="btn btn-primary btn-lg">Submit Application</button>
+        <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-outline btn-lg">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SkillBaseHire</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+</head>
+<body>
+  <header class="navbar">
+    <div class="logo">SkillBaseHire</div>
+    <nav>
+      <a href="#">Home</a>
+      <a href="#">Find Jobs</a>
+      <a href="#">Skills</a>
+      <a href="#">For Recruiters</a>
+    </nav>
+    <button class="nav-btn">Get Started</button>
+  </header>
+
+  <section class="hero">
+    <div class="hero-content">
+      <span class="badge">Verified Skill-Based Hiring</span>
+      <h1>Get hired faster with proven skills</h1>
+      <p>
+        Search jobs, match with verified skills, and apply using your profile.
+        SkillBaseHire helps candidates and recruiters connect faster.
+      </p>
+
+      <div class="search-box">
+        <input type="text" placeholder="Job title, skill, or company" />
+        <input type="text" placeholder="Location" />
+        <button>Search Jobs</button>
+      </div>
+
+      <div class="hero-actions">
+        <button>Browse Jobs</button>
+        <button class="secondary">Verify My Skills</button>
+      </div>
+    </div>
+
+    <div class="job-card">
+      <div class="match">96% Match</div>
+      <h3>QA Automation Engineer</h3>
+      <p>TechNova Solutions · Remote</p>
+      <div class="tags">
+        <span>Selenium</span>
+        <span>Java</span>
+        <span>API Testing</span>
+      </div>
+      <button>Apply Now</button>
+    </div>
+  </section>
+</body>
+</html>

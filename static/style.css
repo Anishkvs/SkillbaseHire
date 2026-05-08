@@ -2569,4 +2569,211 @@ tr:hover td { background: #FAFBFC; }
 }
 .ec-proceed-btn:not(:disabled):hover { background: #1D4ED8; }
 
+/* ══════════════════════════════════════════════════
+   ACTIVE EXAM — DARK MODE  (body.dark-exam)
+   Activated automatically when candidate starts exam.
+   Result page stays light; Instructions stay light.
+══════════════════════════════════════════════════ */
+
+/* ── Page & layout ── */
+body.dark-exam {
+  background: #0D1117;
+  color: #E2E8F0;
+}
+
+/* ── Header ── */
+body.dark-exam .ea-header {
+  background: #161B22;
+  border-bottom-color: #21262D;
+  box-shadow: 0 1px 0 #21262D;
+}
+body.dark-exam .ea-exam-name { color: #F1F5F9; }
+body.dark-exam .ea-q-counter { color: #8B949E; }
+
+body.dark-exam .ea-timer-pill {
+  background: #1C2128;
+  border-color: #30363D;
+  color: #58A6FF;
+}
+body.dark-exam .ea-timer-pill.warning { background: #2D1F00; border-color: #7C4B00; color: #E3B341; }
+body.dark-exam .ea-timer-pill.danger  { background: #3D0000; border-color: #7C1D1D; color: #FF7B72; }
+
+/* ── Warning bar ── */
+body.dark-exam .ea-warn-bar {
+  background: #2D1F00;
+  border-bottom-color: #7C4B00;
+  color: #E3B341;
+}
+
+/* ── Layout container ── */
+body.dark-exam .ea-layout {
+  background: #0D1117;
+}
+
+/* ── Question card ── */
+body.dark-exam .ea-question-card {
+  background: #161B22;
+  border-color: #21262D;
+  box-shadow: 0 4px 20px rgba(0,0,0,.4);
+}
+body.dark-exam .ea-q-card-top { border-bottom-color: #21262D; }
+.ea-q-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+body.dark-exam .ea-q-type-badge {
+  background: #1C2850;
+  color: #58A6FF;
+}
+body.dark-exam .ea-flag-btn {
+  background: #1C2128;
+  border-color: #30363D;
+  color: #8B949E;
+}
+body.dark-exam .ea-flag-btn:hover,
+body.dark-exam .ea-flag-btn.ea-flag-active {
+  background: #2D1F00;
+  border-color: #7C4B00;
+  color: #E3B341;
+}
+body.dark-exam .ea-q-text { color: #F1F5F9; }
+
+/* ── Answer options ── */
+body.dark-exam .ea-option {
+  background: #1C2128;
+  border-color: #30363D;
+  color: #C9D1D9;
+}
+body.dark-exam .ea-option:hover {
+  background: #21262D;
+  border-color: #388BFD;
+}
+body.dark-exam .ea-option:has(input:checked) {
+  background: #0D2044;
+  border-color: #388BFD;
+}
+body.dark-exam .ea-opt-radio {
+  border-color: #4B5563;
+}
+body.dark-exam .ea-option:has(input:checked) .ea-opt-radio {
+  border-color: #388BFD;
+}
+body.dark-exam .ea-option:has(input:checked) .ea-opt-radio::after {
+  background: #388BFD;
+}
+body.dark-exam .ea-opt-text { color: #C9D1D9; }
+
+/* ── Bottom nav bar ── */
+body.dark-exam .ea-nav-bar {
+  background: #161B22;
+  border-color: #21262D;
+  box-shadow: 0 -1px 0 #21262D;
+}
+body.dark-exam .ea-nav-prev {
+  background: #1C2128;
+  border-color: #30363D;
+  color: #C9D1D9;
+}
+body.dark-exam .ea-nav-prev:hover:not(:disabled) {
+  background: #21262D;
+  border-color: #4B5563;
+}
+body.dark-exam .ea-nav-prev:disabled { opacity: .3; }
+body.dark-exam .ea-nav-next {
+  background: #1F6FEB;
+  border-color: #1F6FEB;
+  color: #fff;
+}
+body.dark-exam .ea-nav-next:hover:not(:disabled) { background: #388BFD; border-color: #388BFD; }
+body.dark-exam .ea-nav-pos { color: #8B949E; }
+
+/* ── Right panel sections ── */
+body.dark-exam .ea-panel-section {
+  background: #161B22;
+  border-color: #21262D;
+  box-shadow: 0 2px 8px rgba(0,0,0,.3);
+}
+body.dark-exam .ea-panel-title { color: #F1F5F9; }
+
+/* Proctoring rows */
+body.dark-exam .ea-proctor-row { color: #8B949E; }
+body.dark-exam .ea-proctor-row span { color: #C9D1D9; }
+
+/* Webcam box stays dark by default — no override needed */
+
+/* ── Progress ── */
+body.dark-exam .ea-prog-row > span:first-child { color: #8B949E; }
+body.dark-exam .ea-prog-num { color: #E2E8F0; }
+body.dark-exam .ea-prog-green { color: #3FB950; }
+body.dark-exam .ea-prog-amber { color: #E3B341; }
+body.dark-exam .ea-prog-bar-wrap { background: #21262D; }
+body.dark-exam .ea-prog-bar-fill { background: #1F6FEB; }
+
+/* ── Question palette ── */
+body.dark-exam .ea-pq {
+  background: #1C2128;
+  border-color: #30363D;
+  color: #8B949E;
+}
+body.dark-exam .ea-pq:hover { background: #21262D; border-color: #58A6FF; color: #58A6FF; }
+body.dark-exam .ea-pq.ea-pq-ans {
+  background: #122D1F;
+  border-color: #2EA043;
+  color: #3FB950;
+}
+body.dark-exam .ea-pq.ea-pq-flag {
+  background: #2D1F00;
+  border-color: #9E6A03;
+  color: #E3B341;
+}
+body.dark-exam .ea-pq.ea-pq-current {
+  background: #0D2044;
+  border-color: #388BFD;
+  border-width: 3px;
+  color: #58A6FF;
+  box-shadow: 0 0 0 3px rgba(56,139,253,.2);
+}
+
+/* ── Legend ── */
+body.dark-exam .ea-lg-item { color: #8B949E; }
+body.dark-exam .ea-lg-ans     { background: #122D1F; border-color: #2EA043; }
+body.dark-exam .ea-lg-un      { background: #1C2128; border-color: #30363D; }
+body.dark-exam .ea-lg-current { background: #0D2044; border-color: #388BFD; }
+body.dark-exam .ea-lg-flag    { background: #2D1F00; border-color: #9E6A03; }
+
+/* ── Submit confirmation modal (inside dark exam) ── */
+body.dark-exam .ea-modal-back,
+body.dark-exam .ea-modal-backdrop {
+  background: rgba(0,0,0,.7);
+}
+body.dark-exam .ea-modal {
+  background: #161B22;
+  border: 1px solid #30363D;
+  box-shadow: 0 20px 60px rgba(0,0,0,.6);
+}
+body.dark-exam .ea-modal h3 { color: #F1F5F9; }
+body.dark-exam .ea-modal p  { color: #8B949E; }
+body.dark-exam .ea-modal-warn-icon { background: #2D1F00; }
+body.dark-exam .ea-modal-stats {
+  background: #122D1F;
+  border-color: #2EA043;
+  color: #3FB950;
+}
+body.dark-exam .ea-modal-cancel,
+body.dark-exam .ea-mbtn-cancel {
+  background: #21262D;
+  color: #C9D1D9;
+  border-color: #30363D !important;
+}
+body.dark-exam .ea-modal-cancel:hover { background: #2D333B; }
+body.dark-exam .ea-modal-submit,
+body.dark-exam .ea-mbtn-confirm { background: #1F6FEB; color: #fff; }
+body.dark-exam .ea-modal-submit:hover { background: #388BFD; }
+
+/* ── Auto-submit modal ── */
+body.dark-exam .ea-modal-danger { border-color: #7C1D1D; }
+body.dark-exam .ea-modal-red-icon { background: #3D0000; }
+
+/* ── Scrollbar (dark) ── */
+body.dark-exam ::-webkit-scrollbar { width: 6px; }
+body.dark-exam ::-webkit-scrollbar-track { background: #0D1117; }
+body.dark-exam ::-webkit-scrollbar-thumb { background: #30363D; border-radius: 3px; }
+
 /* End of exam-page styles */

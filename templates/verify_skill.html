@@ -410,6 +410,8 @@ function proceedToExam() {
   // Hide env overlay, show exam
   document.getElementById('envOverlay').style.display = 'none';
   document.getElementById('examWrapper').style.display = '';
+  // Activate dark mode
+  document.body.classList.add('dark-exam');
   // Transfer cam to exam feed
   const examFeed = document.getElementById('examCamFeed');
   if (camStream) {

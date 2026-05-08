@@ -191,21 +191,7 @@
             <input type="checkbox" id="c1" onchange="updateStartBtn()">
             <span class="ei-cb"></span>
           </div>
-          <span>I have read and understood all exam instructions and rules. I agree to follow them throughout the assessment.</span>
-        </label>
-        <label class="ei-consent-row" id="c2label">
-          <div class="ei-cb-wrap">
-            <input type="checkbox" id="c2" onchange="updateStartBtn()">
-            <span class="ei-cb"></span>
-          </div>
-          <span>I consent to webcam, screen, and audio recording during this proctored examination for security and verification purposes.</span>
-        </label>
-        <label class="ei-consent-row" id="c3label">
-          <div class="ei-cb-wrap">
-            <input type="checkbox" id="c3" onchange="updateStartBtn()">
-            <span class="ei-cb"></span>
-          </div>
-          <span>I certify that I will complete this assessment independently and honestly, without any unauthorized assistance.</span>
+          <span>I agree to the exam instructions, rules, identity verification, and monitoring requirements including webcam, screen, and audio recording. I confirm that I will complete this assessment independently and honestly.</span>
         </label>
       </div>
 
@@ -231,17 +217,13 @@
 <script>
 const EXAM_URL = "{{ url_for('verify_skill', skill_id=skill.id) }}";
 function updateStartBtn() {
-  const all = document.getElementById('c1').checked &&
-              document.getElementById('c2').checked &&
-              document.getElementById('c3').checked;
+  const checked = document.getElementById('c1').checked;
   const btn = document.getElementById('startBtn');
-  btn.disabled = !all;
-  btn.textContent = all ? 'Start Test →' : 'Please agree to all terms to continue';
+  btn.disabled = !checked;
+  btn.textContent = checked ? 'Start Test →' : 'Please agree to all terms to continue';
 }
 function goToExam() {
-  if (!document.getElementById('c1').checked ||
-      !document.getElementById('c2').checked ||
-      !document.getElementById('c3').checked) return;
+  if (!document.getElementById('c1').checked) return;
   window.location.href = EXAM_URL;
 }
 </script>

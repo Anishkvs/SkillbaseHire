@@ -2487,6 +2487,61 @@ tr:hover td { background: #FAFBFC; }
 .ea-flag-btn-inner:hover { border-color: #F59E0B; color: #F59E0B; background: #FFFBEB; }
 .ea-flag-active { border-color: #F59E0B !important; color: #D97706 !important; background: #FFFBEB !important; }
 
+/* ── Device Blocked Overlay (db-) ── */
+.db-overlay {
+  position: fixed; inset: 0; background: #F1F5F9; z-index: 9999;
+  display: flex; align-items: center; justify-content: center; padding: 2rem;
+  font-family: 'Inter', sans-serif;
+}
+.db-card {
+  background: #fff; border-radius: 20px; border: 1px solid #E2E8F0;
+  box-shadow: 0 8px 40px rgba(0,0,0,.12);
+  padding: 3rem 2.5rem; max-width: 480px; width: 100%; text-align: center;
+}
+.db-icon {
+  width: 76px; height: 76px; border-radius: 20px;
+  background: #FEF3C7; margin: 0 auto 1.75rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.db-title { font-size: 1.5rem; font-weight: 800; color: #0F172A; margin: 0 0 1rem; }
+.db-desc { font-size: .9375rem; color: #475569; margin: 0 0 .5rem; line-height: 1.65; }
+.db-btn {
+  display: inline-flex; align-items: center; gap: .5rem;
+  margin-top: 2rem; padding: .875rem 2.25rem;
+  background: #2563EB; color: #fff; border-radius: 10px;
+  font-size: .9375rem; font-weight: 700; text-decoration: none;
+  transition: background .15s; box-shadow: 0 4px 14px rgba(37,99,235,.3);
+}
+.db-btn:hover { background: #1D4ED8; }
+.db-note {
+  font-size: .8125rem; color: #94A3B8; margin: 1.5rem 0 0; line-height: 1.6;
+}
+.db-divider { border: none; border-top: 1px solid #F1F5F9; margin: 1.75rem 0 0; }
+
+/* ── Security Warning Toast (sec-toast) ── */
+.sec-toast {
+  position: fixed; bottom: 1.75rem; left: 50%;
+  transform: translateX(-50%) translateY(120px);
+  z-index: 9100; min-width: 340px; max-width: 540px;
+  border-radius: 12px; padding: .875rem 1.25rem;
+  display: flex; align-items: flex-start; gap: .75rem;
+  font-size: .875rem; font-weight: 500; line-height: 1.5;
+  box-shadow: 0 8px 32px rgba(0,0,0,.3);
+  transition: transform .35s cubic-bezier(.34,1.56,.64,1), opacity .3s ease;
+  opacity: 0; pointer-events: none; font-family: 'Inter', sans-serif;
+}
+.sec-toast.visible {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1; pointer-events: auto;
+}
+.sec-toast-mild  { background: #1C2128; color: #E2E8F0; border: 1px solid #30363D; }
+.sec-toast-strong{ background: #2D0000; color: #FCA5A5; border: 1px solid #7C1D1D; }
+.sec-toast-icon  { flex-shrink: 0; margin-top: .1rem; }
+.sec-toast-close {
+  margin-left: auto; flex-shrink: 0; background: none; border: none;
+  color: inherit; opacity: .6; cursor: pointer; font-size: 1rem; padding: 0;
+}
+
 /* ── Environment Check missing classes ── */
 .ec-title { font-size: 1.375rem; font-weight: 800; color: #0F172A; margin: 0 0 .375rem; }
 .ec-subtitle { font-size: .9rem; color: #64748B; margin: 0 0 1.75rem; }
@@ -2568,6 +2623,59 @@ tr:hover td { background: #FAFBFC; }
   box-shadow: 0 4px 16px rgba(37,99,235,.3);
 }
 .ec-proceed-btn:not(:disabled):hover { background: #1D4ED8; }
+
+/* ── Full-Screen Status Badge ── */
+.ea-fs-badge {
+  display: flex; align-items: center; gap: .4rem;
+  font-size: .75rem; font-weight: 700; letter-spacing: .01em;
+  color: #16A34A; background: #DCFCE7; border: 1px solid #86EFAC;
+  padding: .3rem .875rem; border-radius: 20px; white-space: nowrap;
+}
+.ea-fs-badge.ea-fs-badge-off {
+  color: #DC2626; background: #FEE2E2; border-color: #FECACA;
+}
+
+/* ── Exam Locked Blur State (fullscreen exited) ── */
+.ea-exam-locked .ea-layout,
+.ea-exam-locked .ea-warn-bar {
+  filter: blur(8px) brightness(.7);
+  pointer-events: none; user-select: none;
+}
+.ea-exam-locked .ea-header {
+  filter: blur(4px) brightness(.7);
+  pointer-events: none;
+}
+
+/* ── Full-Screen Blocking Modal ── */
+.ea-modal-fs .ea-modal-fs-icon {
+  background: #DBEAFE;
+}
+.ea-fs-warn-banner {
+  background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 9px;
+  padding: .75rem 1rem; font-size: .8125rem; font-weight: 600; color: #92400E;
+  margin-bottom: 1.25rem; text-align: center; line-height: 1.5;
+}
+.ea-fs-critical-banner {
+  background: #FEE2E2; border: 1px solid #FECACA; border-radius: 9px;
+  padding: .75rem 1rem; font-size: .8125rem; font-weight: 600; color: #991B1B;
+  margin-bottom: 1.25rem; text-align: center; line-height: 1.5;
+}
+.ea-fs-return-btn {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: .75rem 1.75rem !important;
+}
+.ea-fs-modal-note {
+  font-size: .7rem; color: #94A3B8; text-align: center; margin-top: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Dark mode overrides for fullscreen elements */
+body.dark-exam .ea-fs-badge        { background: rgba(34,197,94,.15); border-color: rgba(34,197,94,.4); color: #4ADE80; }
+body.dark-exam .ea-fs-badge-off    { background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.4); color: #F87171; }
+body.dark-exam .ea-modal-fs .ea-modal-fs-icon { background: #0D2044; }
+body.dark-exam .ea-fs-warn-banner  { background: #2D1F00; border-color: #7C4B00; color: #E3B341; }
+body.dark-exam .ea-fs-critical-banner { background: #2D0000; border-color: #7C1D1D; color: #FCA5A5; }
+body.dark-exam .ea-fs-modal-note   { color: #4B5563; }
 
 /* ══════════════════════════════════════════════════
    ACTIVE EXAM — DARK MODE  (body.dark-exam)
@@ -2777,3 +2885,250 @@ body.dark-exam ::-webkit-scrollbar-track { background: #0D1117; }
 body.dark-exam ::-webkit-scrollbar-thumb { background: #30363D; border-radius: 3px; }
 
 /* End of exam-page styles */
+
+/* ══════════════════════════════════════════════════════════════════
+   ee-  Exam Ended page
+   ══════════════════════════════════════════════════════════════════ */
+
+.ee-body {
+  margin: 0;
+  background: #F1F5F9;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+}
+
+/* ── Header ── */
+.ee-header {
+  background: #1E293B;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.ee-logo {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  text-decoration: none;
+  color: #F8FAFC;
+  font-weight: 700;
+  font-size: .95rem;
+}
+.ee-logo-icon {
+  width: 32px;
+  height: 32px;
+  background: #2563EB;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.ee-header-label {
+  font-size: .75rem;
+  color: #94A3B8;
+  font-weight: 500;
+  letter-spacing: .02em;
+}
+
+/* ── Main ── */
+.ee-main { padding: 2.5rem 1rem 4rem; }
+.ee-content {
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ── Cards ── */
+.ee-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 2rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,.07);
+}
+.ee-card-ended {
+  text-align: center;
+  border-top: 4px solid #DC2626;
+}
+.ee-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1E293B;
+  margin: 0 0 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+
+/* ── Verdict ring ── */
+.ee-verdict-ring {
+  width: 72px;
+  height: 72px;
+  background: #DC2626;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+}
+.ee-verdict-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #DC2626;
+  margin: 0 0 .5rem;
+}
+.ee-verdict-sub {
+  font-size: .9rem;
+  color: #64748B;
+  margin: 0 0 1.25rem;
+}
+
+/* ── Status pill ── */
+.ee-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  background: #FEF2F2;
+  color: #DC2626;
+  border: 1px solid #FECACA;
+  border-radius: 20px;
+  padding: .35rem .9rem;
+  font-size: .8rem;
+  font-weight: 600;
+}
+
+/* ── Reason box ── */
+.ee-reason-box {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+.ee-reason-text {
+  font-size: .875rem;
+  color: #7F1D1D;
+  margin: 0 0 1rem;
+  line-height: 1.6;
+}
+.ee-violation-stat {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  background: #fff;
+  border-radius: 8px;
+  padding: .75rem 1rem;
+  border: 1px solid #FECACA;
+}
+.ee-vs-icon {
+  width: 36px;
+  height: 36px;
+  background: #FEE2E2;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ee-vs-label { font-size: .75rem; color: #64748B; font-weight: 500; }
+.ee-vs-count { font-size: 1.1rem; font-weight: 800; color: #DC2626; }
+
+/* ── Rules box ── */
+.ee-rules-box {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+.ee-rules-title {
+  font-size: .8rem;
+  font-weight: 700;
+  color: #475569;
+  margin-bottom: .6rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+.ee-rules-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+}
+.ee-rules-list li {
+  font-size: .825rem;
+  color: #64748B;
+  line-height: 1.5;
+}
+
+/* ── Next steps ── */
+.ee-next-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+.ee-next-item {
+  display: flex;
+  align-items: flex-start;
+  gap: .875rem;
+}
+.ee-next-num {
+  width: 28px;
+  height: 28px;
+  background: #DBEAFE;
+  color: #1D4ED8;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.ee-next-title {
+  font-size: .875rem;
+  font-weight: 600;
+  color: #1E293B;
+  margin-bottom: .2rem;
+}
+.ee-next-desc {
+  font-size: .8rem;
+  color: #64748B;
+  line-height: 1.5;
+}
+
+/* ── Action buttons ── */
+.ee-actions {
+  display: flex;
+  gap: .75rem;
+  flex-wrap: wrap;
+}
+.ee-btn-primary {
+  background: #2563EB;
+  color: #fff;
+  padding: .65rem 1.4rem;
+  border-radius: 8px;
+  font-size: .875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background .15s;
+}
+.ee-btn-primary:hover { background: #1D4ED8; }
+.ee-btn-outline {
+  background: transparent;
+  color: #475569;
+  border: 1.5px solid #CBD5E1;
+  padding: .65rem 1.4rem;
+  border-radius: 8px;
+  font-size: .875rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: border-color .15s, color .15s;
+}
+.ee-btn-outline:hover { border-color: #94A3B8; color: #1E293B; }

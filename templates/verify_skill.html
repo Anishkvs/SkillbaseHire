@@ -10,6 +10,33 @@
 </head>
 <body class="ea-body">
 
+<!-- ── Device Blocked Overlay ── -->
+<div id="deviceBlocked" class="db-overlay" style="display:none">
+  <div class="db-card">
+    <div class="db-icon">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="1.75"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18" stroke-width="2.5" stroke-linecap="round"/></svg>
+    </div>
+    <h1 class="db-title">Desktop or Laptop Required</h1>
+    <p class="db-desc">For exam security and integrity, this assessment cannot be taken on a mobile or tablet device.</p>
+    <p class="db-desc">Please open this assessment on a desktop or laptop computer with webcam, microphone, and screen recording permissions enabled.</p>
+    <a href="{{ url_for('skills_page') }}" class="db-btn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Skills Page
+    </a>
+    <hr class="db-divider">
+    <p class="db-note">Please use a desktop or laptop with webcam, microphone, and screen recording permissions enabled.</p>
+  </div>
+</div>
+
+<!-- ── Security Warning Toast ── -->
+<div id="secToast" class="sec-toast sec-toast-mild" role="alert" aria-live="assertive">
+  <span class="sec-toast-icon">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+  </span>
+  <span id="secToastMsg">Keyboard shortcuts are disabled during the exam.</span>
+  <button class="sec-toast-close" onclick="dismissToast()">✕</button>
+</div>
+
 <!-- ═══════════════════════════════════════════
      ENVIRONMENT CHECK OVERLAY
 ═══════════════════════════════════════════ -->
@@ -156,12 +183,16 @@
         <div class="ea-q-counter">Question <span id="hdrQNum">1</span> of {{ questions | length }}</div>
       </div>
     </div>
+    <div class="ea-fs-badge" id="fsBadge" style="display:none">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+      Full Screen Active
+    </div>
     <div class="ea-header-right">
       <div class="ea-timer-pill" id="timerPill">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         <span id="timerText">{{ meta.duration }}:00</span>
       </div>
-      <button class="ea-submit-hdr-btn" onclick="confirmSubmit()">Submit Assessment</button>
+      <button class="ea-submit-hdr-btn" id="submitHdrBtn" onclick="confirmSubmit()">Submit Assessment</button>
     </div>
   </header>
 
@@ -178,7 +209,9 @@
     <!-- LEFT: Question Area -->
     <main class="ea-main">
       <form method="post" action="{{ url_for('verify_skill', skill_id=skill.id) }}" id="examForm">
-        <input type="hidden" name="time_elapsed" id="timeElapsed" value="0">
+        <input type="hidden" name="time_elapsed"    id="timeElapsed"      value="0">
+        <input type="hidden" name="integrity_ended" id="integrityEnded"   value="0">
+        <input type="hidden" name="fs_exit_count"   id="fsExitCountInput" value="0">
 
         {% for q in questions %}
           {% set qi = loop.index0 %}
@@ -300,6 +333,25 @@
   </div>
 </div><!-- examWrapper -->
 
+<!-- ── Full-Screen Exit Blocking Modal ── -->
+<div class="ea-modal-back" id="fsModal" style="display:none">
+  <div class="ea-modal ea-modal-fs">
+    <div class="ea-modal-warn-icon ea-modal-fs-icon">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+    </div>
+    <h3>Return to Full-Screen Mode</h3>
+    <p>You exited full-screen mode. For exam security and integrity, you must return to full-screen mode to continue the assessment.<br><br><strong id="fsTimerNote">⏱ Your timer is still running.</strong></p>
+    <div id="fsWarnBanner" class="ea-fs-warn-banner" style="display:none"></div>
+    <div class="ea-modal-btns" style="justify-content:center">
+      <button class="ea-modal-submit ea-fs-return-btn" id="fsReturnBtn" onclick="returnToFullscreen()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg>
+        Return to Full Screen
+      </button>
+    </div>
+    <p class="ea-fs-modal-note">Event ID: <span id="fsEventId"></span></p>
+  </div>
+</div>
+
 <!-- ── Submit Confirmation Modal ── -->
 <div class="ea-modal-back" id="submitModal">
   <div class="ea-modal">
@@ -342,6 +394,7 @@ let timerSec = DURATION_SEC;
 let timerInterval;
 let startTime;
 let camStream = null;
+let examActive = false;  // true only during active MCQ exam (enables keyboard blocking)
 
 /* ══ ENVIRONMENT CHECK ══ */
 async function runEnvCheck() {
@@ -410,8 +463,9 @@ function proceedToExam() {
   // Hide env overlay, show exam
   document.getElementById('envOverlay').style.display = 'none';
   document.getElementById('examWrapper').style.display = '';
-  // Activate dark mode
+  // Activate dark mode + keyboard blocking
   document.body.classList.add('dark-exam');
+  examActive = true;
   // Transfer cam to exam feed
   const examFeed = document.getElementById('examCamFeed');
   if (camStream) {
@@ -419,13 +473,16 @@ function proceedToExam() {
     examFeed.style.display = 'block';
     document.getElementById('examCamPh').style.display = 'none';
   }
-  // Start timer + fullscreen
+  // Start timer
   startTime = Date.now();
   startTimer();
   showQuestion(0);
+  // Request fullscreen and show badge
   setTimeout(() => {
     if (document.documentElement.requestFullscreen) {
-      document.documentElement.requestFullscreen().catch(()=>{});
+      document.documentElement.requestFullscreen()
+        .then(() => updateFsBadge(true))
+        .catch(() => updateFsBadge(false));
     }
   }, 400);
 }
@@ -538,36 +595,270 @@ function finalSubmit() {
   document.getElementById('examForm').submit();
 }
 
-/* ══ SECURITY ══ */
-document.addEventListener('contextmenu', e => e.preventDefault());
-document.addEventListener('copy',  e => e.preventDefault());
-document.addEventListener('paste', e => e.preventDefault());
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && ['c','v','u','s','a'].includes(e.key.toLowerCase())) e.preventDefault();
+/* ══ DEVICE DETECTION ══ */
+function isUnsupportedDevice() {
+  const ua = navigator.userAgent;
+  const mobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua);
+  const likelyTablet = navigator.maxTouchPoints > 1 && window.screen.width < 1280;
+  return mobileUA || likelyTablet;
+}
+
+/* ══ INTEGRITY LOGGING ══ */
+const examSessionId = 'esid_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+const CANDIDATE_ID  = '{{ user.id if user else "unknown" }}';
+const integrityLog  = [];
+let blockedKeyCount = 0;
+let toastTimer      = null;
+
+function logIntegrityEvent(keyLabel) {
+  blockedKeyCount++;
+  const severity = blockedKeyCount > 3 ? 'high' : 'medium';
+  integrityLog.push({
+    exam_session_id: examSessionId,
+    candidate_id:    CANDIDATE_ID,
+    event_type:      'blocked_key_attempt',
+    key_pressed:     keyLabel,
+    timestamp:       new Date().toISOString(),
+    severity:        severity
+  });
+  const mild = 'Keyboard shortcuts are disabled during the exam.';
+  const strong = 'Repeated keyboard activity detected. Your assessment may be flagged for review.';
+  showSecToast(blockedKeyCount === 1 ? mild : strong, blockedKeyCount > 1 ? 'strong' : 'mild');
+}
+
+function showSecToast(msg, level) {
+  const toast = document.getElementById('secToast');
+  document.getElementById('secToastMsg').textContent = msg;
+  toast.className = 'sec-toast sec-toast-' + level;
+  // force reflow to restart transition
+  void toast.offsetWidth;
+  toast.classList.add('visible');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('visible'), level === 'strong' ? 6000 : 4000);
+}
+
+function dismissToast() {
+  document.getElementById('secToast').classList.remove('visible');
+  clearTimeout(toastTimer);
+}
+
+/* ══ KEYBOARD BLOCKING ══ */
+// Keys blocked with Ctrl/Cmd
+const CTRL_BLOCKED = new Set(['c','v','x','a','s','p','f','r','t','n','u','i','j']);
+// Keys blocked with Ctrl/Cmd + Shift (dev tools)
+const CTRL_SHIFT_BLOCKED = new Set(['i','j','c']);
+// Standalone function/special keys blocked
+const KEY_BLOCKED = new Set(['F5','F12','F11']);
+
+function handleExamKeydown(e) {
+  const key   = e.key;
+  const lower = key.toLowerCase();
+  const ctrl  = e.ctrlKey || e.metaKey;
+  const shift = e.shiftKey;
+  let blocked = false;
+  let label   = '';
+
+  // Standalone blocked keys (F5, F12, F11)
+  if (KEY_BLOCKED.has(key)) {
+    blocked = true; label = key;
+  }
+  // Escape — browsers own ESC exit from fullscreen; we log but cannot prevent it.
+  // fullscreenchange will fire and show the return-to-fullscreen modal.
+  else if (key === 'Escape' && examActive) {
+    logFsEvent('esc_key_pressed', { key_pressed: 'Escape', severity: 'medium' });
+    // do NOT preventDefault — let browser handle ESC fullscreen exit
+  }
+  // Ctrl/Cmd + Shift combos (developer tools, inspect element)
+  else if (ctrl && shift && CTRL_SHIFT_BLOCKED.has(lower)) {
+    blocked = true; label = `Ctrl+Shift+${key.toUpperCase()}`;
+  }
+  // Ctrl/Cmd + single key combos
+  else if (ctrl && !shift && CTRL_BLOCKED.has(lower)) {
+    blocked = true; label = `Ctrl+${key.toUpperCase()}`;
+  }
+
+  if (blocked) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    logIntegrityEvent(label);
+  }
+}
+
+/* ══ FULLSCREEN & SECURITY MANAGEMENT ══ */
+let fsExitCount       = 0;
+let examLocked        = false;
+let lastViolationTime = 0;   // deduplicate events that fire together (e.g. tab+fullscreen)
+
+/* ── Badge ── */
+function updateFsBadge(active) {
+  const badge = document.getElementById('fsBadge');
+  badge.style.display = 'flex';
+  badge.classList.toggle('ea-fs-badge-off', !active);
+}
+
+/* ── Lock / Unlock UI ── */
+function lockExamUI() {
+  if (examLocked) return;
+  examLocked = true;
+  document.getElementById('examWrapper').classList.add('ea-exam-locked');
+  document.querySelectorAll(
+    '#examForm input, #examForm button, #prevBtn, #nextBtn, .ea-flag-btn, #submitHdrBtn'
+  ).forEach(el => { el.disabled = true; });
+}
+
+function unlockExamUI() {
+  examLocked = false;
+  document.getElementById('examWrapper').classList.remove('ea-exam-locked');
+  document.querySelectorAll(
+    '#examForm input, #examForm button, .ea-flag-btn, #submitHdrBtn'
+  ).forEach(el => { el.disabled = false; });
+  showQuestion(current);  // restores natural nav state
+}
+
+/* ── Security event log ── */
+function logSecurityEvent(eventType, extra) {
+  const severity = fsExitCount >= 3 ? 'high' : fsExitCount === 2 ? 'medium' : 'low';
+  integrityLog.push({
+    exam_session_id: examSessionId,
+    candidate_id:    CANDIDATE_ID,
+    event_type:      eventType,
+    timestamp:       new Date().toISOString(),
+    exit_count:      fsExitCount,
+    severity:        severity,
+    browser:         navigator.userAgent,
+    ...extra
+  });
+}
+
+/* ── Unified violation handler (fullscreen exit / tab switch / ESC) ── */
+function handleSecurityViolation(reason) {
+  if (!examActive) return;
+  const now = Date.now();
+  // Deduplicate: tab switch + fullscreenchange often fire within milliseconds of each other
+  if (now - lastViolationTime < 800) {
+    logSecurityEvent(reason + '_deduplicated');
+    return;
+  }
+  lastViolationTime = now;
+  fsExitCount++;
+  document.getElementById('fsExitCountInput').value = fsExitCount;
+  logSecurityEvent(reason, { exit_count: fsExitCount });
+
+  if (fsExitCount >= 3) {
+    // 3rd violation — auto-end exam
+    logSecurityEvent('exam_ended_due_to_fullscreen_exit', { severity: 'high', status: 'integrity_ended' });
+    endExamDueToViolation();
+    return;
+  }
+  // 1st or 2nd — lock UI, show modal
+  lockExamUI();
+  updateFsBadge(false);
+  showFsModal();
+}
+
+/* ── Show fullscreen modal (content differs by exit count) ── */
+function showFsModal() {
+  const modal   = document.getElementById('fsModal');
+  const iconWrap = modal.querySelector('.ea-modal-warn-icon');
+  const title   = modal.querySelector('h3');
+  const msg     = modal.querySelector('p');
+  const banner  = document.getElementById('fsWarnBanner');
+  const btn     = document.getElementById('fsReturnBtn');
+  document.getElementById('fsEventId').textContent = examSessionId + '_fs' + fsExitCount;
+
+  if (fsExitCount === 1) {
+    iconWrap.className = 'ea-modal-warn-icon ea-modal-fs-icon';
+    title.textContent  = 'You Exited Full-Screen Mode';
+    msg.innerHTML      = 'You exited full-screen mode. Please return to full-screen mode to continue the assessment.<br><br><strong>⏱ Your timer is still running.</strong>';
+    banner.style.display = 'none';
+    btn.className      = 'ea-modal-submit ea-fs-return-btn';
+    btn.innerHTML      = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg> Return to Full Screen';
+  } else {
+    // Exit 2 — final warning
+    iconWrap.className = 'ea-modal-warn-icon ea-modal-red-icon';
+    title.innerHTML    = '⚠ Final Warning';
+    msg.innerHTML      = 'This is your final warning. If you exit full-screen mode again, your exam will be <strong>ended automatically</strong>.<br><br><strong>⏱ Your timer is still running.</strong>';
+    banner.style.display = 'block';
+    banner.className   = 'ea-fs-critical-banner';
+    banner.textContent = 'One more full-screen exit will permanently end your exam.';
+    btn.className      = 'ea-modal-submit ea-fs-return-btn ea-fs-final-btn';
+    btn.innerHTML      = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg> Return to Full Screen (Last Chance)';
+  }
+  modal.style.display = 'flex';
+}
+
+/* ── Return to fullscreen from modal ── */
+function returnToFullscreen() {
+  const btn = document.getElementById('fsReturnBtn');
+  btn.textContent = 'Requesting full screen…';
+  btn.disabled = true;
+  document.documentElement.requestFullscreen()
+    .then(() => {
+      document.getElementById('fsModal').style.display = 'none';
+      btn.disabled = false;
+      unlockExamUI();
+      updateFsBadge(true);
+    })
+    .catch(() => {
+      btn.textContent = 'Click here to return to full screen';
+      btn.disabled = false;
+    });
+}
+
+/* ── Auto-end exam on 3rd violation ── */
+function endExamDueToViolation() {
+  examActive = false;
+  clearInterval(timerInterval);
+  document.getElementById('integrityEnded').value   = '1';
+  document.getElementById('fsExitCountInput').value = fsExitCount;
+  document.getElementById('timeElapsed').value      = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
+  // Hide any open modals, lock everything
+  document.getElementById('fsModal').style.display     = 'none';
+  document.getElementById('submitModal').classList.remove('ea-modal-open');
+  document.getElementById('autoModal').style.display   = 'none';
+  lockExamUI();
+  if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+  if (camStream) camStream.getTracks().forEach(t => t.stop());
+  document.getElementById('examForm').submit();
+}
+
+/* ── Fullscreen change event ── */
+document.addEventListener('fullscreenchange', () => {
+  if (!examActive) return;
+  if (!document.fullscreenElement) {
+    handleSecurityViolation('fullscreen_exit');
+  } else {
+    updateFsBadge(true);
+  }
 });
 
+/* ══ SECURITY ══ */
+document.addEventListener('contextmenu', e => { if (examActive) e.preventDefault(); });
+document.addEventListener('copy',  e => { if (examActive) { e.preventDefault(); logIntegrityEvent('Ctrl+C'); } });
+document.addEventListener('paste', e => { if (examActive) { e.preventDefault(); logIntegrityEvent('Ctrl+V'); } });
+document.addEventListener('cut',   e => { if (examActive) { e.preventDefault(); logIntegrityEvent('Ctrl+X'); } });
+document.addEventListener('keydown', handleExamKeydown);
+
+// Tab / app switch → counts as a violation
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && document.getElementById('examWrapper').style.display !== 'none') {
-    tabViolations++;
-    if (tabViolations >= 3) {
-      document.getElementById('autoModal').style.display = 'flex';
-      let cd = 10;
-      document.getElementById('autoCD').textContent = cd;
-      const iv = setInterval(() => {
-        cd--;
-        document.getElementById('autoCD').textContent = cd;
-        if (cd <= 0) { clearInterval(iv); finalSubmit(); }
-      }, 1000);
-    } else {
-      document.getElementById('warnMsg').textContent =
-        `Warning (${tabViolations}/3): Tab switching detected! Further violations will auto-submit.`;
-      document.getElementById('warnBar').style.display = 'flex';
-    }
-  }
+  if (!examActive || !document.hidden) return;
+  handleSecurityViolation('tab_switch');
+});
+
+// Window blur → log only (too noisy for violation count)
+window.addEventListener('blur', () => {
+  if (!examActive) return;
+  logSecurityEvent('window_blur', { severity: 'low' });
 });
 
 /* ══ INIT ══ */
 document.addEventListener('DOMContentLoaded', () => {
+  if (isUnsupportedDevice()) {
+    document.getElementById('deviceBlocked').style.display = 'flex';
+    document.getElementById('envOverlay').style.display    = 'none';
+    document.getElementById('examWrapper').style.display   = 'none';
+    return;
+  }
   runEnvCheck();
 });
 </script>

@@ -553,6 +553,28 @@ def verify_skill(skill_id):
     meta = SKILL_META.get(skill['name'], DEFAULT_META)
 
     if request.method == 'POST':
+        integrity_ended = request.form.get('integrity_ended') == '1'
+        fs_exit_count = request.form.get('fs_exit_count', 0, type=int)
+
+        if integrity_ended:
+            existing = db.execute(
+                'SELECT id FROM user_skills WHERE user_id=? AND skill_id=?',
+                [session['user_id'], skill_id]
+            ).fetchone()
+            if existing:
+                db.execute('UPDATE user_skills SET verified=0, score=0 WHERE user_id=? AND skill_id=?',
+                           [session['user_id'], skill_id])
+            else:
+                db.execute('INSERT INTO user_skills (user_id, skill_id, verified, score) VALUES (?,?,0,0)',
+                           [session['user_id'], skill_id])
+            db.commit()
+            session['exam_ended_data'] = {
+                'skill_id': skill_id,
+                'skill_name': skill['name'],
+                'fs_exit_count': fs_exit_count,
+            }
+            return redirect(url_for('exam_ended', skill_id=skill_id))
+
         score = sum(
             1 for i, q in enumerate(questions)
             if request.form.get(f'q{i}', type=int) == q['answer']
@@ -623,6 +645,23 @@ def exam_result(skill_id):
             'time_taken': None,
         }
     return render_template('exam_result.html', result=result, user=get_current_user())
+
+
+@app.route('/skills/verify/<int:skill_id>/ended')
+@candidate_required
+def exam_ended(skill_id):
+    data = session.pop('exam_ended_data', None)
+    if not data or data.get('skill_id') != skill_id:
+        db = get_db()
+        skill = db.execute('SELECT * FROM skills WHERE id=?', [skill_id]).fetchone()
+        if not skill:
+            return redirect(url_for('skills_page'))
+        data = {
+            'skill_id': skill_id,
+            'skill_name': skill['name'],
+            'fs_exit_count': 3,
+        }
+    return render_template('exam_ended.html', data=data, user=get_current_user())
 
 
 # ── Candidate auth ────────────────────────────────────────────────────────────

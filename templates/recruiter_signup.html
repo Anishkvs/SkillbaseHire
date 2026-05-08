@@ -320,5 +320,13 @@ function checkConfirm() {
   if (pw === cf) { msg.style.display = 'none'; inp.classList.add('input-ok'); inp.classList.remove('input-error'); }
   else           { msg.style.display = 'block'; inp.classList.add('input-error'); inp.classList.remove('input-ok'); }
 }
+
+// Move modals to <body> so position:fixed works from the viewport root
+document.addEventListener('DOMContentLoaded', () => {
+  ['termsModal', 'privacyModal'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.parentNode !== document.body) document.body.appendChild(el);
+  });
+});
 </script>
 {% endblock %}

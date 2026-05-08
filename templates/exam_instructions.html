@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ skill.name }} Assessment — SkillBaseHire</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="ei-body">
+
+<!-- ── Page Header ── -->
+<header class="ei-header">
+  <a href="{{ url_for('home') }}" class="ei-logo">
+    <div class="ei-logo-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L4 6v6c0 4.97 3.36 9.63 8 10.93C16.64 21.63 20 16.97 20 12V6L12 2z" fill="#fff" opacity=".9" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M9 12l2 2 4-4" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span>SkillBaseHire</span>
+  </a>
+  <span class="ei-header-label">Candidate Assessment Platform</span>
+</header>
+
+<!-- ── Page Content ── -->
+<main class="ei-main">
+  <div class="ei-content">
+
+    <!-- Card 1: Assessment Overview -->
+    <div class="ei-card">
+      <div class="ei-overview-row">
+        <div>
+          <h1 class="ei-title">{{ skill.name }} Assessment</h1>
+          <p class="ei-subtitle">Technical Skills Evaluation</p>
+          {% if existing %}
+            {% if existing['verified'] %}
+              <span class="ei-prev-tag ei-prev-pass">✓ Previously Verified · {{ existing['score'] }}%</span>
+            {% else %}
+              <span class="ei-prev-tag ei-prev-fail">Last attempt: {{ existing['score'] }}%</span>
+            {% endif %}
+          {% endif %}
+        </div>
+        <div class="ei-duration-pill">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          {{ meta.duration }} minutes
+        </div>
+      </div>
+
+      <div class="ei-meta-row">
+        <div class="ei-meta-box">
+          <div class="ei-meta-icon ei-mi-blue">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+          </div>
+          <div>
+            <div class="ei-meta-label">Questions</div>
+            <div class="ei-meta-val">{{ meta.questions }} Questions</div>
+          </div>
+        </div>
+        <div class="ei-meta-box">
+          <div class="ei-meta-icon ei-mi-green">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>
+            <div class="ei-meta-label">Passing Score</div>
+            <div class="ei-meta-val">{{ meta.passing }}%</div>
+          </div>
+        </div>
+        <div class="ei-meta-box">
+          <div class="ei-meta-icon ei-mi-purple">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div>
+            <div class="ei-meta-label">Security</div>
+            <div class="ei-meta-val">Proctored</div>
+          </div>
+        </div>
+        <div class="ei-meta-box">
+          <div class="ei-meta-icon ei-mi-amber">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+          </div>
+          <div>
+            <div class="ei-meta-label">Attempt Limit</div>
+            <div class="ei-meta-val">{{ meta.attempts }} Attempts</div>
+          </div>
+        </div>
+        <div class="ei-meta-box">
+          <div class="ei-meta-icon ei-mi-indigo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </div>
+          <div>
+            <div class="ei-meta-label">Skill Level</div>
+            <div class="ei-meta-val">{{ meta.level }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Exam Instructions -->
+    <div class="ei-card">
+      <h2 class="ei-card-title">Exam Instructions</h2>
+      <div class="ei-instr-list">
+        <div class="ei-instr-item">
+          <span class="ei-instr-num">1</span>
+          <span>Read each question carefully before selecting your answer. You can review and change your answers before final submission.</span>
+        </div>
+        <div class="ei-instr-item">
+          <span class="ei-instr-num">2</span>
+          <span>The exam timer will start as soon as you click "Start Test". Make sure you have a stable internet connection.</span>
+        </div>
+        <div class="ei-instr-item">
+          <span class="ei-instr-num">3</span>
+          <span>You can navigate between questions using the question palette. Unanswered questions will be marked for your reference.</span>
+        </div>
+        <div class="ei-instr-item">
+          <span class="ei-instr-num">4</span>
+          <span>Once you submit your assessment, you cannot make any changes. Review all answers before final submission.</span>
+        </div>
+        <div class="ei-instr-item">
+          <span class="ei-instr-num">5</span>
+          <span>Do not switch browser tabs or open other applications. Tab switching is monitored and may result in disqualification.</span>
+        </div>
+        <div class="ei-instr-item">
+          <span class="ei-instr-num">6</span>
+          <span>Ensure your webcam and microphone are enabled throughout the assessment for proctoring purposes.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Security & Proctoring -->
+    <div class="ei-card">
+      <h2 class="ei-card-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Security &amp; Proctoring Requirements
+      </h2>
+
+      <div class="ei-proctor-alert">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        This exam is proctored to ensure integrity. The following monitoring will be active during your assessment.
+      </div>
+
+      <div class="ei-proctor-items">
+        <div class="ei-proctor-row">
+          <div class="ei-proctor-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          </div>
+          <div>
+            <div class="ei-proctor-name">Webcam Monitoring</div>
+            <div class="ei-proctor-desc">Your webcam will capture your image throughout the exam. Ensure your face is clearly visible at all times.</div>
+          </div>
+        </div>
+        <div class="ei-proctor-row">
+          <div class="ei-proctor-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <div>
+            <div class="ei-proctor-name">Screen Recording</div>
+            <div class="ei-proctor-desc">Your screen activity will be recorded. Do not switch tabs or open other applications during the exam.</div>
+          </div>
+        </div>
+        <div class="ei-proctor-row">
+          <div class="ei-proctor-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+          </div>
+          <div>
+            <div class="ei-proctor-name">Audio Monitoring</div>
+            <div class="ei-proctor-desc">Audio will be recorded to detect any external assistance or communication.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ei-prohibited">
+        <div class="ei-prohibited-title">Prohibited Activities</div>
+        <ul class="ei-prohibited-list">
+          <li>Switching browser tabs or opening other applications</li>
+          <li>Using external resources, notes, or assistance</li>
+          <li>Communicating with others during the exam</li>
+          <li>Leaving the camera frame or covering your webcam</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Card 4: Consent & Agreement -->
+    <div class="ei-card">
+      <h2 class="ei-card-title">Consent &amp; Agreement</h2>
+
+      <div class="ei-consents">
+        <label class="ei-consent-row" id="c1label">
+          <div class="ei-cb-wrap">
+            <input type="checkbox" id="c1" onchange="updateStartBtn()">
+            <span class="ei-cb"></span>
+          </div>
+          <span>I have read and understood all exam instructions and rules. I agree to follow them throughout the assessment.</span>
+        </label>
+        <label class="ei-consent-row" id="c2label">
+          <div class="ei-cb-wrap">
+            <input type="checkbox" id="c2" onchange="updateStartBtn()">
+            <span class="ei-cb"></span>
+          </div>
+          <span>I consent to webcam, screen, and audio recording during this proctored examination for security and verification purposes.</span>
+        </label>
+        <label class="ei-consent-row" id="c3label">
+          <div class="ei-cb-wrap">
+            <input type="checkbox" id="c3" onchange="updateStartBtn()">
+            <span class="ei-cb"></span>
+          </div>
+          <span>I certify that I will complete this assessment independently and honestly, without any unauthorized assistance.</span>
+        </label>
+      </div>
+
+      <div class="ei-start-wrap">
+        <button class="ei-start-btn" id="startBtn" disabled onclick="goToExam()">
+          Please agree to all terms to continue
+        </button>
+      </div>
+
+      <div class="ei-note">
+        <strong>Note:</strong> For the best experience, we recommend using a desktop or laptop computer with a webcam.
+      </div>
+    </div>
+
+    <!-- Back link -->
+    <div style="text-align:center;margin-top:1rem">
+      <a href="{{ url_for('skills_page') }}" class="ei-back-link">← Back to Skill Exams</a>
+    </div>
+
+  </div>
+</main>
+
+<script>
+const EXAM_URL = "{{ url_for('verify_skill', skill_id=skill.id) }}";
+function updateStartBtn() {
+  const all = document.getElementById('c1').checked &&
+              document.getElementById('c2').checked &&
+              document.getElementById('c3').checked;
+  const btn = document.getElementById('startBtn');
+  btn.disabled = !all;
+  btn.textContent = all ? 'Start Test →' : 'Please agree to all terms to continue';
+}
+function goToExam() {
+  if (!document.getElementById('c1').checked ||
+      !document.getElementById('c2').checked ||
+      !document.getElementById('c3').checked) return;
+  window.location.href = EXAM_URL;
+}
+</script>
+</body>
+</html>

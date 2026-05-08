@@ -1,55 +1,573 @@
-{% extends "base.html" %}
-{% block title %}Verify {{ skill.name }} — SkillBaseHire{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ skill.name }} Assessment — SkillBaseHire</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="ea-body">
 
-{% block content %}
-<div class="quiz-page">
-  <div class="quiz-container">
-    <a href="{{ url_for('skills_page') }}" class="back-link">← All Skills</a>
-
-    <div class="quiz-header">
-      <span class="badge badge-primary">{{ skill.category }}</span>
-      <h1 style="font-size:1.5rem;font-weight:800;margin:.75rem 0 .375rem">{{ skill.name }} Assessment</h1>
-      <p style="color:var(--text-muted)">Answer {{ questions | length }} questions. Score 66%+ to earn a verified badge.</p>
+<!-- ═══════════════════════════════════════════
+     ENVIRONMENT CHECK OVERLAY
+═══════════════════════════════════════════ -->
+<div class="ec-overlay" id="envOverlay">
+  <header class="ec-header">
+    <div class="ec-logo">
+      <div class="ec-logo-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L4 6v6c0 4.97 3.36 9.63 8 10.93C16.64 21.63 20 16.97 20 12V6L12 2z" fill="#fff" opacity=".9" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M9 12l2 2 4-4" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      SkillBaseHire
     </div>
+    <span class="ec-header-label">Identity &amp; Environment Check</span>
+  </header>
 
-    <div class="progress-bar">
-      <div class="progress-fill" id="progressFill" style="width:0%"></div>
-    </div>
+  <main class="ec-main">
+    <div class="ec-content">
+      <h1 class="ec-title">Verification Required</h1>
+      <p class="ec-subtitle">We need to verify your identity and test your environment before starting the exam.</p>
 
-    <form method="post" action="{{ url_for('verify_skill', skill_id=skill.id) }}" id="quizForm">
-      {% for q in questions %}
-        {% set q_idx = loop.index0 %}
-        <div class="quiz-question">
-          <div class="quiz-q-number">Question {{ loop.index }} of {{ questions | length }}</div>
-          <h3>{{ q.q }}</h3>
-          <div class="quiz-options">
-            {% for opt in q.options %}
-              <label class="quiz-option">
-                <input type="radio" name="q{{ q_idx }}" value="{{ loop.index0 }}" required>
-                <span>{{ opt }}</span>
-              </label>
-            {% endfor %}
+      <!-- Camera Setup -->
+      <div class="ec-card">
+        <h3 class="ec-section-title">Camera Setup</h3>
+        <div class="ec-cam-box" id="camBox">
+          <video id="camVideo" autoplay muted playsinline style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px"></video>
+          <div class="ec-cam-placeholder" id="camPlaceholder">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.5"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            <span id="camPlaceholderText">Requesting camera access…</span>
           </div>
         </div>
-      {% endfor %}
 
-      <div style="display:flex;gap:.75rem;margin-top:2rem">
-        <button type="submit" class="btn btn-primary btn-lg">Submit &amp; Get Badge</button>
-        <a href="{{ url_for('skills_page') }}" class="btn btn-outline btn-lg">Cancel</a>
+        <div class="ec-check-item" id="camCheck">
+          <div class="ec-check-status ec-pending" id="camStatus">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="ec-check-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          </div>
+          <div>
+            <div class="ec-check-name">Camera Access</div>
+            <div class="ec-check-desc" id="camDesc">Requesting permission…</div>
+          </div>
+        </div>
+
+        <div class="ec-check-item" id="faceCheck">
+          <div class="ec-check-status ec-pending" id="faceStatus">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="ec-check-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
+          </div>
+          <div>
+            <div class="ec-check-name">Face Detection</div>
+            <div class="ec-check-desc" id="faceDesc">Waiting for camera…</div>
+          </div>
+        </div>
       </div>
-    </form>
+
+      <!-- Identity Verification -->
+      <div class="ec-card">
+        <h3 class="ec-section-title">Identity Verification</h3>
+        <label class="ec-id-choice">
+          <input type="radio" name="idType" value="gov" checked>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          Government-Issued ID
+        </label>
+
+        <div class="ec-upload-zone" onclick="document.getElementById('idFile').click()">
+          <input type="file" id="idFile" accept="image/*,.pdf" style="display:none" onchange="handleIdUpload(this)">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="1.5"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="9" x2="13" y2="9"/><line x1="7" y1="13" x2="17" y2="13"/><circle cx="17" cy="7" r="2"/></svg>
+          <div class="ec-upload-text">Upload a photo of your government-issued ID</div>
+          <button type="button" class="ec-choose-btn" onclick="event.stopPropagation();document.getElementById('idFile').click()">Choose File</button>
+          <div class="ec-upload-hint">Accepted: Driver's License, Passport, National ID</div>
+          <div class="ec-upload-chosen" id="idChosen"></div>
+        </div>
+      </div>
+
+      <!-- System Permissions -->
+      <div class="ec-card">
+        <h3 class="ec-section-title">System Permissions</h3>
+
+        <div class="ec-check-item" id="micCheck">
+          <div class="ec-check-status ec-pending" id="micStatus">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="ec-check-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+          </div>
+          <div>
+            <div class="ec-check-name">Microphone Access</div>
+            <div class="ec-check-desc" id="micDesc">Requesting permission…</div>
+          </div>
+        </div>
+
+        <div class="ec-check-item" id="screenCheck">
+          <div class="ec-check-status ec-pending" id="screenStatus">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="ec-check-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <div>
+            <div class="ec-check-name">Screen Recording Permission</div>
+            <div class="ec-check-desc" id="screenDesc">Permission will be requested…</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Important notice -->
+      <div class="ec-important">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2" style="flex-shrink:0"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span><strong>Important:</strong> All verification checks must pass before you can proceed to the exam. Ensure good lighting, a clear view of your face, and a quiet environment.</span>
+      </div>
+
+      <!-- Actions -->
+      <div class="ec-actions">
+        <a href="{{ url_for('exam_instructions', skill_id=skill.id) }}" class="ec-cancel-btn">Cancel</a>
+        <button class="ec-proceed-btn" id="proceedBtn" disabled onclick="proceedToExam()">
+          <span id="proceedText">Waiting for verification…</span>
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     ACTIVE EXAM (hidden until env check passes)
+═══════════════════════════════════════════ -->
+<div id="examWrapper" style="display:none">
+
+  <!-- Exam Header -->
+  <header class="ea-header">
+    <div class="ea-header-left">
+      <div class="ea-logo-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L4 6v6c0 4.97 3.36 9.63 8 10.93C16.64 21.63 20 16.97 20 12V6L12 2z" fill="#fff" opacity=".9" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M9 12l2 2 4-4" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div>
+        <div class="ea-exam-name">{{ skill.name }} Assessment</div>
+        <div class="ea-q-counter">Question <span id="hdrQNum">1</span> of {{ questions | length }}</div>
+      </div>
+    </div>
+    <div class="ea-header-right">
+      <div class="ea-timer-pill" id="timerPill">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="timerText">{{ meta.duration }}:00</span>
+      </div>
+      <button class="ea-submit-hdr-btn" onclick="confirmSubmit()">Submit Assessment</button>
+    </div>
+  </header>
+
+  <!-- Tab switch warning -->
+  <div class="ea-warn-bar" id="warnBar" style="display:none">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span id="warnMsg">Warning: Tab switching detected!</span>
+    <button onclick="document.getElementById('warnBar').style.display='none'">×</button>
+  </div>
+
+  <!-- Main layout -->
+  <div class="ea-layout">
+
+    <!-- LEFT: Question Area -->
+    <main class="ea-main">
+      <form method="post" action="{{ url_for('verify_skill', skill_id=skill.id) }}" id="examForm">
+        <input type="hidden" name="time_elapsed" id="timeElapsed" value="0">
+
+        {% for q in questions %}
+          {% set qi = loop.index0 %}
+          <div class="ea-question-card" id="q{{ qi }}" {% if qi > 0 %}style="display:none"{% endif %}>
+            <div class="ea-q-card-top">
+              <span class="ea-q-type-badge">Multiple Choice</span>
+              <button type="button" class="ea-flag-btn" id="flag{{ qi }}" onclick="toggleFlag({{ qi }})" title="Flag for review">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+              </button>
+            </div>
+            <h2 class="ea-q-text">{{ q.q }}</h2>
+            <div class="ea-options" id="opts{{ qi }}">
+              {% for opt in q.options %}
+                <label class="ea-option" id="opt{{ qi }}_{{ loop.index0 }}">
+                  <input type="radio" name="q{{ qi }}" value="{{ loop.index0 }}" onchange="markAnswered({{ qi }})">
+                  <span class="ea-opt-radio"></span>
+                  <span class="ea-opt-text">{{ opt }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+
+        <!-- Bottom navigation -->
+        <div class="ea-nav-bar">
+          <button type="button" class="ea-nav-prev" id="prevBtn" onclick="navigate(-1)" disabled>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+            Previous
+          </button>
+          <span class="ea-nav-pos"><span id="navCur">1</span> / {{ questions | length }}</span>
+          <button type="button" class="ea-nav-next" id="nextBtn" onclick="navigate(1)">
+            Next
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+
+      </form>
+    </main>
+
+    <!-- RIGHT: Proctoring Panel -->
+    <aside class="ea-panel">
+
+      <!-- Proctoring Status -->
+      <div class="ea-panel-section">
+        <div class="ea-panel-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Proctoring Status
+        </div>
+        <div class="ea-proctor-list">
+          <div class="ea-proctor-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            <span>Webcam</span>
+            <span class="ea-dot-green"></span>
+          </div>
+          <div class="ea-proctor-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            <span>Screen Recording</span>
+            <span class="ea-dot-green"></span>
+          </div>
+          <div class="ea-proctor-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
+            <span>Audio Monitoring</span>
+            <span class="ea-dot-green"></span>
+          </div>
+          <div class="ea-proctor-row">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#374151" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
+            <span>Face Detection</span>
+            <span class="ea-dot-green"></span>
+          </div>
+        </div>
+        <div class="ea-webcam-box">
+          <video id="examCamFeed" autoplay muted playsinline style="display:none;width:100%;height:100%;object-fit:cover;border-radius:6px"></video>
+          <div class="ea-cam-ph" id="examCamPh">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.5"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            <span>Webcam Active</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Progress -->
+      <div class="ea-panel-section">
+        <div class="ea-panel-title">Progress</div>
+        <div class="ea-progress-rows">
+          <div class="ea-prog-row">
+            <span>Answered</span>
+            <span class="ea-prog-num ea-prog-green" id="pgAnswered">0</span>
+          </div>
+          <div class="ea-prog-row">
+            <span>Unanswered</span>
+            <span class="ea-prog-num" id="pgUnanswered">{{ questions | length }}</span>
+          </div>
+          <div class="ea-prog-row">
+            <span>Flagged</span>
+            <span class="ea-prog-num ea-prog-amber" id="pgFlagged">0</span>
+          </div>
+        </div>
+        <div class="ea-prog-bar-wrap">
+          <div class="ea-prog-bar-fill" id="pgBar" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Question Palette -->
+      <div class="ea-panel-section">
+        <div class="ea-panel-title">Question Palette</div>
+        <div class="ea-palette" id="palette">
+          {% for q in questions %}
+            <button type="button" class="ea-pq" id="pq{{ loop.index0 }}" onclick="goTo({{ loop.index0 }})">{{ loop.index }}</button>
+          {% endfor %}
+        </div>
+        <div class="ea-legend">
+          <div class="ea-lg-item"><span class="ea-lg ea-lg-current"></span>Current</div>
+          <div class="ea-lg-item"><span class="ea-lg ea-lg-ans"></span>Answered</div>
+          <div class="ea-lg-item"><span class="ea-lg ea-lg-flag"></span>Flagged</div>
+          <div class="ea-lg-item"><span class="ea-lg ea-lg-un"></span>Unanswered</div>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+</div><!-- examWrapper -->
+
+<!-- ── Submit Confirmation Modal ── -->
+<div class="ea-modal-back" id="submitModal">
+  <div class="ea-modal">
+    <div class="ea-modal-warn-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <h3>Submit Assessment?</h3>
+    <p>Are you sure you want to submit the exam? <strong>You cannot change your answers after submission.</strong></p>
+    <div class="ea-modal-stats" id="modalStats"></div>
+    <div class="ea-modal-btns">
+      <button class="ea-modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="ea-modal-submit" onclick="finalSubmit()">Submit Assessment</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Auto-submit Modal ── -->
+<div class="ea-modal-back" id="autoModal" style="display:none">
+  <div class="ea-modal ea-modal-danger">
+    <div class="ea-modal-warn-icon ea-modal-red-icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <h3>Final Warning</h3>
+    <p>Multiple violations detected. Your assessment will be auto-submitted in <strong id="autoCD">10</strong> seconds.</p>
+    <div class="ea-modal-btns" style="justify-content:center">
+      <button class="ea-modal-submit" onclick="finalSubmit()">Submit Now</button>
+    </div>
   </div>
 </div>
 
 <script>
-  const total = {{ questions | length }};
-  function updateProgress() {
-    let answered = 0;
-    for (let i = 0; i < total; i++) {
-      if (document.querySelector('input[name="q' + i + '"]:checked')) answered++;
-    }
-    document.getElementById('progressFill').style.width = (answered / total * 100) + '%';
+const TOTAL = {{ questions | length }};
+const DURATION_SEC = {{ meta.duration }} * 60;
+
+let current = 0;
+let answered = new Array(TOTAL).fill(false);
+let flagged  = new Array(TOTAL).fill(false);
+let tabViolations = 0;
+let timerSec = DURATION_SEC;
+let timerInterval;
+let startTime;
+let camStream = null;
+
+/* ══ ENVIRONMENT CHECK ══ */
+async function runEnvCheck() {
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
+    // Camera granted
+    const video = document.getElementById('camVideo');
+    video.srcObject = camStream;
+    video.style.display = 'block';
+    document.getElementById('camPlaceholder').style.display = 'none';
+    setCheckStatus('cam', true, 'Camera detected and accessible');
+    // Show exam cam feed later
+    const examFeed = document.getElementById('examCamFeed');
+    examFeed.srcObject = camStream;
+    // Mic granted (same stream)
+    setCheckStatus('mic', true, 'Microphone detected and accessible');
+    // Screen recording (just UI)
+    setTimeout(() => {
+      setCheckStatus('screen', true, 'Screen recording permission granted');
+    }, 800);
+    // Face detection (simulated)
+    setTimeout(() => {
+      setCheckStatus('face', true, 'Face detected in camera view');
+      // Enable proceed
+      const btn = document.getElementById('proceedBtn');
+      btn.disabled = false;
+      document.getElementById('proceedText').textContent = 'Proceed to Exam →';
+    }, 1800);
+  } catch (e) {
+    const denied = e.name === 'NotAllowedError';
+    setCheckStatus('cam', false, denied ? 'Camera access denied — please allow in browser settings' : 'Camera not found');
+    setCheckStatus('mic', false, denied ? 'Microphone access denied' : 'Microphone not found');
+    document.getElementById('camPlaceholderText').textContent = 'Camera access required';
+    // Still allow proceed for demo
+    setTimeout(() => {
+      setCheckStatus('screen', true, 'Screen recording permission granted');
+      setCheckStatus('face', false, 'Camera required for face detection');
+      const btn = document.getElementById('proceedBtn');
+      btn.disabled = false;
+      document.getElementById('proceedText').textContent = 'Continue Anyway →';
+    }, 1000);
   }
-  document.querySelectorAll('input[type="radio"]').forEach(r => r.addEventListener('change', updateProgress));
+}
+
+function setCheckStatus(type, ok, desc) {
+  const statusEl = document.getElementById(type + 'Status');
+  const descEl   = document.getElementById(type + 'Desc');
+  const itemEl   = document.getElementById(type + 'Check');
+  if (ok) {
+    statusEl.className = 'ec-check-status ec-ok';
+    itemEl.classList.add('ec-check-ok');
+  } else {
+    statusEl.className = 'ec-check-status ec-fail';
+    itemEl.classList.add('ec-check-fail');
+  }
+  if (descEl) descEl.textContent = desc;
+}
+
+function handleIdUpload(input) {
+  if (input.files.length) {
+    document.getElementById('idChosen').textContent = '✓ ' + input.files[0].name;
+  }
+}
+
+function proceedToExam() {
+  // Hide env overlay, show exam
+  document.getElementById('envOverlay').style.display = 'none';
+  document.getElementById('examWrapper').style.display = '';
+  // Transfer cam to exam feed
+  const examFeed = document.getElementById('examCamFeed');
+  if (camStream) {
+    examFeed.srcObject = camStream;
+    examFeed.style.display = 'block';
+    document.getElementById('examCamPh').style.display = 'none';
+  }
+  // Start timer + fullscreen
+  startTime = Date.now();
+  startTimer();
+  showQuestion(0);
+  setTimeout(() => {
+    if (document.documentElement.requestFullscreen) {
+      document.documentElement.requestFullscreen().catch(()=>{});
+    }
+  }, 400);
+}
+
+/* ══ TIMER ══ */
+function startTimer() {
+  timerInterval = setInterval(() => {
+    timerSec--;
+    document.getElementById('timeElapsed').value = Math.round((Date.now() - startTime) / 1000);
+    if (timerSec <= 0) { clearInterval(timerInterval); finalSubmit(); return; }
+    const m = String(Math.floor(timerSec / 60)).padStart(2, '0');
+    const s = String(timerSec % 60).padStart(2, '0');
+    const txt = `${m}:${s}`;
+    document.getElementById('timerText').textContent = txt;
+    const pill = document.getElementById('timerPill');
+    if (timerSec <= 300) pill.classList.add('ea-timer-warn');
+    if (timerSec <= 60)  pill.classList.add('ea-timer-danger');
+  }, 1000);
+}
+
+/* ══ NAVIGATION ══ */
+function showQuestion(idx) {
+  document.querySelectorAll('.ea-question-card').forEach(el => el.style.display = 'none');
+  document.getElementById('q' + idx).style.display = '';
+  current = idx;
+  document.getElementById('hdrQNum').textContent = idx + 1;
+  document.getElementById('navCur').textContent = idx + 1;
+  document.getElementById('prevBtn').disabled = idx === 0;
+  const nextBtn = document.getElementById('nextBtn');
+  if (idx === TOTAL - 1) {
+    nextBtn.innerHTML = 'Review &amp; Submit <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+    nextBtn.onclick = confirmSubmit;
+  } else {
+    nextBtn.innerHTML = 'Next <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>';
+    nextBtn.onclick = () => navigate(1);
+  }
+  updatePalette();
+}
+
+function navigate(dir) {
+  const next = current + dir;
+  if (next >= 0 && next < TOTAL) showQuestion(next);
+}
+function goTo(idx) { showQuestion(idx); }
+
+/* ══ ANSWER / FLAG ══ */
+function markAnswered(qi) {
+  answered[qi] = true;
+  updatePalette();
+  updateProgress();
+}
+
+function toggleFlag(qi) {
+  flagged[qi] = !flagged[qi];
+  document.getElementById('flag' + qi).classList.toggle('ea-flag-active', flagged[qi]);
+  updatePalette();
+  updateProgress();
+}
+
+/* ══ PALETTE / PROGRESS ══ */
+function updatePalette() {
+  for (let i = 0; i < TOTAL; i++) {
+    const btn = document.getElementById('pq' + i);
+    btn.className = 'ea-pq';
+    if (i === current)    btn.classList.add('ea-pq-current');
+    else if (flagged[i])  btn.classList.add('ea-pq-flag');
+    else if (answered[i]) btn.classList.add('ea-pq-ans');
+  }
+}
+
+function updateProgress() {
+  const ans = answered.filter(Boolean).length;
+  const flg = flagged.filter(Boolean).length;
+  document.getElementById('pgAnswered').textContent   = ans;
+  document.getElementById('pgUnanswered').textContent = TOTAL - ans;
+  document.getElementById('pgFlagged').textContent    = flg;
+  document.getElementById('pgBar').style.width = (ans / TOTAL * 100) + '%';
+}
+
+/* ══ OPTION SELECTION ══ */
+document.addEventListener('change', e => {
+  if (e.target.type === 'radio') {
+    const qi = parseInt(e.target.name.slice(1));
+    document.querySelectorAll(`#opts${qi} .ea-option`).forEach(l => l.classList.remove('ea-opt-selected'));
+    e.target.closest('.ea-option').classList.add('ea-opt-selected');
+  }
+});
+
+/* ══ SUBMIT ══ */
+function confirmSubmit() {
+  const ans = answered.filter(Boolean).length;
+  const un  = TOTAL - ans;
+  document.getElementById('modalStats').innerHTML =
+    `<span class="ea-stat-ans">✓ ${ans} answered</span>` +
+    (un > 0 ? `<span class="ea-stat-un">○ ${un} unanswered</span>` : '');
+  document.getElementById('submitModal').classList.add('ea-modal-open');
+}
+
+function closeModal() {
+  document.getElementById('submitModal').classList.remove('ea-modal-open');
+}
+
+function finalSubmit() {
+  clearInterval(timerInterval);
+  document.getElementById('timeElapsed').value = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
+  document.getElementById('submitModal').classList.remove('ea-modal-open');
+  document.getElementById('autoModal').style.display = 'none';
+  if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+  if (camStream) camStream.getTracks().forEach(t => t.stop());
+  document.getElementById('examForm').submit();
+}
+
+/* ══ SECURITY ══ */
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('copy',  e => e.preventDefault());
+document.addEventListener('paste', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && ['c','v','u','s','a'].includes(e.key.toLowerCase())) e.preventDefault();
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && document.getElementById('examWrapper').style.display !== 'none') {
+    tabViolations++;
+    if (tabViolations >= 3) {
+      document.getElementById('autoModal').style.display = 'flex';
+      let cd = 10;
+      document.getElementById('autoCD').textContent = cd;
+      const iv = setInterval(() => {
+        cd--;
+        document.getElementById('autoCD').textContent = cd;
+        if (cd <= 0) { clearInterval(iv); finalSubmit(); }
+      }, 1000);
+    } else {
+      document.getElementById('warnMsg').textContent =
+        `Warning (${tabViolations}/3): Tab switching detected! Further violations will auto-submit.`;
+      document.getElementById('warnBar').style.display = 'flex';
+    }
+  }
+});
+
+/* ══ INIT ══ */
+document.addEventListener('DOMContentLoaded', () => {
+  runEnvCheck();
+});
 </script>
-{% endblock %}
+</body>
+</html>

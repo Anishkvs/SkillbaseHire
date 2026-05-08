@@ -46,14 +46,14 @@
             {% if session.get('role') == 'candidate' %}
               <div class="skill-card-actions">
                 {% if skill.verified %}
-                  <a href="{{ url_for('verify_skill', skill_id=skill.id) }}" class="btn btn-sm btn-outline">Retake Quiz</a>
+                  <a href="{{ url_for('exam_instructions', skill_id=skill.id) }}" class="btn btn-sm btn-outline">Retake Test</a>
                 {% elif skill.added %}
-                  <a href="{{ url_for('verify_skill', skill_id=skill.id) }}" class="btn btn-sm btn-primary">Take Quiz</a>
+                  <a href="{{ url_for('exam_instructions', skill_id=skill.id) }}" class="btn btn-sm btn-primary">Start Skill Test</a>
                 {% else %}
                   <form action="{{ url_for('add_skill', skill_id=skill.id) }}" method="post" style="display:inline">
                     <button type="submit" class="btn btn-sm btn-outline">+ Add</button>
                   </form>
-                  <a href="{{ url_for('verify_skill', skill_id=skill.id) }}" class="btn btn-sm btn-primary">Verify Now</a>
+                  <a href="{{ url_for('exam_instructions', skill_id=skill.id) }}" class="btn btn-sm btn-primary">Get Verified</a>
                 {% endif %}
               </div>
             {% else %}

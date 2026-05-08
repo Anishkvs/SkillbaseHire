@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ result.skill_name }} Result — SkillBaseHire</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body class="er-body">
+
+<!-- ── Header ── -->
+<header class="er-header">
+  <a href="{{ url_for('home') }}" class="er-logo">
+    <div class="er-logo-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L4 6v6c0 4.97 3.36 9.63 8 10.93C16.64 21.63 20 16.97 20 12V6L12 2z" fill="#fff" opacity=".9" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M9 12l2 2 4-4" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <span>SkillBaseHire</span>
+  </a>
+  <span class="er-header-label">Assessment Results</span>
+</header>
+
+<main class="er-main">
+  <div class="er-content">
+
+  {% if result.verified %}
+  <!-- ══════════════ PASS ══════════════ -->
+
+    <!-- Card 1: Verdict -->
+    <div class="er-card er-card-pass">
+      <div class="er-verdict-ring er-ring-pass">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+      </div>
+      <h1 class="er-verdict-title er-pass-text">Congratulations! You Passed</h1>
+      <p class="er-verdict-sub">You've successfully demonstrated your proficiency in <strong>{{ result.skill_name }}</strong>.</p>
+      <div class="er-status-pill er-pill-pass">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Verified
+      </div>
+    </div>
+
+    <!-- Card 2: Score Summary -->
+    <div class="er-card">
+      <h2 class="er-card-title">Score Summary</h2>
+      <div class="er-score-row">
+        <!-- Donut chart -->
+        <div class="er-donut-wrap">
+          <svg viewBox="0 0 120 120" class="er-donut-svg">
+            <circle cx="60" cy="60" r="46" fill="none" stroke="#DCFCE7" stroke-width="12"/>
+            <circle cx="60" cy="60" r="46" fill="none" stroke="#10B981" stroke-width="12"
+              stroke-dasharray="{{ (result.score / 100 * 289.0) | int }} 289.0"
+              stroke-dashoffset="72.2"
+              stroke-linecap="round"/>
+          </svg>
+          <div class="er-donut-inner">
+            <div class="er-donut-score er-score-pass">{{ result.score }}%</div>
+            <div class="er-donut-label">Score</div>
+          </div>
+        </div>
+        <!-- Stat boxes -->
+        <div class="er-stat-boxes">
+          {% if result.correct is not none %}
+          <div class="er-stat-box">
+            <div class="er-stat-icon er-si-green">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="er-stat-text">
+              <div class="er-stat-val">{{ result.correct }}/{{ result.total }}</div>
+              <div class="er-stat-lbl">Correct Answers</div>
+            </div>
+          </div>
+          {% endif %}
+          <div class="er-stat-box">
+            <div class="er-stat-icon er-si-blue">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="er-stat-text">
+              <div class="er-stat-val">{{ result.passing }}%</div>
+              <div class="er-stat-lbl">Passing Score</div>
+            </div>
+          </div>
+          <div class="er-stat-box">
+            <div class="er-stat-icon er-si-purple">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="er-stat-text">
+              <div class="er-stat-val">{{ result.time_taken or '—' }}</div>
+              <div class="er-stat-lbl">Time Taken</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Performance banner -->
+      <div class="er-perf-banner er-perf-pass">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Excellent Performance! You scored above the passing threshold.
+      </div>
+    </div>
+
+    <!-- Card 3: Next Steps -->
+    <div class="er-card">
+      <h2 class="er-card-title">Next Steps</h2>
+      <div class="er-next-steps">
+        <div class="er-next-item">
+          <div class="er-next-icon er-ni-green">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>
+            <div class="er-next-title">Skill Badge Added to Profile</div>
+            <div class="er-next-desc">Your <strong>{{ result.skill_name }}</strong> verified skill badge is now visible to recruiters on your profile.</div>
+          </div>
+        </div>
+        <div class="er-next-item">
+          <div class="er-next-icon er-ni-green">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>
+            <div class="er-next-title">Browse Matching Jobs</div>
+            <div class="er-next-desc">Explore jobs that require {{ result.skill_name }} and apply with your verified credentials.</div>
+          </div>
+        </div>
+        <div class="er-next-item">
+          <div class="er-next-icon er-ni-green">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div>
+            <div class="er-next-title">Verify More Skills</div>
+            <div class="er-next-desc">Increase your job match rate by verifying additional skills relevant to your target roles.</div>
+          </div>
+        </div>
+      </div>
+      <div class="er-actions">
+        <a href="{{ url_for('candidate_dashboard') }}" class="er-btn-primary">Return to Dashboard</a>
+        <a href="{{ url_for('jobs') }}" class="er-btn-outline">Browse Jobs</a>
+        <a href="{{ url_for('skills_page') }}" class="er-btn-outline">Verify More Skills</a>
+      </div>
+    </div>
+
+  {% else %}
+  <!-- ══════════════ FAIL ══════════════ -->
+
+    <!-- Card 1: Verdict -->
+    <div class="er-card er-card-fail">
+      <div class="er-verdict-ring er-ring-fail">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </div>
+      <h1 class="er-verdict-title er-fail-text">Assessment Not Passed</h1>
+      <p class="er-verdict-sub">You scored <strong>{{ result.score }}%</strong> — the passing score is <strong>{{ result.passing }}%</strong>. Don't give up!</p>
+      <div class="er-status-pill er-pill-fail">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        Not Verified
+      </div>
+    </div>
+
+    <!-- Card 2: Score Summary -->
+    <div class="er-card">
+      <h2 class="er-card-title">Score Summary</h2>
+      <div class="er-score-row">
+        <div class="er-donut-wrap">
+          <svg viewBox="0 0 120 120" class="er-donut-svg">
+            <circle cx="60" cy="60" r="46" fill="none" stroke="#FEE2E2" stroke-width="12"/>
+            <circle cx="60" cy="60" r="46" fill="none" stroke="#EF4444" stroke-width="12"
+              stroke-dasharray="{{ (result.score / 100 * 289.0) | int }} 289.0"
+              stroke-dashoffset="72.2"
+              stroke-linecap="round"/>
+          </svg>
+          <div class="er-donut-inner">
+            <div class="er-donut-score er-score-fail">{{ result.score }}%</div>
+            <div class="er-donut-label">Score</div>
+          </div>
+        </div>
+        <div class="er-stat-boxes">
+          {% if result.correct is not none %}
+          <div class="er-stat-box">
+            <div class="er-stat-icon er-si-red">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </div>
+            <div class="er-stat-text">
+              <div class="er-stat-val">{{ result.correct }}/{{ result.total }}</div>
+              <div class="er-stat-lbl">Correct Answers</div>
+            </div>
+          </div>
+          {% endif %}
+          <div class="er-stat-box">
+            <div class="er-stat-icon er-si-blue">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+            <div class="er-stat-text">
+              <div class="er-stat-val">{{ result.passing }}%</div>
+              <div class="er-stat-lbl">Passing Score</div>
+            </div>
+          </div>
+          <div class="er-stat-box">
+            <div class="er-stat-icon er-si-purple">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <div class="er-stat-text">
+              <div class="er-stat-val">{{ result.time_taken or '—' }}</div>
+              <div class="er-stat-lbl">Time Taken</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="er-perf-banner er-perf-fail">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Keep Practicing! Review the topics and try again to earn your badge.
+      </div>
+    </div>
+
+    <!-- Card 3: Next Steps -->
+    <div class="er-card">
+      <h2 class="er-card-title">Next Steps</h2>
+      <div class="er-next-steps">
+        <div class="er-next-item">
+          <div class="er-next-num">1</div>
+          <div>
+            <div class="er-next-title">Review the Study Material</div>
+            <div class="er-next-desc">Go through the core concepts of {{ result.skill_name }} — focus on areas where you felt uncertain during the exam.</div>
+          </div>
+        </div>
+        <div class="er-next-item">
+          <div class="er-next-num">2</div>
+          <div>
+            <div class="er-next-title">Practice with Sample Questions</div>
+            <div class="er-next-desc">Use online resources and practice tests to reinforce your understanding before retaking the assessment.</div>
+          </div>
+        </div>
+        <div class="er-next-item">
+          <div class="er-next-num">3</div>
+          <div>
+            <div class="er-next-title">Retake the Assessment</div>
+            <div class="er-next-desc">When you feel ready, retake the test to earn your verified {{ result.skill_name }} badge.</div>
+          </div>
+        </div>
+      </div>
+      <div class="er-actions">
+        <a href="{{ url_for('exam_instructions', skill_id=result.skill_id) }}" class="er-btn-primary">Retake Assessment</a>
+        <a href="{{ url_for('candidate_dashboard') }}" class="er-btn-outline">Return to Dashboard</a>
+      </div>
+    </div>
+
+  {% endif %}
+
+  </div>
+</main>
+
+</body>
+</html>

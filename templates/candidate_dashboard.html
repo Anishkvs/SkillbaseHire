@@ -113,7 +113,7 @@
               {% if skill.verified %}
                 <span class="skill-score">{{ skill.score }}%</span>
               {% else %}
-                <a href="{{ url_for('verify_skill', skill_id=skill.id) }}" class="verify-link" title="Take quiz to verify">Verify</a>
+                <a href="{{ url_for('exam_instructions', skill_id=skill.id) }}" class="verify-link" title="Take skill test to verify">Verify</a>
               {% endif %}
               <form action="{{ url_for('remove_skill', skill_id=skill.id) }}" method="post" style="display:inline" onsubmit="return confirm('Remove {{ skill.name }}?')">
                 <button type="submit" class="remove-skill-btn" title="Remove">×</button>

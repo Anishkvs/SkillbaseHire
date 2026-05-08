@@ -149,6 +149,12 @@ def init_db():
             ('Git', 'Tools', 'Version control system'),
             ('Linux', 'Tools', 'Open-source operating system'),
             ('Agile/Scrum', 'Methodology', 'Agile project management'),
+            ('Playwright', 'Testing', 'Modern end-to-end browser testing framework'),
+            ('Appium', 'Testing', 'Mobile app automation testing framework'),
+            ('API Testing', 'Testing', 'REST and GraphQL API testing'),
+            ('Manual Testing', 'Testing', 'Manual software quality assurance'),
+            ('Cypress', 'Testing', 'Fast, reliable end-to-end testing for the web'),
+            ('TestNG', 'Testing', 'Java testing framework inspired by JUnit'),
         ]
         db.executemany(
             'INSERT OR IGNORE INTO skills (name, category, description) VALUES (?, ?, ?)',
@@ -405,24 +411,92 @@ QUIZ_BANK = {
         {'q': 'Which keyword defines a function in Python?', 'options': ['func', 'def', 'function', 'lambda'], 'answer': 1},
         {'q': 'What does PEP stand for?', 'options': ['Python Enhancement Proposal', 'Python Execution Protocol', 'Program Enhancement Package', 'Python Error Package'], 'answer': 0},
         {'q': 'How do you create a list comprehension?', 'options': ['[x for x in range(5)]', '{x for x in range(5)}', '(x for x in range(5))', 'list(x for x in 5)'], 'answer': 0},
+        {'q': 'Which method removes and returns the last element of a list?', 'options': ['remove()', 'pop()', 'delete()', 'discard()'], 'answer': 1},
+        {'q': 'What is a Python decorator?', 'options': ['A class inheritance pattern', 'A function that modifies another function', 'A type of loop', 'A module import style'], 'answer': 1},
     ],
     'JavaScript': [
         {'q': 'Which operator checks strict equality?', 'options': ['==', '===', '=', '!='], 'answer': 1},
         {'q': 'What does typeof null return?', 'options': ['null', 'undefined', 'object', 'boolean'], 'answer': 2},
         {'q': 'Which method adds an element to the end of an array?', 'options': ['push()', 'pop()', 'shift()', 'append()'], 'answer': 0},
         {'q': 'What is a closure in JavaScript?', 'options': ['A function with access to its outer scope', 'A class constructor', 'A type of loop', 'An import statement'], 'answer': 0},
+        {'q': 'What does the spread operator (...) do?', 'options': ['Deletes array elements', 'Expands iterable elements', 'Creates a new loop', 'Declares a variable'], 'answer': 1},
+        {'q': 'Which keyword creates a block-scoped variable?', 'options': ['var', 'let', 'const', 'Both let and const'], 'answer': 3},
     ],
     'React': [
         {'q': 'Which hook handles side effects?', 'options': ['useState', 'useEffect', 'useContext', 'useReducer'], 'answer': 1},
         {'q': 'What is JSX?', 'options': ['A database query language', 'A syntax extension for JavaScript', 'A CSS preprocessor', 'A testing framework'], 'answer': 1},
         {'q': 'What does useState return?', 'options': ['A value only', 'A setter only', 'A value and a setter function', 'An event handler'], 'answer': 2},
         {'q': 'Which lifecycle runs after component mounts?', 'options': ['componentWillMount', 'componentDidMount', 'componentDidUpdate', 'render'], 'answer': 1},
+        {'q': 'What is the purpose of the key prop in lists?', 'options': ['Encrypts data', 'Helps React identify changed elements', 'Declares a CSS class', 'Triggers re-renders'], 'answer': 1},
+        {'q': 'Which hook provides access to context?', 'options': ['useRef', 'useMemo', 'useContext', 'useCallback'], 'answer': 2},
     ],
     'SQL': [
         {'q': 'Which clause filters rows?', 'options': ['ORDER BY', 'GROUP BY', 'WHERE', 'HAVING'], 'answer': 2},
         {'q': 'What does JOIN do?', 'options': ['Combines rows from two tables', 'Deletes rows', 'Adds a column', 'Sorts results'], 'answer': 0},
-        {'q': 'Which aggregate counts rows?', 'options': ['SUM()', 'COUNT()', 'MAX()', 'AVG()'], 'answer': 1},
+        {'q': 'Which aggregate function counts rows?', 'options': ['SUM()', 'COUNT()', 'MAX()', 'AVG()'], 'answer': 1},
         {'q': 'What is a PRIMARY KEY?', 'options': ['A unique identifier for each row', 'The first column', 'An index', 'A foreign reference'], 'answer': 0},
+        {'q': 'Which statement removes all rows from a table without deleting the table?', 'options': ['DELETE', 'DROP', 'TRUNCATE', 'REMOVE'], 'answer': 2},
+        {'q': 'What does DISTINCT do in a SELECT statement?', 'options': ['Sorts results', 'Removes duplicate rows', 'Filters by condition', 'Joins tables'], 'answer': 1},
+    ],
+    'Java': [
+        {'q': 'Which keyword is used to define a class in Java?', 'options': ['class', 'Class', 'define', 'object'], 'answer': 0},
+        {'q': 'What is the default value of an int variable in Java?', 'options': ['null', '0', '1', 'undefined'], 'answer': 1},
+        {'q': 'Which collection interface allows duplicate elements?', 'options': ['Set', 'Map', 'List', 'SortedSet'], 'answer': 2},
+        {'q': 'What does JVM stand for?', 'options': ['Java Variable Machine', 'Java Virtual Machine', 'Java Verified Method', 'Java Visual Manager'], 'answer': 1},
+        {'q': 'Which access modifier makes a member accessible only within its own class?', 'options': ['public', 'protected', 'private', 'package-private'], 'answer': 2},
+        {'q': 'What is method overloading in Java?', 'options': ['Same method name, different parameters', 'Same method name, different class', 'Using abstract classes', 'Extending a parent class method'], 'answer': 0},
+        {'q': 'Which keyword prevents a method from being overridden?', 'options': ['static', 'abstract', 'final', 'private'], 'answer': 2},
+        {'q': 'What is the parent class of all Java classes?', 'options': ['Base', 'Object', 'Class', 'Super'], 'answer': 1},
+    ],
+    'Selenium': [
+        {'q': 'Which method locates a web element by its ID?', 'options': ['driver.findElement(By.name())', 'driver.findElement(By.id())', 'driver.getElement()', 'driver.locateById()'], 'answer': 1},
+        {'q': 'What does WebDriver.get() do?', 'options': ['Gets the page title', 'Opens a URL in the browser', 'Returns the current URL', 'Gets the page source'], 'answer': 1},
+        {'q': 'Which wait polls until a condition is met with configurable polling interval?', 'options': ['ImplicitWait', 'ExplicitWait', 'FluentWait', 'StaticWait'], 'answer': 2},
+        {'q': 'What is the correct way to click a button in Selenium?', 'options': ['element.press()', 'element.click()', 'element.trigger()', 'driver.click(element)'], 'answer': 1},
+        {'q': 'Which method retrieves visible text of an element?', 'options': ['element.getText()', 'element.getValue()', 'element.getContent()', 'element.innerHTML()'], 'answer': 0},
+        {'q': 'How do you switch to an iframe in Selenium?', 'options': ['driver.switchTo().frame()', 'driver.selectFrame()', 'driver.openFrame()', 'driver.navigateFrame()'], 'answer': 0},
+        {'q': 'Which XPath selects all input elements?', 'options': ['/input', '//input', './input', 'input[]'], 'answer': 1},
+        {'q': 'What does driver.quit() do differently from driver.close()?', 'options': ['Same behavior', 'Quits all windows and ends session', 'Closes only the active tab', 'Refreshes the browser'], 'answer': 1},
+    ],
+    'Playwright': [
+        {'q': 'Which Playwright method navigates to a URL?', 'options': ['page.visit()', 'page.goto()', 'page.open()', 'page.navigate()'], 'answer': 1},
+        {'q': 'How do you click an element in Playwright?', 'options': ['page.press()', 'page.tap()', 'page.click()', 'page.select()'], 'answer': 2},
+        {'q': 'Which method waits for a selector to appear?', 'options': ['page.awaitSelector()', 'page.waitForSelector()', 'page.findElement()', 'page.expectElement()'], 'answer': 1},
+        {'q': 'What does page.fill() do in Playwright?', 'options': ['Clears a form', 'Types text into an input field', 'Submits a form', 'Validates form data'], 'answer': 1},
+        {'q': 'Which Playwright method takes a screenshot?', 'options': ['page.capture()', 'page.screen()', 'page.screenshot()', 'page.snap()'], 'answer': 2},
+        {'q': 'How do you handle a dialog/alert in Playwright?', 'options': ['page.dismissDialog()', 'page.on("dialog", handler)', 'page.acceptAlert()', 'page.dismissAlert()'], 'answer': 1},
+        {'q': 'Which command runs Playwright tests in headed mode?', 'options': ['npx playwright test --visible', 'npx playwright test --headed', 'npx playwright test --gui', 'npx playwright test --open'], 'answer': 1},
+        {'q': 'What is a Playwright fixture?', 'options': ['A test helper for common setup/teardown', 'A CSS selector strategy', 'A browser configuration file', 'A type of assertion'], 'answer': 0},
+    ],
+    'Appium': [
+        {'q': 'What type of applications can Appium test?', 'options': ['Only Android', 'Only iOS', 'Both mobile and desktop native apps', 'Only web apps'], 'answer': 2},
+        {'q': 'Which capability sets the application package in Android Appium tests?', 'options': ['app', 'appPackage', 'appBundle', 'appActivity'], 'answer': 1},
+        {'q': 'What is the Appium server used for?', 'options': ['Running tests on the browser', 'Bridging test scripts and mobile devices', 'Compiling test code', 'Managing test data'], 'answer': 1},
+        {'q': 'Which locator strategy finds elements by accessibility ID?', 'options': ['By.id()', 'MobileBy.AccessibilityId()', 'By.accessibilityId()', 'MobileBy.id()'], 'answer': 1},
+        {'q': 'What does the desired capability "platformName" specify?', 'options': ['The device model', 'The OS (Android/iOS)', 'The app version', 'The automation engine'], 'answer': 1},
+        {'q': 'Which Appium driver is used for iOS automation?', 'options': ['UIAutomator2', 'XCUITest', 'Espresso', 'Instrumentation'], 'answer': 1},
+        {'q': 'How do you perform a swipe gesture in Appium?', 'options': ['driver.swipe()', 'new TouchAction(driver).press().moveTo().release().perform()', 'driver.gesture("swipe")', 'driver.scroll()'], 'answer': 1},
+        {'q': 'What is Appium Inspector used for?', 'options': ['Running test scripts', 'Inspecting UI elements and their properties', 'Generating test reports', 'Managing device connections'], 'answer': 1},
+    ],
+    'API Testing': [
+        {'q': 'Which HTTP method is used to retrieve data from a server?', 'options': ['POST', 'PUT', 'GET', 'DELETE'], 'answer': 2},
+        {'q': 'What HTTP status code indicates a successful resource creation?', 'options': ['200', '201', '204', '400'], 'answer': 1},
+        {'q': 'What does a 404 status code mean?', 'options': ['Internal server error', 'Unauthorized', 'Resource not found', 'Bad request'], 'answer': 2},
+        {'q': 'Which tool is commonly used for API testing?', 'options': ['Selenium', 'Postman', 'JUnit', 'Appium'], 'answer': 1},
+        {'q': 'What is the purpose of an API authentication token?', 'options': ['To compress data', 'To verify the identity of the requester', 'To format JSON responses', 'To cache API responses'], 'answer': 1},
+        {'q': 'What does REST stand for?', 'options': ['Remote Execution Service Technology', 'Representational State Transfer', 'Reliable Endpoint Service Transfer', 'Resource Execution Standard Test'], 'answer': 1},
+        {'q': 'Which HTTP method updates an existing resource completely?', 'options': ['GET', 'POST', 'PUT', 'PATCH'], 'answer': 2},
+        {'q': 'What is JSON?', 'options': ['A database type', 'A JavaScript framework', 'A lightweight data interchange format', 'A testing protocol'], 'answer': 2},
+    ],
+    'Manual Testing': [
+        {'q': 'What is a test case?', 'options': ['A bug report', 'A set of conditions to verify a feature', 'A deployment script', 'A performance benchmark'], 'answer': 1},
+        {'q': 'What is regression testing?', 'options': ['Testing new features only', 'Re-testing after changes to ensure nothing broke', 'Testing performance under load', 'Initial feature testing'], 'answer': 1},
+        {'q': 'What is the difference between severity and priority in bug reporting?', 'options': ['They are the same thing', 'Severity is impact on system; priority is urgency of fix', 'Priority is impact on system; severity is urgency', 'Both refer to bug frequency'], 'answer': 1},
+        {'q': 'What is exploratory testing?', 'options': ['Testing from a test script', 'Simultaneous learning, test design, and execution', 'Automated regression testing', 'User acceptance testing'], 'answer': 1},
+        {'q': 'What is a test plan?', 'options': ['A single test case', 'A document describing testing strategy, scope, and resources', 'A bug tracking spreadsheet', 'An automated test script'], 'answer': 1},
+        {'q': 'What is boundary value analysis?', 'options': ['Testing random inputs', 'Testing at the edges of valid input ranges', 'Checking UI boundaries', 'Testing network limits'], 'answer': 1},
+        {'q': 'Which testing type validates the system meets business requirements?', 'options': ['Unit testing', 'Integration testing', 'User Acceptance Testing (UAT)', 'Performance testing'], 'answer': 2},
+        {'q': 'What is a defect lifecycle?', 'options': ['Time to close a defect', 'Stages a bug goes through from discovery to closure', 'Number of defects per sprint', 'Defect density metric'], 'answer': 1},
     ],
 }
 
@@ -432,6 +506,38 @@ DEFAULT_QUESTIONS = lambda name: [
     {'q': f'Can you explain core {name} concepts to others?', 'options': ['Yes, confidently', 'Yes, mostly', 'Partially', 'Not yet'], 'answer': 0},
     {'q': f'Do you keep up with {name} updates and best practices?', 'options': ['Yes, actively', 'Mostly yes', 'Occasionally', 'Rarely'], 'answer': 0},
 ]
+
+# Exam metadata per skill
+SKILL_META = {
+    'Java':           {'duration': 45, 'questions': 8, 'passing': 70, 'attempts': 2, 'level': 'Intermediate'},
+    'Selenium':       {'duration': 45, 'questions': 8, 'passing': 70, 'attempts': 2, 'level': 'Intermediate'},
+    'Playwright':     {'duration': 45, 'questions': 8, 'passing': 70, 'attempts': 2, 'level': 'Intermediate'},
+    'API Testing':    {'duration': 40, 'questions': 8, 'passing': 70, 'attempts': 2, 'level': 'Intermediate'},
+    'Manual Testing': {'duration': 35, 'questions': 8, 'passing': 70, 'attempts': 2, 'level': 'Beginner–Intermediate'},
+    'Appium':         {'duration': 45, 'questions': 8, 'passing': 70, 'attempts': 2, 'level': 'Intermediate'},
+    'SQL':            {'duration': 35, 'questions': 6, 'passing': 70, 'attempts': 2, 'level': 'Intermediate'},
+    'Python':         {'duration': 30, 'questions': 6, 'passing': 66, 'attempts': 3, 'level': 'Intermediate'},
+    'JavaScript':     {'duration': 30, 'questions': 6, 'passing': 66, 'attempts': 3, 'level': 'Intermediate'},
+    'React':          {'duration': 30, 'questions': 6, 'passing': 66, 'attempts': 3, 'level': 'Intermediate'},
+}
+DEFAULT_META = {'duration': 25, 'questions': 4, 'passing': 66, 'attempts': 3, 'level': 'Intermediate'}
+
+
+@app.route('/skills/verify/<int:skill_id>/instructions')
+@candidate_required
+def exam_instructions(skill_id):
+    db = get_db()
+    skill = db.execute('SELECT * FROM skills WHERE id=?', [skill_id]).fetchone()
+    if not skill:
+        flash('Skill not found.', 'error')
+        return redirect(url_for('skills_page'))
+    meta = SKILL_META.get(skill['name'], DEFAULT_META)
+    existing = db.execute(
+        'SELECT score, verified FROM user_skills WHERE user_id=? AND skill_id=?',
+        [session['user_id'], skill_id]
+    ).fetchone()
+    return render_template('exam_instructions.html', skill=skill, meta=meta,
+                           existing=existing, user=get_current_user())
 
 
 @app.route('/skills/verify/<int:skill_id>', methods=['GET', 'POST'])
@@ -444,14 +550,16 @@ def verify_skill(skill_id):
         return redirect(url_for('skills_page'))
 
     questions = QUIZ_BANK.get(skill['name'], DEFAULT_QUESTIONS(skill['name']))
+    meta = SKILL_META.get(skill['name'], DEFAULT_META)
 
     if request.method == 'POST':
         score = sum(
             1 for i, q in enumerate(questions)
             if request.form.get(f'q{i}', type=int) == q['answer']
         )
-        pct = int((score / len(questions)) * 100)
-        verified = 1 if pct >= 66 else 0
+        total = len(questions)
+        pct = int((score / total) * 100)
+        verified = 1 if pct >= meta['passing'] else 0
 
         existing = db.execute(
             'SELECT id FROM user_skills WHERE user_id=? AND skill_id=?',
@@ -465,17 +573,56 @@ def verify_skill(skill_id):
                        [session['user_id'], skill_id, verified, pct])
         db.commit()
 
-        if verified:
-            flash(f'You scored {pct}% and earned a verified badge for {skill["name"]}!', 'success')
-        else:
-            flash(f'You scored {pct}%. Score 66%+ to get verified. Keep practicing!', 'warning')
-        return redirect(url_for('candidate_dashboard'))
+        time_elapsed = request.form.get('time_elapsed', 0, type=int)
+        mins = time_elapsed // 60
+        secs = time_elapsed % 60
+        time_taken_str = f'{mins}:{secs:02d}'
 
+        session['exam_result'] = {
+            'skill_id': skill_id,
+            'skill_name': skill['name'],
+            'score': pct,
+            'correct': score,
+            'total': total,
+            'verified': bool(verified),
+            'passing': meta['passing'],
+            'duration': meta['duration'],
+            'time_taken': time_taken_str,
+        }
+        return redirect(url_for('exam_result', skill_id=skill_id))
+
+    # GET — show active exam; add skill to profile if not already present
     db.execute('INSERT OR IGNORE INTO user_skills (user_id, skill_id) VALUES (?,?)',
                [session['user_id'], skill_id])
     db.commit()
     return render_template('verify_skill.html', skill=skill, questions=questions,
-                           user=get_current_user())
+                           meta=meta, user=get_current_user())
+
+
+@app.route('/skills/verify/<int:skill_id>/result')
+@candidate_required
+def exam_result(skill_id):
+    result = session.pop('exam_result', None)
+    if not result or result.get('skill_id') != skill_id:
+        db = get_db()
+        skill = db.execute('SELECT * FROM skills WHERE id=?', [skill_id]).fetchone()
+        us = db.execute('SELECT * FROM user_skills WHERE user_id=? AND skill_id=?',
+                        [session['user_id'], skill_id]).fetchone()
+        if not skill or not us:
+            return redirect(url_for('skills_page'))
+        meta = SKILL_META.get(skill['name'], DEFAULT_META)
+        result = {
+            'skill_id': skill_id,
+            'skill_name': skill['name'],
+            'score': us['score'],
+            'correct': None,
+            'total': meta['questions'],
+            'verified': bool(us['verified']),
+            'passing': meta['passing'],
+            'duration': meta['duration'],
+            'time_taken': None,
+        }
+    return render_template('exam_result.html', result=result, user=get_current_user())
 
 
 # ── Candidate auth ────────────────────────────────────────────────────────────

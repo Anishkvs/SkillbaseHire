@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block title %}{% if recruiter %}{{ recruiter.company }} — Recruiter Profile{% else %}Recruiter Not Found{% endif %} — SkillBaseHire{% endblock %}
+
+{% block content %}
+<div class="rd-page">
+  <div class="container">
+
+    {% if not recruiter %}
+    <!-- ── Not Found ── -->
+    <div class="rd-not-found">
+      <div class="rd-not-found-icon">🏢</div>
+      <h2>Recruiter Not Found</h2>
+      <p>This recruiter profile doesn't exist or has been removed.</p>
+      <a href="{{ url_for('home') }}" class="btn btn-primary">Go Back</a>
+    </div>
+
+    {% else %}
+
+    <!-- ── Breadcrumb ── -->
+    <nav class="rd-breadcrumb" aria-label="Breadcrumb">
+      <a href="{{ url_for('home') }}">Home</a>
+      <span class="rd-sep">›</span>
+      <span>Recruiters</span>
+      <span class="rd-sep">›</span>
+      <strong>{{ recruiter.company }}</strong>
+    </nav>
+
+    <div class="rd-layout">
+
+      <!-- ── Sidebar: Profile card ── -->
+      <aside>
+        <div class="rd-profile-card">
+          <!-- Company avatar -->
+          <div class="rd-avatar" aria-label="{{ recruiter.company }}">{{ recruiter.company[0].upper() }}</div>
+
+          <!-- Company & recruiter -->
+          <h1 class="rd-company-name">{{ recruiter.company }}</h1>
+          <div class="rd-recruiter-sub">{{ recruiter.name }}</div>
+
+          <!-- Actively Hiring badge -->
+          {% if jobs | length > 0 %}
+          <div class="rd-hiring-badge">
+            <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>
+            Actively Hiring
+          </div>
+          {% endif %}
+
+          <!-- Stats -->
+          <div class="rd-stat-row">
+            <div class="rd-stat-item">
+              <div class="rd-stat-num">{{ jobs | length }}</div>
+              <div class="rd-stat-lbl">Open Jobs</div>
+            </div>
+            <div class="rd-stat-item">
+              <div class="rd-stat-num">{{ recruiter.created_at | timeago }}</div>
+              <div class="rd-stat-lbl">Joined</div>
+            </div>
+          </div>
+
+          <!-- Contact details -->
+          <ul class="rd-meta-list">
+            <li>
+              <span class="mi-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </span>
+              <a href="mailto:{{ recruiter.email }}">{{ recruiter.email }}</a>
+            </li>
+            {% if recruiter.website %}
+            <li>
+              <span class="mi-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+              </span>
+              <a href="{{ recruiter.website }}" target="_blank" rel="noopener">Website ↗</a>
+            </li>
+            {% endif %}
+          </ul>
+
+          <hr class="rd-divider">
+
+          <!-- Role-based actions -->
+          <div class="rd-actions">
+            {% if session.get('role') == 'candidate' %}
+              <a href="#active-jobs" class="btn btn-primary btn-full btn-sm">View Active Jobs</a>
+              <a href="mailto:{{ recruiter.email }}" class="btn btn-outline btn-full btn-sm">Contact Recruiter</a>
+              <a href="{{ url_for('jobs') }}" class="btn btn-ghost btn-full btn-sm">Browse All Jobs</a>
+            {% elif user and user.id == recruiter.id %}
+              <a href="{{ url_for('post_job') }}" class="btn btn-primary btn-full btn-sm">+ Post New Job</a>
+              <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-outline btn-full btn-sm">Manage Jobs</a>
+              <a href="{{ url_for('search_candidates') }}" class="btn btn-ghost btn-full btn-sm">Find Candidates</a>
+            {% else %}
+              {% if jobs | length > 0 %}
+                <a href="#active-jobs" class="btn btn-primary btn-full btn-sm">View Active Jobs</a>
+              {% endif %}
+              <a href="{{ url_for('home') }}" class="btn btn-ghost btn-full btn-sm">← Home</a>
+            {% endif %}
+          </div>
+
+          <div class="rd-joined">Active since {{ recruiter.created_at | timeago }}</div>
+        </div>
+      </aside>
+
+      <!-- ── Main content ── -->
+      <div class="rd-main">
+
+        <!-- About Company -->
+        <div class="rd-card">
+          <h2 class="rd-card-title">
+            <span style="display:flex;align-items:center;gap:.5rem">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+              About {{ recruiter.company }}
+            </span>
+          </h2>
+          {% if recruiter.company_bio %}
+            <p class="rd-about">{{ recruiter.company_bio }}</p>
+          {% else %}
+            <p class="rd-about" style="font-style:italic">No company description provided yet.</p>
+          {% endif %}
+          {% if recruiter.website %}
+            <a href="{{ recruiter.website }}" target="_blank" rel="noopener" class="btn btn-outline btn-sm rd-website-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+              Visit Website ↗
+            </a>
+          {% endif %}
+        </div>
+
+        <!-- Recruiter Activity -->
+        <div class="rd-card">
+          <h2 class="rd-card-title">
+            <span style="display:flex;align-items:center;gap:.5rem">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Hiring Activity
+            </span>
+          </h2>
+          <div class="rd-activity-grid">
+            <div class="rd-activity-box">
+              <div class="rd-activity-val">{{ jobs | length }}</div>
+              <div class="rd-activity-lbl">Active Openings</div>
+            </div>
+            <div class="rd-activity-box">
+              <div class="rd-activity-val">{{ recruiter.created_at | timeago }}</div>
+              <div class="rd-activity-lbl">Last Active</div>
+            </div>
+            <div class="rd-activity-box">
+              <div class="rd-activity-val">
+                {% if jobs | length > 0 %}
+                  <span style="color:var(--success)">●</span> Hiring
+                {% else %}
+                  <span style="color:var(--text-muted)">●</span> None
+                {% endif %}
+              </div>
+              <div class="rd-activity-lbl">Status</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Job Posts -->
+        <div class="rd-card" id="active-jobs">
+          <h2 class="rd-card-title">
+            <span style="display:flex;align-items:center;gap:.5rem">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              Active Job Posts
+            </span>
+            {% if jobs | length > 0 %}
+              <span class="rd-card-count">{{ jobs | length }}</span>
+            {% endif %}
+          </h2>
+
+          {% if jobs %}
+            {% for job in jobs %}
+            <div class="rd-job-card">
+              <div class="rd-job-title">{{ job.title }}</div>
+              <div class="rd-job-meta">
+                <span>📍 {{ job.location }}</span>
+                <span class="rd-job-meta-dot">·</span>
+                <span class="badge badge-gray">{{ job.job_type }}</span>
+                <span class="rd-job-meta-dot">·</span>
+                <span>{{ job.created_at | timeago }}</span>
+              </div>
+              {% if job.skills_list %}
+              <div class="rd-job-skills">
+                {% for skill_name in job.skills_list.split(', ') %}
+                  <span class="rd-job-skill-tag">{{ skill_name }}</span>
+                {% endfor %}
+              </div>
+              {% endif %}
+              <div class="rd-job-foot">
+                <div>
+                  {% if job.salary_min or job.salary_max %}
+                    <span class="rd-job-salary">
+                      {% if job.salary_min and job.salary_max %}${{ job.salary_min // 1000 }}K – ${{ job.salary_max // 1000 }}K
+                      {% elif job.salary_min %}${{ job.salary_min // 1000 }}K+
+                      {% else %}Up to ${{ job.salary_max // 1000 }}K{% endif %}
+                    </span>
+                  {% else %}
+                    <span class="rd-job-posted">{{ job.created_at | timeago }}</span>
+                  {% endif %}
+                </div>
+                <div class="rd-job-actions">
+                  <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-outline btn-sm">View Job</a>
+                  {% if session.get('role') == 'candidate' %}
+                    <a href="{{ url_for('apply_job', job_id=job.id) }}" class="btn btn-primary btn-sm">Apply Now</a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <p class="rd-empty">No active job postings at the moment.</p>
+          {% endif %}
+        </div>
+
+        <!-- Recruiter self-actions -->
+        {% if user and user.id == recruiter.id %}
+        <div class="rd-card">
+          <h2 class="rd-card-title">
+            <span style="display:flex;align-items:center;gap:.5rem">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+              Manage Your Profile
+            </span>
+          </h2>
+          <div style="display:flex;flex-wrap:wrap;gap:.65rem">
+            <a href="{{ url_for('post_job') }}" class="btn btn-primary btn-sm">+ Post New Job</a>
+            <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-outline btn-sm">Dashboard</a>
+            <a href="{{ url_for('search_candidates') }}" class="btn btn-outline btn-sm">Find Candidates</a>
+          </div>
+        </div>
+        {% endif %}
+
+      </div><!-- end .rd-main -->
+    </div><!-- end .rd-layout -->
+
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

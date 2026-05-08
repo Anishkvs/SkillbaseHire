@@ -124,7 +124,9 @@
             {% for app in recent_apps %}
               <tr>
                 <td>
-                  <div style="font-weight:600">{{ app.candidate_name }}</div>
+                  <div style="font-weight:600">
+                    <a href="{{ url_for('candidate_detail', candidate_id=app.candidate_id) }}" class="profile-name-link">{{ app.candidate_name }}</a>
+                  </div>
                   <div style="font-size:.8rem;color:var(--text-muted)">{{ app.candidate_email }}</div>
                 </td>
                 <td>{{ app.job_title }}</td>

@@ -736,7 +736,8 @@ def candidate_dashboard():
     ''', [session['user_id']]).fetchall()
 
     applications = db.execute('''
-        SELECT a.*, j.title, j.location, j.job_type, rp.company AS company_name
+        SELECT a.*, j.title, j.location, j.job_type, j.recruiter_id,
+               rp.company AS company_name
         FROM applications a JOIN jobs j ON a.job_id = j.id
         JOIN recruiter_profiles rp ON j.recruiter_id = rp.user_id
         WHERE a.candidate_id=? ORDER BY a.applied_at DESC
@@ -1094,6 +1095,56 @@ def search_candidates():
                            all_skills=all_skills, search=search,
                            skill_filter=skill_filter, location_filter=location_filter,
                            verified_only=verified_only, user=get_current_user())
+
+
+# ── Candidate Detail ─────────────────────────────────────────────────────────
+
+@app.route('/candidates/<int:candidate_id>')
+def candidate_detail(candidate_id):
+    db = get_db()
+    candidate = db.execute('''
+        SELECT u.id, u.name, u.email, u.created_at,
+               cp.headline, cp.location, cp.bio, cp.linkedin, cp.github
+        FROM users u LEFT JOIN candidate_profiles cp ON u.id = cp.user_id
+        WHERE u.id = ? AND u.role = 'candidate'
+    ''', [candidate_id]).fetchone()
+    if not candidate:
+        return render_template('candidate_detail.html', candidate=None, skills=[],
+                               user=get_current_user())
+    skills = db.execute('''
+        SELECT s.id, s.name, s.category, us.verified, us.score
+        FROM user_skills us JOIN skills s ON us.skill_id = s.id
+        WHERE us.user_id = ?
+        ORDER BY us.verified DESC, s.name
+    ''', [candidate_id]).fetchall()
+    return render_template('candidate_detail.html', candidate=candidate, skills=skills,
+                           user=get_current_user())
+
+
+# ── Recruiter Detail ──────────────────────────────────────────────────────────
+
+@app.route('/recruiters/<int:recruiter_id>')
+def recruiter_detail(recruiter_id):
+    db = get_db()
+    recruiter = db.execute('''
+        SELECT u.id, u.name, u.email, u.created_at,
+               rp.company, rp.company_bio, rp.website
+        FROM users u LEFT JOIN recruiter_profiles rp ON u.id = rp.user_id
+        WHERE u.id = ? AND u.role = 'recruiter'
+    ''', [recruiter_id]).fetchone()
+    if not recruiter:
+        return render_template('recruiter_detail.html', recruiter=None, jobs=[],
+                               user=get_current_user())
+    jobs = db.execute('''
+        SELECT j.*,
+               (SELECT GROUP_CONCAT(s.name, ', ')
+                FROM job_skills js JOIN skills s ON js.skill_id = s.id
+                WHERE js.job_id = j.id) AS skills_list
+        FROM jobs j WHERE j.recruiter_id = ? AND j.active = 1
+        ORDER BY j.created_at DESC
+    ''', [recruiter_id]).fetchall()
+    return render_template('recruiter_detail.html', recruiter=recruiter, jobs=jobs,
+                           user=get_current_user())
 
 
 # ── Logout ────────────────────────────────────────────────────────────────────

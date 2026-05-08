@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% block title %}{% if candidate %}{{ candidate.name }} — Candidate Profile{% else %}Candidate Not Found{% endif %} — SkillBaseHire{% endblock %}
+
+{% block content %}
+<div class="cd-page">
+  <div class="container">
+
+    {% if not candidate %}
+    <!-- ── Not Found ── -->
+    <div class="cd-not-found">
+      <div class="cd-not-found-icon">👤</div>
+      <h2>Candidate Not Found</h2>
+      <p>This candidate profile doesn't exist or has been removed.</p>
+      <a href="{{ url_for('search_candidates') if session.get('role') == 'recruiter' else url_for('home') }}" class="btn btn-primary">Go Back</a>
+    </div>
+
+    {% else %}
+
+    <!-- ── Breadcrumb ── -->
+    <nav class="cd-breadcrumb" aria-label="Breadcrumb">
+      <a href="{{ url_for('home') }}">Home</a>
+      <span class="cd-sep">›</span>
+      {% if session.get('role') == 'recruiter' %}
+        <a href="{{ url_for('search_candidates') }}">Candidates</a>
+      {% else %}
+        <span>Candidates</span>
+      {% endif %}
+      <span class="cd-sep">›</span>
+      <strong>{{ candidate.name }}</strong>
+    </nav>
+
+    <div class="cd-layout">
+
+      <!-- ── Sidebar: Profile card ── -->
+      <aside>
+        <div class="cd-profile-card">
+          <!-- Avatar -->
+          <div class="cd-avatar" aria-label="{{ candidate.name }}">{{ candidate.name[0].upper() }}</div>
+
+          <!-- Name & headline -->
+          <h1 class="cd-name">{{ candidate.name }}</h1>
+          {% if candidate.headline %}
+            <div class="cd-headline">{{ candidate.headline }}</div>
+          {% endif %}
+
+          <!-- Status badge -->
+          <div class="cd-status-badge">
+            <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>
+            Open to Work
+          </div>
+
+          <!-- Stats -->
+          {% set verified_count = skills | selectattr('verified', 'equalto', 1) | list | length %}
+          {% set total_count = skills | length %}
+          <div class="cd-stat-row">
+            <div class="cd-stat-item">
+              <div class="cd-stat-num">{{ verified_count }}</div>
+              <div class="cd-stat-lbl">Verified</div>
+            </div>
+            <div class="cd-stat-item">
+              <div class="cd-stat-num">{{ total_count }}</div>
+              <div class="cd-stat-lbl">Skills</div>
+            </div>
+            <div class="cd-stat-item">
+              <div class="cd-stat-num">{{ candidate.created_at | timeago }}</div>
+              <div class="cd-stat-lbl">Joined</div>
+            </div>
+          </div>
+
+          <!-- Contact details -->
+          <ul class="cd-meta-list">
+            <li>
+              <span class="mi-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </span>
+              <a href="mailto:{{ candidate.email }}">{{ candidate.email }}</a>
+            </li>
+            {% if candidate.location %}
+            <li>
+              <span class="mi-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              </span>
+              {{ candidate.location }}
+            </li>
+            {% endif %}
+            {% if candidate.linkedin %}
+            <li>
+              <span class="mi-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+              </span>
+              <a href="{{ candidate.linkedin }}" target="_blank" rel="noopener">LinkedIn ↗</a>
+            </li>
+            {% endif %}
+            {% if candidate.github %}
+            <li>
+              <span class="mi-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>
+              </span>
+              <a href="{{ candidate.github }}" target="_blank" rel="noopener">GitHub ↗</a>
+            </li>
+            {% endif %}
+          </ul>
+
+          <hr class="cd-divider">
+
+          <!-- Role-based actions -->
+          <div class="cd-actions">
+            {% if session.get('role') == 'recruiter' %}
+              <a href="mailto:{{ candidate.email }}" class="btn btn-primary btn-full btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-.15em"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                Contact Candidate
+              </a>
+              {% if skills | selectattr('verified', 'equalto', 0) | list | length > 0 %}
+                <a href="{{ url_for('skills_page') }}" class="btn btn-outline btn-full btn-sm">Request Skill Test</a>
+              {% endif %}
+              <a href="{{ url_for('search_candidates') }}" class="btn btn-ghost btn-full btn-sm">← Back to Candidates</a>
+            {% elif user and user.id == candidate.id %}
+              <a href="{{ url_for('candidate_profile') }}" class="btn btn-primary btn-full btn-sm">Edit Profile</a>
+              <a href="{{ url_for('skills_page') }}" class="btn btn-outline btn-full btn-sm">Verify More Skills</a>
+              <a href="{{ url_for('candidate_dashboard') }}" class="btn btn-ghost btn-full btn-sm">My Dashboard</a>
+            {% else %}
+              <a href="{{ url_for('candidate_login') }}" class="btn btn-outline btn-full btn-sm">Log in to connect</a>
+            {% endif %}
+          </div>
+
+          <div class="cd-joined">Member since {{ candidate.created_at | timeago }}</div>
+        </div>
+      </aside>
+
+      <!-- ── Main content ── -->
+      <div class="cd-main">
+
+        <!-- Professional Summary -->
+        {% if candidate.bio %}
+        <div class="cd-card">
+          <h2 class="cd-card-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            Professional Summary
+          </h2>
+          <p class="cd-bio">{{ candidate.bio }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Skills -->
+        <div class="cd-card">
+          <h2 class="cd-card-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Skills
+          </h2>
+
+          {% set verified_skills = skills | selectattr('verified', 'equalto', 1) | list %}
+          {% set pending_skills  = skills | selectattr('verified', 'equalto', 0) | list %}
+
+          {% if verified_skills %}
+          <div class="cd-skills-section">
+            <div class="cd-skills-sublabel">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-.1em"><polyline points="20 6 9 17 4 12"/></svg>
+              Verified Skills ({{ verified_skills | length }})
+            </div>
+            <div class="cd-skills-flex">
+              {% for skill in verified_skills %}
+                <span class="cd-skill-v">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  {{ skill.name }}
+                  <span class="cd-skill-score">{{ skill.score }}%</span>
+                </span>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          {% if pending_skills %}
+          <div class="cd-skills-section">
+            <div class="cd-skills-sublabel">Pending Verification ({{ pending_skills | length }})</div>
+            <div class="cd-skills-flex">
+              {% for skill in pending_skills %}
+                <span class="cd-skill-p" title="Skill test not completed yet">{{ skill.name }}</span>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          {% if not skills %}
+            <p class="cd-empty">No skills added yet.</p>
+          {% endif %}
+        </div>
+
+        <!-- Sections not yet in DB — shown as structured empty states for recruiter view -->
+        {% if session.get('role') == 'recruiter' or (user and user.id == candidate.id) %}
+        <div class="cd-card">
+          <h2 class="cd-card-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+            Work Experience
+          </h2>
+          <p class="cd-empty">Work experience details are not available yet.</p>
+        </div>
+
+        <div class="cd-card">
+          <h2 class="cd-card-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            Education &amp; Certifications
+          </h2>
+          <p class="cd-empty">Education and certification details are not available yet.</p>
+        </div>
+
+        <div class="cd-card">
+          <h2 class="cd-card-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Resume
+          </h2>
+          {% if user and user.id == candidate.id %}
+            <p class="cd-empty" style="margin-bottom:1rem">No resume uploaded yet.</p>
+            <a href="{{ url_for('candidate_profile') }}" class="btn btn-outline btn-sm">Upload Resume</a>
+          {% else %}
+            <p class="cd-empty">Resume not available.</p>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Recruiter action card -->
+        {% if session.get('role') == 'recruiter' %}
+        <div class="cd-card cd-actions-card">
+          <h2 class="cd-card-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            Recruiter Actions
+          </h2>
+          <div class="cd-action-btn-row">
+            <a href="mailto:{{ candidate.email }}" class="btn btn-primary btn-sm">Contact Candidate</a>
+            <a href="{{ url_for('skills_page') }}" class="btn btn-outline btn-sm">Request Skill Test</a>
+            <a href="{{ url_for('search_candidates') }}" class="btn btn-outline btn-sm">← Find More Candidates</a>
+          </div>
+        </div>
+        {% elif user and user.id == candidate.id %}
+        <div class="cd-card cd-actions-card">
+          <h2 class="cd-card-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            Quick Actions
+          </h2>
+          <div class="cd-action-btn-row">
+            <a href="{{ url_for('candidate_profile') }}" class="btn btn-primary btn-sm">Edit Profile</a>
+            <a href="{{ url_for('skills_page') }}" class="btn btn-outline btn-sm">Take Skill Test</a>
+            <a href="{{ url_for('candidate_dashboard') }}" class="btn btn-outline btn-sm">View My Applications</a>
+          </div>
+        </div>
+        {% endif %}
+
+      </div><!-- end .cd-main -->
+    </div><!-- end .cd-layout -->
+
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

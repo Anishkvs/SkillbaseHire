@@ -11,11 +11,13 @@
 
       <div class="card" style="margin-top:1rem">
         <div class="job-detail-header">
-          <div class="company-logo company-logo-lg">{{ job.company_name[0].upper() }}</div>
+          <a href="{{ url_for('recruiter_detail', recruiter_id=job.recruiter_id) }}" class="profile-link-avatar square" aria-label="View {{ job.company_name }} recruiter profile">
+            <div class="company-logo company-logo-lg">{{ job.company_name[0].upper() }}</div>
+          </a>
           <div>
             <h1 style="font-size:1.5rem;font-weight:800;margin:0 0 .375rem">{{ job.title }}</h1>
             <div class="job-detail-meta">
-              <span>🏢 {{ job.company_name }}</span>
+              <span>🏢 <a href="{{ url_for('recruiter_detail', recruiter_id=job.recruiter_id) }}" class="profile-name-link">{{ job.company_name }}</a></span>
               <span>📍 {{ job.location }}</span>
               <span class="badge badge-gray">{{ job.job_type }}</span>
               <span style="color:var(--success);font-weight:600">{{ job | salary }}</span>
@@ -93,7 +95,7 @@
 
       {% if job.company_bio or job.website %}
         <div class="card" style="margin-top:1rem">
-          <div class="section-mini-title">About {{ job.company_name }}</div>
+          <div class="section-mini-title">About <a href="{{ url_for('recruiter_detail', recruiter_id=job.recruiter_id) }}" class="profile-name-link">{{ job.company_name }}</a></div>
           {% if job.company_bio %}
             <p style="font-size:.9rem;color:var(--text-muted);margin:.5rem 0">{{ job.company_bio }}</p>
           {% endif %}

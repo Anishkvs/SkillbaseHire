@@ -75,7 +75,7 @@
               <div class="company-logo company-logo-sm">{{ job.company_name[0].upper() }}</div>
               <div class="recommended-info">
                 <a href="{{ url_for('job_detail', job_id=job.id) }}" class="recommended-title">{{ job.title }}</a>
-                <div class="recommended-meta">{{ job.company_name }} · {{ job.location }} · {{ job.job_type }}</div>
+                <div class="recommended-meta"><a href="{{ url_for('recruiter_detail', recruiter_id=job.recruiter_id) }}" class="profile-name-link">{{ job.company_name }}</a> · {{ job.location }} · {{ job.job_type }}</div>
               </div>
               <div style="display:flex;align-items:center;gap:.75rem;flex-shrink:0">
                 {% if job.skill_match > 0 %}
@@ -150,7 +150,7 @@
               {% for app in applications %}
                 <tr>
                   <td><strong>{{ app.title }}</strong></td>
-                  <td>{{ app.company_name }}</td>
+                  <td><a href="{{ url_for('recruiter_detail', recruiter_id=app.recruiter_id) }}" class="profile-name-link">{{ app.company_name }}</a></td>
                   <td><span class="badge badge-gray">{{ app.job_type }}</span></td>
                   <td>
                     <span class="app-status status-{{ app.status }}">

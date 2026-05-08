@@ -18,9 +18,11 @@
       {% for app in applications %}
         <div class="app-card">
           <div class="app-card-header">
-            <div class="avatar">{{ app.candidate_name[0].upper() }}</div>
+            <a href="{{ url_for('candidate_detail', candidate_id=app.candidate_id) }}" class="profile-link-avatar" aria-label="View {{ app.candidate_name }}'s profile">
+              <div class="avatar">{{ app.candidate_name[0].upper() }}</div>
+            </a>
             <div class="app-candidate-info">
-              <h3>{{ app.candidate_name }}</h3>
+              <h3><a href="{{ url_for('candidate_detail', candidate_id=app.candidate_id) }}" class="profile-name-link">{{ app.candidate_name }}</a></h3>
               <div class="app-meta">
                 {{ app.candidate_email }}
                 {% if app.headline %} · {{ app.headline }}{% endif %}

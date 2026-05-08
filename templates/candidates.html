@@ -48,9 +48,11 @@
     <div class="candidates-grid">
       {% for c in candidates %}
         <div class="candidate-card">
-          <div class="avatar">{{ c.name[0].upper() }}</div>
+          <a href="{{ url_for('candidate_detail', candidate_id=c.id) }}" class="profile-link-avatar" aria-label="View {{ c.name }}'s profile">
+            <div class="avatar">{{ c.name[0].upper() }}</div>
+          </a>
           <div class="candidate-info">
-            <h3>{{ c.name }}</h3>
+            <h3><a href="{{ url_for('candidate_detail', candidate_id=c.id) }}" class="profile-name-link">{{ c.name }}</a></h3>
             {% if c.headline %}
               <div class="headline">{{ c.headline }}</div>
             {% endif %}

@@ -12,17 +12,28 @@
 
 <header class="navbar">
   <div class="container navbar-inner">
+
     <a href="{{ url_for('home') }}" class="navbar-brand">
-      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><polygon points="11,2 20,7 20,15 11,20 2,15 2,7" fill="#4F46E5" opacity=".2" stroke="#4F46E5" stroke-width="1.5"/><polygon points="11,6 16,9 16,13 11,16 6,13 6,9" fill="#4F46E5"/></svg>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L4 6v6c0 4.97 3.36 9.63 8 10.93C16.64 21.63 20 16.97 20 12V6L12 2z" fill="#2563EB" opacity=".15" stroke="#2563EB" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M9 12l2 2 4-4" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
       SkillBaseHire
     </a>
 
     <nav class="navbar-menu" id="navMenu">
-      <a href="{{ url_for('jobs') }}" class="{{ 'active' if request.endpoint == 'jobs' else '' }}">Find Jobs</a>
-      <a href="{{ url_for('skills_page') }}" class="{{ 'active' if request.endpoint == 'skills_page' else '' }}">Skills</a>
-      {% if session.get('role') == 'recruiter' %}
+      {% if not session.get('user_id') %}
+        <a href="{{ url_for('recruiter_signup') }}">For Recruiters</a>
+        <a href="{{ url_for('candidate_signup') }}">For Candidates</a>
+        <a href="{{ url_for('skills_page') }}" class="{{ 'active' if request.endpoint == 'skills_page' else '' }}">Skill Exams</a>
+        <a href="{{ url_for('jobs') }}" class="{{ 'active' if request.endpoint == 'jobs' else '' }}">Find Jobs</a>
+      {% elif session.get('role') == 'candidate' %}
+        <a href="{{ url_for('jobs') }}" class="{{ 'active' if request.endpoint == 'jobs' else '' }}">Find Jobs</a>
+        <a href="{{ url_for('skills_page') }}" class="{{ 'active' if request.endpoint == 'skills_page' else '' }}">Skill Exams</a>
+      {% else %}
         <a href="{{ url_for('post_job') }}">Post Job</a>
-        <a href="{{ url_for('search_candidates') }}">Candidates</a>
+        <a href="{{ url_for('search_candidates') }}">Find Candidates</a>
+        <a href="{{ url_for('skills_page') }}">Skill Exams</a>
       {% endif %}
     </nav>
 
@@ -38,11 +49,11 @@
           <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-sm btn-primary">Dashboard</a>
         {% endif %}
         <form action="{{ url_for('logout') }}" method="post" style="display:inline">
-          <button type="submit" class="btn btn-sm btn-outline">Logout</button>
+          <button type="submit" class="btn btn-sm btn-ghost">Log out</button>
         </form>
       {% else %}
-        <a href="{{ url_for('candidate_login') }}" class="btn btn-sm btn-outline">Candidate Login</a>
-        <a href="{{ url_for('recruiter_login') }}" class="btn btn-sm btn-primary">For Recruiters</a>
+        <a href="{{ url_for('candidate_login') }}" class="btn btn-sm btn-login">Log in</a>
+        <a href="{{ url_for('candidate_signup') }}" class="btn btn-sm btn-primary">Sign up</a>
       {% endif %}
     </div>
 
@@ -65,7 +76,7 @@
     <script>
       setTimeout(() => {
         const c = document.getElementById('flashContainer');
-        if (c) c.style.opacity = '0', setTimeout(() => c.remove(), 400);
+        if (c) { c.style.opacity = '0'; setTimeout(() => c.remove(), 400); }
       }, 4000);
     </script>
   {% endif %}
@@ -77,30 +88,59 @@
   <div class="container footer-inner">
     <div class="footer-brand">
       <div class="footer-logo">
-        <svg width="20" height="20" viewBox="0 0 22 22" fill="none"><polygon points="11,2 20,7 20,15 11,20 2,15 2,7" fill="#818CF8" opacity=".3" stroke="#818CF8" stroke-width="1.5"/><polygon points="11,6 16,9 16,13 11,16 6,13 6,9" fill="#818CF8"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L4 6v6c0 4.97 3.36 9.63 8 10.93C16.64 21.63 20 16.97 20 12V6L12 2z" fill="#818CF8" opacity=".25" stroke="#818CF8" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M9 12l2 2 4-4" stroke="#818CF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
         SkillBaseHire
       </div>
-      <p>Connecting talent with opportunity<br>through verified skills.</p>
+      <p>Connecting verified talent with top companies<br>that need them. Skill-first, always.</p>
+      <div class="footer-social">
+        <a href="#" class="footer-social-icon" title="LinkedIn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2" fill="currentColor"/></svg>
+        </a>
+        <a href="#" class="footer-social-icon" title="Twitter">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg>
+        </a>
+        <a href="#" class="footer-social-icon" title="Instagram">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        </a>
+        <a href="#" class="footer-social-icon" title="Website">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+        </a>
+      </div>
     </div>
-    <div class="footer-links">
+    <div class="footer-links-4">
       <div>
-        <h4>Candidates</h4>
-        <a href="{{ url_for('jobs') }}">Browse Jobs</a>
-        <a href="{{ url_for('skills_page') }}">Verify Skills</a>
-        <a href="{{ url_for('candidate_signup') }}">Create Profile</a>
-        <a href="{{ url_for('candidate_login') }}">Login</a>
+        <h4>Platform</h4>
+        <a href="{{ url_for('recruiter_signup') }}">For Recruiters</a>
+        <a href="{{ url_for('jobs') }}">Find Jobs</a>
+        <a href="{{ url_for('skills_page') }}">Skill Exams</a>
+        <a href="{{ url_for('recruiter_signup') }}">Hiring</a>
       </div>
       <div>
-        <h4>Recruiters</h4>
-        <a href="{{ url_for('recruiter_signup') }}">Post Jobs</a>
-        <a href="{{ url_for('search_candidates') }}">Find Talent</a>
-        <a href="{{ url_for('recruiter_login') }}">Login</a>
+        <h4>Company</h4>
+        <a href="#">About us</a>
+        <a href="#">Blog</a>
+        <a href="#">Careers</a>
+        <a href="#">Press</a>
+      </div>
+      <div>
+        <h4>Support</h4>
+        <a href="#">Help center</a>
+        <a href="#">Privacy policy</a>
+        <a href="#">Terms of use</a>
+        <a href="#">Contact</a>
       </div>
     </div>
   </div>
   <div class="footer-bottom">
-    <div class="container">
-      <p>© 2024 SkillBaseHire. Built for skill-first hiring.</p>
+    <div class="container footer-bottom-row">
+      <p>© 2025 SkillBaseHire. All rights reserved.</p>
+      <div class="soc2-badge">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        SOC 2 Certified
+      </div>
     </div>
   </div>
 </footer>

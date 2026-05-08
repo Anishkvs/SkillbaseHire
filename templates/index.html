@@ -1,190 +1,315 @@
 {% extends "base.html" %}
-{% block title %}SkillBaseHire — Skill-First Hiring Platform{% endblock %}
+{% block title %}SkillBaseHire — Hire for What Candidates Actually Know{% endblock %}
 
 {% block content %}
 
-<!-- Hero -->
-<section class="hero">
-  <div class="container hero-inner">
-    <div class="hero-content">
-      <div class="hero-badge">✦ Verified Skill-Based Hiring</div>
-      <h1>Get hired faster<br>with <span class="hero-accent">proven skills</span></h1>
-      <p>Take skill assessments, earn verified badges, and get matched with companies that value what you can actually do.</p>
+<!-- ══════════════════════════════════════════
+     HERO
+══════════════════════════════════════════ -->
+<section class="lp-hero">
+  <div class="container lp-hero-inner">
 
-      <form class="hero-search" action="{{ url_for('jobs') }}" method="get">
-        <div class="hero-search-field">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" name="q" placeholder="Job title, skill, or company">
-        </div>
-        <div class="hero-search-divider"></div>
-        <div class="hero-search-field">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          <input type="text" name="location" placeholder="Location or remote">
-        </div>
-        <button type="submit" class="btn btn-primary">Search Jobs</button>
-      </form>
-
-      <div class="hero-cta">
-        {% if not session.get('user_id') %}
-          <a href="{{ url_for('candidate_signup') }}" class="btn btn-white btn-lg">Get Started Free</a>
-          <a href="{{ url_for('skills_page') }}" class="btn btn-ghost-white btn-lg">Verify My Skills →</a>
+    <!-- Left -->
+    <div class="lp-hero-content">
+      <div class="lp-pill">
+        <span class="lp-pill-dot"></span>
+        Skill-First Hiring Platform
+      </div>
+      <h1 class="lp-headline">
+        Hire for what candidates<br><span class="lp-accent">actually</span> know
+      </h1>
+      <p class="lp-hero-sub">
+        Candidates complete verified skill exams. Recruiters search and connect instantly.
+        Cut screening time by 70% with proof-backed profiles.
+      </p>
+      <div class="lp-hero-btns">
+        {% if session.get('role') == 'recruiter' %}
+          <a href="{{ url_for('search_candidates') }}" class="btn btn-primary btn-lg">Find candidates →</a>
         {% else %}
-          <a href="{{ url_for('jobs') }}" class="btn btn-white btn-lg">Browse All Jobs</a>
-          <a href="{{ url_for('skills_page') }}" class="btn btn-ghost-white btn-lg">Verify Skills →</a>
+          <a href="{{ url_for('recruiter_signup') }}" class="btn btn-primary btn-lg">Find candidates →</a>
         {% endif %}
+        <a href="{{ url_for('jobs') }}" class="btn btn-outline btn-lg">Search jobs</a>
       </div>
     </div>
 
-    <div class="hero-visual">
-      <div class="preview-card preview-card-main">
-        <div class="preview-match">96% Match</div>
-        <h3>Senior Frontend Engineer</h3>
-        <p>Stripe · Remote · $120K–$160K</p>
-        <div class="preview-tags">
-          <span class="preview-tag verified">✓ React</span>
-          <span class="preview-tag verified">✓ TypeScript</span>
-          <span class="preview-tag">Node.js</span>
-        </div>
-        <div class="preview-actions">
-          <button class="btn btn-sm btn-primary-light">Apply Now</button>
-        </div>
-      </div>
-      <div class="preview-card preview-card-sm">
-        <div class="preview-badge-row">
-          <span class="preview-verified-badge">✓ Python Verified</span>
-          <span class="preview-score">Score: 92%</span>
-        </div>
-        <p class="preview-sub">Badge added to your profile</p>
-      </div>
-      <div class="preview-card preview-card-sm">
-        <p class="preview-sub-label">New application from</p>
-        <div class="preview-candidate-row">
-          <div class="preview-avatar">AK</div>
+    <!-- Right: Profile Demo Card -->
+    <div class="pdc-wrap">
+      <div class="pdc-card">
+
+        <!-- Top: Profile + Match score -->
+        <div class="pdc-top">
+          <div class="pdc-profile-row">
+            <div class="pdc-av">S</div>
+            <div class="pdc-meta">
+              <div class="pdc-name">Sandra</div>
+              <div class="pdc-sub">Senior Frontend Developer · Bangalore</div>
+            </div>
+          </div>
           <div>
-            <strong>Arjun Kumar</strong>
-            <p>4 verified skills · React, Python +2</p>
+            <span class="pdc-badge-verified">✓ Verified</span>
+            <div class="pdc-match-box">
+              <div class="pdc-match-lbl">Match score</div>
+              <div class="pdc-match-val">96%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Skill Chips -->
+        <div class="pdc-chips">
+          <span class="pdc-chip chip-green">✓ React.js</span>
+          <span class="pdc-chip chip-blue">✓ TypeScript</span>
+          <span class="pdc-chip chip-orange">✓ System Design</span>
+          <span class="pdc-chip chip-teal">✓ Node.js</span>
+        </div>
+
+        <!-- Progress bars -->
+        <div class="pdc-bars">
+          <div class="pdc-bar-item">
+            <span class="pdc-bar-lbl">React.js</span>
+            <div class="pdc-bar-track"><div class="pdc-bar-fill bg-green" style="width:92%"></div></div>
+            <span class="pdc-bar-num">92</span>
+          </div>
+          <div class="pdc-bar-item">
+            <span class="pdc-bar-lbl">TypeScript</span>
+            <div class="pdc-bar-track"><div class="pdc-bar-fill bg-blue" style="width:88%"></div></div>
+            <span class="pdc-bar-num">88</span>
+          </div>
+          <div class="pdc-bar-item">
+            <span class="pdc-bar-lbl">System Design</span>
+            <div class="pdc-bar-track"><div class="pdc-bar-fill bg-amber" style="width:79%"></div></div>
+            <span class="pdc-bar-num">79</span>
+          </div>
+        </div>
+
+        <!-- Notification -->
+        <div class="pdc-notif">
+          <div class="pdc-notif-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <polyline points="9,12 11,14 15,10"/>
+            </svg>
+          </div>
+          <div>
+            <div class="pdc-notif-lbl">Skill exam passed</div>
+            <div class="pdc-notif-title"><strong>Frontend Expert</strong> · 2h ago</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     RECRUITMENT PROCESS
+══════════════════════════════════════════ -->
+<section class="lp-process">
+  <div class="container">
+    <p class="lp-section-eyebrow">Our Recruitment Process</p>
+    <h2 class="lp-section-heading">Our Recruitment Process</h2>
+    <p class="lp-section-desc">Skill assessments. Verified talent. <span class="lp-accent">Better hires.</span></p>
+
+    <!-- Row 1 -->
+    <div class="lp-process-row">
+
+      <div class="lp-pstep">
+        <div class="lp-pstep-num">1</div>
+        <div class="lp-pstep-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+        </div>
+        <h4>HR sends a skill assessment</h4>
+        <p>HR sends a skill assessment to shortlisted candidates</p>
+      </div>
+
+      <div class="lp-arrow">
+        <svg width="32" height="14" viewBox="0 0 32 14" fill="none"><line x1="0" y1="7" x2="24" y2="7" stroke="#BFDBFE" stroke-width="1.5" stroke-dasharray="4 3"/><polyline points="20,3 26,7 20,11" stroke="#BFDBFE" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+      </div>
+
+      <div class="lp-pstep">
+        <div class="lp-pstep-num">2</div>
+        <div class="lp-pstep-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <h4>Candidates complete the test</h4>
+        <p>Candidates complete the test through the platform</p>
+      </div>
+
+      <div class="lp-arrow">
+        <svg width="32" height="14" viewBox="0 0 32 14" fill="none"><line x1="0" y1="7" x2="24" y2="7" stroke="#BFDBFE" stroke-width="1.5" stroke-dasharray="4 3"/><polyline points="20,3 26,7 20,11" stroke="#BFDBFE" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+      </div>
+
+      <div class="lp-pstep">
+        <div class="lp-pstep-num">3</div>
+        <div class="lp-pstep-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        </div>
+        <h4>System evaluates performance</h4>
+        <p>System evaluates performance and verifies skill levels</p>
+      </div>
+
+      <div class="lp-arrow">
+        <svg width="32" height="14" viewBox="0 0 32 14" fill="none"><line x1="0" y1="7" x2="24" y2="7" stroke="#BFDBFE" stroke-width="1.5" stroke-dasharray="4 3"/><polyline points="20,3 26,7 20,11" stroke="#BFDBFE" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+      </div>
+
+      <div class="lp-pstep">
+        <div class="lp-pstep-num">4</div>
+        <div class="lp-pstep-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9,12 11,14 15,10"/></svg>
+        </div>
+        <h4>Verified skill badge</h4>
+        <p>Candidates receive a verified skill badge (Domain + channels)</p>
+      </div>
+
+    </div>
+
+    <!-- Connector between rows -->
+    <div class="lp-process-connector">
+      <svg width="48" height="40" viewBox="0 0 48 40" fill="none">
+        <path d="M40 0 v20 Q40 36 24 36 H8 Q0 36 0 28" stroke="#BFDBFE" stroke-width="1.5" stroke-dasharray="4 3" fill="none" stroke-linecap="round"/>
+        <polyline points="4,24 0,28 4,32" stroke="#BFDBFE" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+
+    <!-- Row 2 -->
+    <div class="lp-process-row">
+
+      <div class="lp-pstep">
+        <div class="lp-pstep-num">5</div>
+        <div class="lp-pstep-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46 22,3"/></svg>
+        </div>
+        <h4>HR filters and shortlists</h4>
+        <p>HR filters and shortlists top-performing candidates</p>
+      </div>
+
+      <div class="lp-arrow">
+        <svg width="32" height="14" viewBox="0 0 32 14" fill="none"><line x1="0" y1="7" x2="24" y2="7" stroke="#BFDBFE" stroke-width="1.5" stroke-dasharray="4 3"/><polyline points="20,3 26,7 20,11" stroke="#BFDBFE" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+      </div>
+
+      <div class="lp-pstep">
+        <div class="lp-pstep-num">6</div>
+        <div class="lp-pstep-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="16" x2="12" y2="16"/></svg>
+        </div>
+        <h4>Pre-qualified candidates shortlisted</h4>
+        <p>Pre-qualified candidates are shortlisted to start companies</p>
+      </div>
+
+      <div class="lp-arrow">
+        <svg width="32" height="14" viewBox="0 0 32 14" fill="none"><line x1="0" y1="7" x2="24" y2="7" stroke="#BFDBFE" stroke-width="1.5" stroke-dasharray="4 3"/><polyline points="20,3 26,7 20,11" stroke="#BFDBFE" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+      </div>
+
+      <div class="lp-pstep">
+        <div class="lp-pstep-num">7</div>
+        <div class="lp-pstep-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><polygon points="23,7 16,12 23,17 23,7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        </div>
+        <h4>Client conducts interviews</h4>
+        <p>Client conducts interviews with high-confidence candidates</p>
+      </div>
+
+      <div class="lp-arrow">
+        <svg width="32" height="14" viewBox="0 0 32 14" fill="none"><line x1="0" y1="7" x2="24" y2="7" stroke="#BFDBFE" stroke-width="1.5" stroke-dasharray="4 3"/><polyline points="20,3 26,7 20,11" stroke="#BFDBFE" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+      </div>
+
+      <div class="lp-pstep">
+        <div class="lp-pstep-num">8</div>
+        <div class="lp-pstep-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+        </div>
+        <h4>Successful candidates are hired</h4>
+        <p>Successful candidates join the team</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════
+     HOW IT WORKS
+══════════════════════════════════════════ -->
+<section class="lp-hiw">
+  <div class="container">
+    <p class="lp-section-eyebrow">How It Works</p>
+    <h2 class="lp-section-heading">Simple for candidates.<br>Powerful for recruiters.</h2>
+
+    <div class="lp-hiw-grid">
+
+      <!-- For Candidates -->
+      <div>
+        <div class="lp-hiw-col-label blue">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+          For Candidates
+        </div>
+        <div class="lp-hiw-step">
+          <div class="lp-hiw-num blue">1</div>
+          <div class="lp-hiw-step-body">
+            <h4>Create your profile</h4>
+            <p>Sign up and build your profile in minutes. Add your experience, education, skills, and links.</p>
+          </div>
+        </div>
+        <div class="lp-hiw-step">
+          <div class="lp-hiw-num blue">2</div>
+          <div class="lp-hiw-step-body">
+            <h4>Take skill tests &amp; get verified</h4>
+            <p>Complete short assessments for each skill and earn verified badges that build trust.</p>
+          </div>
+        </div>
+        <div class="lp-hiw-step">
+          <div class="lp-hiw-num blue">3</div>
+          <div class="lp-hiw-step-body">
+            <h4>Apply with confidence</h4>
+            <p>Browse matched jobs and apply in one click using your verified skills.</p>
           </div>
         </div>
       </div>
+
+      <!-- For Recruiters -->
+      <div>
+        <div class="lp-hiw-col-label teal">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+          For Recruiters
+        </div>
+        <div class="lp-hiw-step">
+          <div class="lp-hiw-num teal">1</div>
+          <div class="lp-hiw-step-body">
+            <h4>Post your job</h4>
+            <p>Create a job listing in minutes. Add role details, required skills, and experience level.</p>
+          </div>
+        </div>
+        <div class="lp-hiw-step">
+          <div class="lp-hiw-num teal">2</div>
+          <div class="lp-hiw-step-body">
+            <h4>Search verified talent</h4>
+            <p>Filter candidates by verified skills, match score, and role fit.</p>
+          </div>
+        </div>
+        <div class="lp-hiw-step">
+          <div class="lp-hiw-num teal">3</div>
+          <div class="lp-hiw-step-body">
+            <h4>Manage applications</h4>
+            <p>Track applications, request missing skill tests, and shortlist candidates faster.</p>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
 
-<!-- Stats Bar -->
-<div class="stats-bar">
-  <div class="container stats-inner">
-    <div class="stat-item">
-      <div class="stat-number">{{ stats.jobs }}+</div>
-      <div class="stat-label">Active Jobs</div>
-    </div>
-    <div class="stat-divider"></div>
-    <div class="stat-item">
-      <div class="stat-number">{{ stats.candidates }}+</div>
-      <div class="stat-label">Verified Candidates</div>
-    </div>
-    <div class="stat-divider"></div>
-    <div class="stat-item">
-      <div class="stat-number">{{ stats.companies }}+</div>
-      <div class="stat-label">Companies Hiring</div>
-    </div>
-    <div class="stat-divider"></div>
-    <div class="stat-item">
-      <div class="stat-number">40+</div>
-      <div class="stat-label">Skill Assessments</div>
-    </div>
-  </div>
-</div>
 
-<!-- Featured Jobs -->
-<section class="section">
+<!-- ══════════════════════════════════════════
+     CTA
+══════════════════════════════════════════ -->
+<section class="lp-cta">
   <div class="container">
-    <div class="section-header">
-      <h2>Latest Opportunities</h2>
-      <p>Discover roles matched to your verified skill set</p>
-    </div>
-
-    {% if jobs %}
-      <div class="jobs-grid">
-        {% for job in jobs %}
-          <a href="{{ url_for('job_detail', job_id=job.id) }}" class="job-card-link">
-            <div class="job-card">
-              <div class="job-card-header">
-                <div class="company-logo">{{ job.company_name[0].upper() }}</div>
-                <div class="job-card-info">
-                  <h3>{{ job.title }}</h3>
-                  <p>{{ job.company_name }} · {{ job.location }}</p>
-                </div>
-                <span class="badge badge-gray">{{ job.job_type }}</span>
-              </div>
-              {% if job.skills_list %}
-                <div class="job-skills">
-                  {% for skill in job.skills_list.split(', ')[:4] %}
-                    <span class="skill-tag">{{ skill }}</span>
-                  {% endfor %}
-                </div>
-              {% endif %}
-              <div class="job-card-footer">
-                <span class="job-salary">{{ job | salary }}</span>
-                <span class="job-date">{{ job.created_at | timeago }}</span>
-              </div>
-            </div>
-          </a>
-        {% endfor %}
-      </div>
-      <div style="text-align:center; margin-top:2.5rem">
-        <a href="{{ url_for('jobs') }}" class="btn btn-outline btn-lg">View All Jobs →</a>
-      </div>
-    {% else %}
-      <div class="empty-state">
-        <div class="empty-icon">💼</div>
-        <h3>No jobs posted yet</h3>
-        <p>Be the first to post a job on SkillBaseHire.</p>
-        <a href="{{ url_for('recruiter_signup') }}" class="btn btn-primary">Post a Job</a>
-      </div>
-    {% endif %}
-  </div>
-</section>
-
-<!-- How it Works -->
-<section class="section how-section">
-  <div class="container">
-    <div class="section-header">
-      <h2>How it Works</h2>
-      <p>Three steps from skills to your next role</p>
-    </div>
-    <div class="steps-grid">
-      <div class="step-card">
-        <div class="step-number">1</div>
-        <h3>Build Your Profile</h3>
-        <p>Sign up as a candidate and create your skill-first profile in minutes.</p>
-      </div>
-      <div class="step-card">
-        <div class="step-number">2</div>
-        <h3>Verify Your Skills</h3>
-        <p>Take short assessments to earn verified skill badges that stand out to recruiters.</p>
-      </div>
-      <div class="step-card">
-        <div class="step-number">3</div>
-        <h3>Get Matched & Hired</h3>
-        <p>Apply to jobs with your verified profile. Recruiters find you by skill, not just experience.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CTA -->
-<section class="cta-section">
-  <div class="container">
-    <h2>Ready to get skill-verified?</h2>
-    <p>Join thousands of candidates and companies on SkillBaseHire</p>
-    <div class="cta-buttons">
-      {% if not session.get('user_id') %}
-        <a href="{{ url_for('candidate_signup') }}" class="btn btn-white btn-lg">Create Candidate Profile</a>
-        <a href="{{ url_for('recruiter_signup') }}" class="btn btn-outline-white btn-lg">Post Jobs as Recruiter</a>
-      {% else %}
-        <a href="{{ url_for('jobs') }}" class="btn btn-white btn-lg">Browse Jobs</a>
-        <a href="{{ url_for('skills_page') }}" class="btn btn-outline-white btn-lg">Verify Skills</a>
-      {% endif %}
+    <h2>Ready to hire smarter?</h2>
+    <p>Join thousands of candidates and companies already on SkillBaseHire.</p>
+    <div class="lp-cta-btns">
+      <a href="{{ url_for('candidate_signup') }}" class="btn btn-lg btn-white">Get started as a candidate</a>
+      <a href="{{ url_for('recruiter_signup') }}" class="btn btn-lg btn-outline-white">Post your first job</a>
     </div>
   </div>
 </section>

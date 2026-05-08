@@ -3554,3 +3554,624 @@ body.dark-exam ::-webkit-scrollbar-thumb { background: #30363D; border-radius: 3
   .rd-layout { grid-template-columns: 1fr; }
   .rd-profile-card { position: static; }
 }
+
+/* ============================================================
+   Registration type selection page
+   ============================================================ */
+.reg-type-page {
+  min-height: calc(100vh - 72px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  background: var(--bg-alt);
+}
+.reg-type-wrap {
+  width: 100%;
+  max-width: 680px;
+}
+.reg-type-logo {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  font-weight: 800;
+  font-size: 1.125rem;
+  color: var(--text);
+  text-decoration: none;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+.reg-type-heading {
+  text-align: center;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 .5rem;
+}
+.reg-type-sub {
+  text-align: center;
+  color: var(--text-muted);
+  margin: 0 0 2rem;
+}
+.reg-type-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+.reg-type-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 1.75rem 1.5rem;
+  background: var(--surface);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-lg);
+  text-decoration: none;
+  color: var(--text);
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+  cursor: pointer;
+}
+.reg-type-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px rgba(79,70,229,.08);
+  transform: translateY(-2px);
+}
+.reg-type-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+.reg-type-icon.blue { background: #EEF2FF; }
+.reg-type-icon.purple { background: #F5F3FF; }
+.reg-type-card h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 .375rem;
+}
+.reg-type-card p {
+  font-size: .875rem;
+  color: var(--text-muted);
+  margin: 0 0 1.25rem;
+  line-height: 1.5;
+}
+.reg-type-card .reg-type-arrow {
+  margin-top: auto;
+  font-size: .875rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+.reg-type-footer {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: .875rem;
+  color: var(--text-muted);
+}
+.reg-type-footer a { color: var(--primary); font-weight: 500; }
+@media (max-width: 560px) {
+  .reg-type-cards { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
+   Wide auth card (for extended signup forms)
+   ============================================================ */
+.auth-card-lg {
+  max-width: 680px !important;
+}
+
+/* Form section heading */
+.reg-section {
+  margin: 1.75rem 0 .75rem;
+  padding-bottom: .5rem;
+  border-bottom: 1px solid var(--border);
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* ============================================================
+   Password validation UI
+   ============================================================ */
+.pw-wrap {
+  position: relative;
+}
+.pw-toggle {
+  position: absolute;
+  right: .75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+.pw-toggle:hover { color: var(--text); }
+
+.pw-strength-row {
+  display: flex;
+  align-items: center;
+  gap: .625rem;
+  margin-top: .375rem;
+}
+.pw-bars {
+  display: flex;
+  gap: 3px;
+  flex: 1;
+}
+.pw-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  transition: background .2s;
+}
+.pw-strength-label {
+  font-size: .75rem;
+  font-weight: 600;
+  min-width: 48px;
+  color: var(--text-muted);
+}
+.pw-bar.weak   { background: #ef4444; }
+.pw-bar.medium { background: #f59e0b; }
+.pw-bar.strong { background: #22c55e; }
+.pw-strength-label.weak   { color: #ef4444; }
+.pw-strength-label.medium { color: #f59e0b; }
+.pw-strength-label.strong { color: #22c55e; }
+
+.pw-rules {
+  margin: .625rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .25rem .75rem;
+}
+.pw-rule {
+  font-size: .75rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: .375rem;
+}
+.pw-rule::before {
+  content: '○';
+  font-size: .65rem;
+  flex-shrink: 0;
+}
+.pw-rule.ok { color: #22c55e; }
+.pw-rule.ok::before { content: '✓'; }
+.pw-rule.fail { color: #ef4444; }
+.pw-rule.fail::before { content: '✗'; }
+
+.form-control.input-ok    { border-color: #22c55e; }
+.form-control.input-error { border-color: #ef4444; }
+.field-error {
+  font-size: .75rem;
+  color: #ef4444;
+  margin-top: .25rem;
+}
+
+/* ============================================================
+   Skills picker (signup)
+   ============================================================ */
+.skills-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-top: .5rem;
+}
+.skill-opt {
+  display: none;
+}
+.skill-opt-label {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .3125rem .75rem;
+  border: 1.5px solid var(--border);
+  border-radius: 999px;
+  font-size: .8125rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all .14s;
+  user-select: none;
+}
+.skill-opt:checked + .skill-opt-label {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  color: var(--primary);
+}
+.skill-opt-label:hover { border-color: var(--primary); color: var(--primary); }
+.skills-picker-search {
+  width: 100%;
+  margin-bottom: .5rem;
+}
+
+/* ============================================================
+   Resume upload zone
+   ============================================================ */
+.upload-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+  position: relative;
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+.upload-zone input[type=file] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  width: 100%;
+  height: 100%;
+}
+.upload-zone-icon { font-size: 1.75rem; margin-bottom: .5rem; }
+.upload-zone-text { font-size: .875rem; color: var(--text-muted); }
+.upload-zone-hint { font-size: .75rem; color: var(--text-muted); margin-top: .25rem; }
+.upload-zone-filename {
+  margin-top: .5rem;
+  font-size: .8125rem;
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* ============================================================
+   Email sent / verification page
+   ============================================================ */
+.email-sent-page {
+  min-height: calc(100vh - 72px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem 1rem;
+  background: var(--bg-alt);
+}
+.email-sent-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 3rem 2.5rem;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+}
+.email-sent-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #ECFDF5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  font-size: 2rem;
+}
+.email-sent-card h2 {
+  font-size: 1.375rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 .5rem;
+}
+.email-sent-card p {
+  color: var(--text-muted);
+  font-size: .9375rem;
+  margin: 0 0 .75rem;
+  line-height: 1.6;
+}
+.email-sent-address {
+  font-weight: 700;
+  color: var(--text);
+}
+.email-sent-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 1.5rem 0;
+}
+.email-sent-spam {
+  font-size: .8125rem;
+  color: var(--text-muted);
+  margin-top: 1rem;
+}
+
+/* ============================================================
+   Signup role toggle (Candidate / Recruiter switcher)
+   ============================================================ */
+.signup-role-toggle {
+  display: flex;
+  background: var(--bg-alt);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 4px;
+  margin-bottom: 1.75rem;
+  gap: 4px;
+}
+.signup-role-toggle a {
+  flex: 1;
+  text-align: center;
+  padding: .5rem .75rem;
+  border-radius: 7px;
+  font-size: .875rem;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--text-muted);
+  transition: background .15s, color .15s, box-shadow .15s;
+}
+.signup-role-toggle a:hover {
+  color: var(--text);
+  background: var(--surface);
+}
+.signup-role-toggle a.active {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(79,70,229,.3);
+}
+.signup-role-toggle a.active:hover {
+  background: var(--primary-dark);
+  color: #fff;
+}
+
+/* ── Disabled button ── */
+.btn:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+/* ── Popup / modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 1rem;
+  animation: fadeIn .15s ease;
+}
+@keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
+.modal-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 64px rgba(0,0,0,.22);
+  width: 100%;
+  max-width: 560px;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp .18s ease;
+}
+@keyframes slideUp { from { transform: translateY(16px); opacity: 0 } to { transform: none; opacity: 1 } }
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.125rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.modal-header h3 {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0 .25rem;
+}
+.modal-close:hover { color: var(--text); }
+.modal-body {
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  font-size: .875rem;
+  color: var(--text-muted);
+  line-height: 1.75;
+}
+.modal-body h4 {
+  font-size: .9375rem;
+  font-weight: 700;
+  color: var(--text);
+  margin: 1.25rem 0 .375rem;
+}
+.modal-body h4:first-child { margin-top: 0; }
+.modal-body p { margin: 0 0 .75rem; }
+.modal-body p:last-child { margin-bottom: 0; }
+.modal-footer {
+  padding: .875rem 1.5rem;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+/* ── Skills picker hint ── */
+.skills-hint {
+  font-size: .8125rem;
+  color: var(--text-muted);
+  padding: .375rem 0;
+}
+
+/* ============================================================
+   Verification status badges
+   ============================================================ */
+.badge-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .2rem .625rem;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 700;
+  background: #DCFCE7;
+  color: #15803D;
+  border: 1px solid #BBF7D0;
+  white-space: nowrap;
+}
+.badge-unverified {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .2rem .625rem;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 700;
+  background: #FFF7ED;
+  color: #C2410C;
+  border: 1px solid #FED7AA;
+  white-space: nowrap;
+}
+.badge-email-pending {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  padding: .2rem .625rem;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 700;
+  background: #FFFBEB;
+  color: #B45309;
+  border: 1px solid #FDE68A;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   Verification warning banner
+   ============================================================ */
+.verify-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: #FFF7ED;
+  border: 1.5px solid #FED7AA;
+  border-radius: var(--radius);
+  padding: .875rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+.verify-banner-content {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+}
+.verify-banner-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  margin-top: .05rem;
+}
+.verify-banner-title {
+  font-weight: 700;
+  font-size: .9375rem;
+  color: #9A3412;
+  margin-bottom: .2rem;
+}
+.verify-banner-msg {
+  font-size: .8125rem;
+  color: #C2410C;
+  line-height: 1.5;
+}
+.verify-banner-btn {
+  background: #EA580C !important;
+  color: #fff !important;
+  border-color: #EA580C !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.verify-banner-btn:hover {
+  background: #C2410C !important;
+  border-color: #C2410C !important;
+}
+@media (max-width: 640px) {
+  .verify-banner { flex-direction: column; align-items: flex-start; }
+}
+
+/* Account status info row in profile cards */
+.acct-status-row {
+  display: flex;
+  flex-direction: column;
+  gap: .375rem;
+  font-size: .8125rem;
+  color: var(--text-muted);
+  padding: .75rem 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin: .875rem 0;
+}
+.acct-status-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: .5rem;
+}
+.acct-status-label { font-weight: 500; }
+
+/* ============================================================
+   Blocked access card (unverified recruiter on candidate profile)
+   ============================================================ */
+.blocked-access-page {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+}
+.blocked-access-card {
+  background: var(--surface);
+  border: 1.5px solid #FED7AA;
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 2rem;
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-sm);
+}
+.blocked-access-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #FFF7ED;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  font-size: 1.75rem;
+}
+.blocked-access-card h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 .625rem;
+}
+.blocked-access-card p {
+  color: var(--text-muted);
+  font-size: .9rem;
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+.blocked-access-btns {
+  display: flex;
+  flex-direction: column;
+  gap: .625rem;
+}

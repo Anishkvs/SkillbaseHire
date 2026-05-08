@@ -5,7 +5,23 @@
 <div class="cd-page">
   <div class="container">
 
-    {% if not candidate %}
+    {% if blocked_recruiter %}
+    <!-- ── Blocked: unverified recruiter ── -->
+    <div class="blocked-access-page">
+      <div class="blocked-access-card">
+        <div class="blocked-access-icon">🔒</div>
+        <h2>Email Verification Required</h2>
+        <p>Please verify your official company email address before viewing candidate profiles.</p>
+        <div class="blocked-access-btns">
+          <form action="{{ url_for('resend_verification') }}" method="post">
+            <button type="submit" class="btn btn-primary btn-full">Resend Verification Email</button>
+          </form>
+          <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-outline btn-full">Back to Dashboard</a>
+        </div>
+      </div>
+    </div>
+
+    {% elif not candidate %}
     <!-- ── Not Found ── -->
     <div class="cd-not-found">
       <div class="cd-not-found-icon">👤</div>
@@ -43,10 +59,17 @@
             <div class="cd-headline">{{ candidate.headline }}</div>
           {% endif %}
 
-          <!-- Status badge -->
-          <div class="cd-status-badge">
-            <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>
-            Open to Work
+          <!-- Verification + open to work badges -->
+          <div style="display:flex;gap:.375rem;flex-wrap:wrap;justify-content:center;margin:.5rem 0">
+            <div class="cd-status-badge">
+              <svg width="8" height="8" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>
+              Open to Work
+            </div>
+            {% if candidate.email_verified %}
+              <span class="badge-verified">✓ Account Verified</span>
+            {% else %}
+              <span class="badge-unverified">Not Verified</span>
+            {% endif %}
           </div>
 
           <!-- Stats -->
@@ -151,7 +174,7 @@
           {% set verified_skills = skills | selectattr('verified', 'equalto', 1) | list %}
           {% set pending_skills  = skills | selectattr('verified', 'equalto', 0) | list %}
 
-          {% if verified_skills %}
+          {% if show_verified_skills and verified_skills %}
           <div class="cd-skills-section">
             <div class="cd-skills-sublabel">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-.1em"><polyline points="20 6 9 17 4 12"/></svg>
@@ -167,9 +190,29 @@
               {% endfor %}
             </div>
           </div>
+          {% elif not show_verified_skills and verified_skills %}
+          <div class="cd-skills-section">
+            <div class="cd-skills-sublabel" style="color:var(--text-muted)">
+              Skills ({{ skills | length }} total — scores visible after candidate verifies email)
+            </div>
+            <div class="cd-skills-flex">
+              {% for skill in skills %}
+                <span class="cd-skill-p">{{ skill.name }}</span>
+              {% endfor %}
+            </div>
+          </div>
+          {% elif pending_skills %}
+          <div class="cd-skills-section">
+            <div class="cd-skills-sublabel">Pending Verification ({{ pending_skills | length }})</div>
+            <div class="cd-skills-flex">
+              {% for skill in pending_skills %}
+                <span class="cd-skill-p" title="Skill test not completed yet">{{ skill.name }}</span>
+              {% endfor %}
+            </div>
+          </div>
           {% endif %}
 
-          {% if pending_skills %}
+          {% if show_verified_skills and pending_skills %}
           <div class="cd-skills-section">
             <div class="cd-skills-sublabel">Pending Verification ({{ pending_skills | length }})</div>
             <div class="cd-skills-flex">

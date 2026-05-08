@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Create Account — SkillBaseHire{% endblock %}
+
+{% block content %}
+<div class="reg-type-page">
+  <div class="reg-type-wrap">
+
+    <a href="{{ url_for('home') }}" class="reg-type-logo">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2L4 6v6c0 4.97 3.36 9.63 8 10.93C16.64 21.63 20 16.97 20 12V6L12 2z" fill="#4F46E5" opacity=".2" stroke="#4F46E5" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M9 12l2 2 4-4" stroke="#4F46E5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      SkillBaseHire
+    </a>
+
+    <h1 class="reg-type-heading">Join SkillBaseHire</h1>
+    <p class="reg-type-sub">How would you like to get started?</p>
+
+    <div class="reg-type-cards">
+      <a href="{{ url_for('candidate_signup') }}" class="reg-type-card">
+        <div class="reg-type-icon blue">🎯</div>
+        <h3>I'm a Candidate</h3>
+        <p>Find jobs that match your verified skills and stand out from the crowd.</p>
+        <span class="reg-type-arrow">Get started →</span>
+      </a>
+      <a href="{{ url_for('recruiter_signup') }}" class="reg-type-card">
+        <div class="reg-type-icon purple">🏢</div>
+        <h3>I'm a Recruiter</h3>
+        <p>Post jobs and discover skill-verified talent. Hire smarter, not harder.</p>
+        <span class="reg-type-arrow">Get started →</span>
+      </a>
+    </div>
+
+    <p class="reg-type-footer">
+      Already have an account?
+      <a href="{{ url_for('candidate_login') }}">Log in as Candidate</a> ·
+      <a href="{{ url_for('recruiter_login') }}">Log in as Recruiter</a>
+    </p>
+
+  </div>
+</div>
+{% endblock %}

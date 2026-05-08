@@ -15,6 +15,23 @@
   </div>
 </div>
 
+{% if not user.email_verified %}
+<div class="container" style="padding-top:1.5rem;padding-bottom:0">
+  <div class="verify-banner">
+    <div class="verify-banner-content">
+      <div class="verify-banner-icon">⚠️</div>
+      <div>
+        <div class="verify-banner-title">Verify Your Email</div>
+        <div class="verify-banner-msg">Your account is not verified. Please verify your email address to improve account security and access all platform features.</div>
+      </div>
+    </div>
+    <form action="{{ url_for('resend_verification') }}" method="post" style="flex-shrink:0">
+      <button type="submit" class="btn btn-sm verify-banner-btn">Resend Verification Email</button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
 <div class="container dashboard-layout">
 
   <!-- Sidebar -->
@@ -37,7 +54,25 @@
       {% if profile.github %}
         <div class="profile-meta-item"><a href="{{ profile.github }}" target="_blank">GitHub ↗</a></div>
       {% endif %}
-      <a href="{{ url_for('candidate_profile') }}" class="btn btn-outline btn-sm btn-full" style="margin-top:1rem">Edit Profile</a>
+      <div class="acct-status-row" style="margin-top:.75rem">
+        <div class="acct-status-item">
+          <span class="acct-status-label">Account Status</span>
+          {% if user.email_verified %}
+            <span class="badge-verified">✓ Verified</span>
+          {% else %}
+            <span class="badge-unverified">Not Verified</span>
+          {% endif %}
+        </div>
+        <div class="acct-status-item">
+          <span class="acct-status-label">Email Status</span>
+          {% if user.email_verified %}
+            <span class="badge-verified">✓ Confirmed</span>
+          {% else %}
+            <span class="badge-email-pending">Pending Verification</span>
+          {% endif %}
+        </div>
+      </div>
+      <a href="{{ url_for('candidate_profile') }}" class="btn btn-outline btn-sm btn-full" style="margin-top:.75rem">Edit Profile</a>
     </div>
 
     <!-- Quick Stats -->

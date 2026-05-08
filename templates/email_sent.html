@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Verify Your Email — SkillBaseHire{% endblock %}
+
+{% block content %}
+<div class="email-sent-page">
+  <div class="email-sent-card">
+
+    <div class="email-sent-icon">📧</div>
+
+    <h2>Check your inbox</h2>
+    <p>
+      We sent a verification email to<br>
+      <span class="email-sent-address">{{ pending_email }}</span>
+    </p>
+    <p>Click the link in that email to verify your account and get started.</p>
+
+    <div class="email-sent-divider"></div>
+
+    <p style="font-size:.875rem;color:var(--text-muted);margin:0 0 1rem">Didn't receive it? Check your spam folder or resend below.</p>
+
+    <form action="{{ url_for('resend_verification') }}" method="post">
+      <button type="submit" class="btn btn-outline btn-full">Resend Verification Email</button>
+    </form>
+
+    <p class="email-sent-spam">
+      The link expires in 24 hours. If you used a spam folder, mark us as safe to ensure delivery.
+    </p>
+
+    <div style="margin-top:1.5rem">
+      <a href="{{ url_for('home') }}" style="font-size:.875rem;color:var(--text-muted)">← Back to Home</a>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

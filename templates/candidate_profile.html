@@ -13,7 +13,35 @@
 </div>
 
 <div class="container" style="max-width:680px;padding:2.5rem 1.5rem">
+
+  {% if not user.email_verified %}
+  <div class="verify-banner" style="margin-bottom:1.5rem">
+    <div class="verify-banner-content">
+      <div class="verify-banner-icon">⚠️</div>
+      <div>
+        <div class="verify-banner-title">Verify Your Email</div>
+        <div class="verify-banner-msg">Your account is not verified. Please verify your email address to improve account security and access all platform features.</div>
+      </div>
+    </div>
+    <form action="{{ url_for('resend_verification') }}" method="post" style="flex-shrink:0">
+      <button type="submit" class="btn btn-sm verify-banner-btn">Resend Verification Email</button>
+    </form>
+  </div>
+  {% endif %}
+
   <div class="card">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:1.25rem;padding-bottom:1rem;border-bottom:1px solid var(--border)">
+      <div style="font-weight:700;font-size:1rem;color:var(--text)">Account Status</div>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+        {% if user.email_verified %}
+          <span class="badge-verified">✓ Account Verified</span>
+          <span class="badge-verified">✓ Email Confirmed</span>
+        {% else %}
+          <span class="badge-unverified">Account Not Verified</span>
+          <span class="badge-email-pending">Email Pending Verification</span>
+        {% endif %}
+      </div>
+    </div>
     <form method="post" action="{{ url_for('candidate_profile') }}">
       <div class="form-section-title">Personal Info</div>
       <div class="form-group">

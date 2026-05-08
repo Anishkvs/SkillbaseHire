@@ -3,56 +3,322 @@
 
 {% block content %}
 <div class="auth-page">
-  <div class="auth-card">
+  <div class="auth-card auth-card-lg">
+
     <div class="auth-logo">
       <a href="{{ url_for('home') }}" class="auth-brand-link">
-        <svg width="28" height="28" viewBox="0 0 22 22" fill="none"><polygon points="11,2 20,7 20,15 11,20 2,15 2,7" fill="#4F46E5" opacity=".2" stroke="#4F46E5" stroke-width="1.5"/><polygon points="11,6 16,9 16,13 11,16 6,13 6,9" fill="#4F46E5"/></svg>
+        <svg width="28" height="28" viewBox="0 0 22 22" fill="none">
+          <polygon points="11,2 20,7 20,15 11,20 2,15 2,7" fill="#4F46E5" opacity=".2" stroke="#4F46E5" stroke-width="1.5"/>
+          <polygon points="11,6 16,9 16,13 11,16 6,13 6,9" fill="#4F46E5"/>
+        </svg>
         SkillBaseHire
       </a>
+    </div>
+
+    <!-- Role toggle -->
+    <div class="signup-role-toggle">
+      <a href="{{ url_for('candidate_signup') }}">Candidate</a>
+      <a href="{{ url_for('recruiter_signup') }}" class="active">Recruiter</a>
     </div>
 
     <div class="auth-role-badge">For Recruiters</div>
     <h1 class="auth-title">Start hiring smarter</h1>
     <p class="auth-subtitle">Post jobs and find skill-verified candidates</p>
 
-    <form method="post" action="{{ url_for('recruiter_signup') }}">
+    <form method="post" action="{{ url_for('recruiter_signup') }}" id="recruiterSignupForm" novalidate>
+
+      <!-- Personal Details -->
+      <div class="reg-section">Your Details</div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label" for="name">Your Name</label>
-          <input class="form-control" type="text" id="name" name="name" placeholder="John Smith" required>
+          <label class="form-label" for="name">Full Name <span style="color:#ef4444">*</span></label>
+          <input class="form-control" type="text" id="name" name="name"
+                 value="{{ form.get('name','') }}" placeholder="John Smith" required autocomplete="name">
         </div>
         <div class="form-group">
-          <label class="form-label" for="company">Company Name</label>
-          <input class="form-control" type="text" id="company" name="company" placeholder="Acme Corp" required>
+          <label class="form-label" for="job_title">Your Job Title</label>
+          <input class="form-control" type="text" id="job_title" name="job_title"
+                 value="{{ form.get('job_title','') }}" placeholder="e.g. HR Manager">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="email">Work Email <span style="color:#ef4444">*</span></label>
+          <input class="form-control" type="email" id="email" name="email"
+                 value="{{ form.get('email','') }}" placeholder="john@company.com" required autocomplete="email"
+                 oninput="checkDomain(this.value)">
+          <div id="domainError" class="field-error" style="display:none">
+            Personal email providers are not allowed. Please use your official work email.
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="phone">Phone Number</label>
+          <input class="form-control" type="tel" id="phone" name="phone"
+                 value="{{ form.get('phone','') }}" placeholder="+1 555 000 0000">
+        </div>
+      </div>
+
+      <!-- Company Details -->
+      <div class="reg-section">Company Details</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="company">Company Name <span style="color:#ef4444">*</span></label>
+          <input class="form-control" type="text" id="company" name="company"
+                 value="{{ form.get('company','') }}" placeholder="Acme Corp" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="industry">Industry</label>
+          <select class="form-control" id="industry" name="industry">
+            <option value="">Select…</option>
+            {% for opt in ['Technology','Finance','Healthcare','Education','Retail','Manufacturing','Media & Entertainment','Consulting','Other'] %}
+              <option value="{{ opt }}" {{ 'selected' if form.get('industry') == opt else '' }}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="company_size">Company Size</label>
+          <select class="form-control" id="company_size" name="company_size">
+            <option value="">Select…</option>
+            {% for opt in ['1–10','11–50','51–200','201–500','501–1000','1000+'] %}
+              <option value="{{ opt }}" {{ 'selected' if form.get('company_size') == opt else '' }}>{{ opt }} employees</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="company_location">Company Location</label>
+          <input class="form-control" type="text" id="company_location" name="company_location"
+                 value="{{ form.get('company_location','') }}" placeholder="City, Country">
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label" for="email">Work Email</label>
-        <input class="form-control" type="email" id="email" name="email" placeholder="john@company.com" required>
+        <label class="form-label" for="website">Company Website</label>
+        <input class="form-control" type="url" id="website" name="website"
+               value="{{ form.get('website','') }}" placeholder="https://company.com">
       </div>
+      <div class="form-group">
+        <label class="form-label" for="company_bio">About the Company</label>
+        <textarea class="form-control" id="company_bio" name="company_bio" rows="3"
+                  placeholder="Tell candidates about your company culture and mission…" maxlength="800" style="resize:vertical">{{ form.get('company_bio','') }}</textarea>
+      </div>
+
+      <!-- Password -->
+      <div class="reg-section">Password</div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label" for="password">Password</label>
-          <input class="form-control" type="password" id="password" name="password" placeholder="Min. 6 characters" required>
+          <label class="form-label" for="password">Password <span style="color:#ef4444">*</span></label>
+          <div class="pw-wrap">
+            <input class="form-control" type="password" id="password" name="password"
+                   placeholder="Create a strong password" autocomplete="new-password"
+                   oninput="updateStrength(this.value)" required>
+            <button type="button" class="pw-toggle" onclick="togglePw('password')" aria-label="Show/hide password">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <div class="pw-strength-row" id="strengthRow" style="display:none">
+            <div class="pw-bars">
+              <div class="pw-bar" id="bar0"></div>
+              <div class="pw-bar" id="bar1"></div>
+              <div class="pw-bar" id="bar2"></div>
+            </div>
+            <span class="pw-strength-label" id="strengthLabel"></span>
+          </div>
+          <ul class="pw-rules">
+            <li class="pw-rule" id="rule-len">At least 8 characters</li>
+            <li class="pw-rule" id="rule-upper">One uppercase letter</li>
+            <li class="pw-rule" id="rule-lower">One lowercase letter</li>
+            <li class="pw-rule" id="rule-num">One number</li>
+            <li class="pw-rule" id="rule-special">One special char (@#$%&amp;*!)</li>
+            <li class="pw-rule" id="rule-space">No leading/trailing spaces</li>
+          </ul>
         </div>
         <div class="form-group">
-          <label class="form-label" for="confirm_password">Confirm Password</label>
-          <input class="form-control" type="password" id="confirm_password" name="confirm_password" placeholder="Repeat password" required>
+          <label class="form-label" for="confirm_password">Confirm Password <span style="color:#ef4444">*</span></label>
+          <div class="pw-wrap">
+            <input class="form-control" type="password" id="confirm_password" name="confirm_password"
+                   placeholder="Repeat password" autocomplete="new-password"
+                   oninput="checkConfirm()" required>
+            <button type="button" class="pw-toggle" onclick="togglePw('confirm_password')" aria-label="Show/hide password">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <div id="confirmMsg" class="field-error" style="display:none">Passwords do not match</div>
         </div>
       </div>
 
-      <button type="submit" class="btn btn-primary btn-full" style="margin-top:.5rem">
-        Create Recruiter Account
+      <!-- Terms -->
+      <div style="margin:1.25rem 0 1rem;display:flex;align-items:flex-start;gap:.625rem">
+        <input type="checkbox" id="terms" name="terms" value="1" required
+               style="margin-top:.2rem;flex-shrink:0" onchange="onTermsChange()">
+        <label for="terms" style="font-size:.875rem;color:var(--text-muted);cursor:pointer">
+          I agree to the
+          <a href="#" style="color:var(--primary)" onclick="openModal('termsModal');return false;">Terms of Use</a>
+          and
+          <a href="#" style="color:var(--primary)" onclick="openModal('privacyModal');return false;">Privacy Policy</a>
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full" id="submitBtn" disabled>
+        Create Recruiter Account &amp; Verify Email
       </button>
     </form>
 
-    <div class="auth-divider"><span>or</span></div>
+    <p class="auth-footer">Already have an account? <a href="{{ url_for('recruiter_login') }}">Log in</a></p>
 
-    <a href="{{ url_for('candidate_signup') }}" class="btn btn-outline btn-full">Sign up as Candidate instead</a>
-
-    <p class="auth-footer">
-      Already have an account? <a href="{{ url_for('recruiter_login') }}">Log in</a>
-    </p>
   </div>
 </div>
+
+<!-- Terms of Use modal -->
+<div class="modal-overlay" id="termsModal" style="display:none" onclick="onOverlayClick(event,'termsModal')">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Terms of Use</h3>
+      <button class="modal-close" onclick="closeModal('termsModal')" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <h4>1. Acceptance of Terms</h4>
+      <p>By creating a recruiter account on SkillBaseHire, you agree to these Terms of Use. If you do not agree, please do not register or use the platform.</p>
+
+      <h4>2. Recruiter Eligibility</h4>
+      <p>Recruiter accounts are reserved for companies and organisations actively hiring. You must use an official company email address. Personal email providers are not permitted for recruiter registration.</p>
+
+      <h4>3. Platform Use</h4>
+      <p>Recruiters may post job listings, search for skill-verified candidates, and manage applications through the platform. All job postings must be genuine, lawful, and accurately described.</p>
+
+      <h4>4. Candidate Data</h4>
+      <p>Candidate profile information made available to you must be used solely for legitimate hiring purposes. Sharing, selling, or misusing candidate data is strictly prohibited and may result in immediate account termination.</p>
+
+      <h4>5. Conduct</h4>
+      <p>Recruiters must not post discriminatory or misleading job listings, contact candidates outside the platform's intended hiring workflow, or attempt to circumvent any platform security or verification mechanisms.</p>
+
+      <h4>6. Intellectual Property</h4>
+      <p>All content on SkillBaseHire, including skill assessments, platform design, and documentation, is the property of SkillBaseHire and is protected by applicable intellectual property laws.</p>
+
+      <h4>7. Limitation of Liability</h4>
+      <p>SkillBaseHire is a matching platform and is not responsible for employment decisions, offers, or outcomes. Skill scores are indicative and should be used as one input among many in hiring decisions.</p>
+
+      <h4>8. Changes to Terms</h4>
+      <p>We may update these terms from time to time. Continued use after changes constitutes acceptance of the revised terms.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-sm" onclick="acceptAndClose('termsModal')">I Understand</button>
+    </div>
+  </div>
+</div>
+
+<!-- Privacy Policy modal -->
+<div class="modal-overlay" id="privacyModal" style="display:none" onclick="onOverlayClick(event,'privacyModal')">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Privacy Policy</h3>
+      <button class="modal-close" onclick="closeModal('privacyModal')" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <h4>1. Information We Collect</h4>
+      <p>We collect information you provide directly: your name, work email, job title, company details, and activity on the platform. We also collect usage data to improve platform features.</p>
+
+      <h4>2. How We Use Your Information</h4>
+      <p>Your data is used to operate your recruiter account, match you with relevant candidates, send verification and transactional emails, and improve platform features. We do not use your data for unrelated advertising.</p>
+
+      <h4>3. Candidate Data Access</h4>
+      <p>As a verified recruiter, you may access candidate profiles and skill scores. This access is logged and governed by our Candidate Data policy. You may not export or redistribute candidate data outside the platform.</p>
+
+      <h4>4. Data Security</h4>
+      <p>We use industry-standard security measures including password hashing, HTTPS encryption, and secure token-based email verification. We regularly audit access controls to protect candidate data.</p>
+
+      <h4>5. Data Retention</h4>
+      <p>Your account data is retained as long as your recruiter account is active. You may request deletion by contacting our support team. Some data may be retained for legal or compliance purposes.</p>
+
+      <h4>6. Your Rights</h4>
+      <p>You have the right to access, correct, or delete your personal data. To exercise these rights, contact us at privacy@skillbasehire.com.</p>
+
+      <h4>7. Contact</h4>
+      <p>For privacy-related questions, contact us at privacy@skillbasehire.com.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-sm" onclick="acceptAndClose('privacyModal')">I Understand</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Modal ── */
+function openModal(id) {
+  document.getElementById(id).style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+  document.body.style.overflow = '';
+}
+function onOverlayClick(e, id) {
+  if (e.target === document.getElementById(id)) closeModal(id);
+}
+function acceptAndClose(id) { closeModal(id); }
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    ['termsModal','privacyModal'].forEach(id => {
+      if (document.getElementById(id).style.display !== 'none') closeModal(id);
+    });
+  }
+});
+
+/* ── Terms → enable submit ── */
+function onTermsChange() {
+  document.getElementById('submitBtn').disabled = !document.getElementById('terms').checked;
+}
+
+/* ── Domain check ── */
+const PERSONAL_DOMAINS = new Set([
+  'gmail.com','yahoo.com','outlook.com','hotmail.com',
+  'rediffmail.com','protonmail.com','icloud.com',
+  'aol.com','ymail.com','mail.com','live.com'
+]);
+function checkDomain(email) {
+  const errEl  = document.getElementById('domainError');
+  const domain = (email.split('@')[1] || '').toLowerCase();
+  const bad    = domain && PERSONAL_DOMAINS.has(domain);
+  errEl.style.display = bad ? 'block' : 'none';
+  document.getElementById('email').classList.toggle('input-error', bad);
+}
+
+/* ── Password ── */
+function togglePw(id) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+function updateStrength(val) {
+  const row = document.getElementById('strengthRow');
+  if (!val) { row.style.display = 'none'; return; }
+  row.style.display = 'flex';
+  const checks = [val.length >= 8, /[A-Z]/.test(val), /[a-z]/.test(val), /\d/.test(val), /[@#$%&*!]/.test(val), val === val.trim()];
+  const ids = ['rule-len','rule-upper','rule-lower','rule-num','rule-special','rule-space'];
+  const passed = checks.filter(Boolean).length;
+  checks.forEach((ok, i) => {
+    document.getElementById(ids[i]).classList.toggle('ok', ok);
+    document.getElementById(ids[i]).classList.toggle('fail', !ok && val.length > 0);
+  });
+  const bars = [document.getElementById('bar0'), document.getElementById('bar1'), document.getElementById('bar2')];
+  const label = document.getElementById('strengthLabel');
+  bars.forEach(b => b.className = 'pw-bar');
+  if (passed <= 2)      { bars[0].classList.add('weak');   label.textContent = 'Weak';   label.className = 'pw-strength-label weak'; }
+  else if (passed <= 4) { bars[0].classList.add('medium'); bars[1].classList.add('medium'); label.textContent = 'Medium'; label.className = 'pw-strength-label medium'; }
+  else                  { bars.forEach(b => b.classList.add('strong')); label.textContent = 'Strong'; label.className = 'pw-strength-label strong'; }
+  checkConfirm();
+}
+function checkConfirm() {
+  const pw = document.getElementById('password').value;
+  const cf = document.getElementById('confirm_password').value;
+  const msg = document.getElementById('confirmMsg');
+  const inp = document.getElementById('confirm_password');
+  if (!cf) { msg.style.display = 'none'; inp.classList.remove('input-ok','input-error'); return; }
+  if (pw === cf) { msg.style.display = 'none'; inp.classList.add('input-ok'); inp.classList.remove('input-error'); }
+  else           { msg.style.display = 'block'; inp.classList.add('input-error'); inp.classList.remove('input-ok'); }
+}
+</script>
 {% endblock %}

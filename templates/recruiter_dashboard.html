@@ -5,8 +5,15 @@
 <div class="page-header">
   <div class="container page-header-inner">
     <div>
-      <h1>{{ profile.company }} Dashboard</h1>
-      <p>Welcome back, {{ user.name }}</p>
+      <div style="display:flex;align-items:center;gap:.625rem;flex-wrap:wrap">
+        <h1 style="margin:0">{{ profile.company }} Dashboard</h1>
+        {% if user.email_verified %}
+          <span class="badge-verified">✓ Account Verified</span>
+        {% else %}
+          <span class="badge-unverified">Account Not Verified</span>
+        {% endif %}
+      </div>
+      <p style="margin:.25rem 0 0">Welcome back, {{ user.name }}</p>
     </div>
     <div style="display:flex;gap:.75rem">
       <a href="{{ url_for('search_candidates') }}" class="btn btn-outline">Find Candidates</a>
@@ -16,6 +23,21 @@
 </div>
 
 <div class="container" style="padding:2.5rem 1.5rem">
+
+  {% if not user.email_verified %}
+  <div class="verify-banner" style="margin-bottom:2rem">
+    <div class="verify-banner-content">
+      <div class="verify-banner-icon">⚠️</div>
+      <div>
+        <div class="verify-banner-title">Verify Your Work Email</div>
+        <div class="verify-banner-msg">Your recruiter account is not verified. Please verify your official company email address to access candidate profiles and hiring tools.</div>
+      </div>
+    </div>
+    <form action="{{ url_for('resend_verification') }}" method="post" style="flex-shrink:0">
+      <button type="submit" class="btn btn-sm verify-banner-btn">Resend Verification Email</button>
+    </form>
+  </div>
+  {% endif %}
 
   <!-- Stats -->
   <div class="stats-grid" style="margin-bottom:2rem">

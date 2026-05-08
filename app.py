@@ -1,7 +1,13 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, g
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
 import sqlite3
 import os
+import re
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 from functools import wraps
 
@@ -9,6 +15,15 @@ app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'skillbasehire-dev-secret-2024')
 
 DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'skillbasehire.db')
+
+PERSONAL_EMAIL_DOMAINS = {
+    'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com',
+    'rediffmail.com', 'protonmail.com', 'icloud.com',
+    'aol.com', 'ymail.com', 'mail.com', 'live.com',
+}
+RESUME_UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads', 'resumes')
+ALLOWED_RESUME_EXT = {'pdf', 'doc', 'docx'}
+MAX_RESUME_SIZE = 5 * 1024 * 1024  # 5 MB
 
 
 def get_db():
@@ -160,6 +175,25 @@ def init_db():
             'INSERT OR IGNORE INTO skills (name, category, description) VALUES (?, ?, ?)',
             skills_data
         )
+
+        # Schema migrations — safe, idempotent
+        for stmt in [
+            "ALTER TABLE users ADD COLUMN email_verified INTEGER DEFAULT 1",
+            "ALTER TABLE users ADD COLUMN verification_token TEXT",
+            "ALTER TABLE candidate_profiles ADD COLUMN phone TEXT DEFAULT ''",
+            "ALTER TABLE candidate_profiles ADD COLUMN job_title TEXT DEFAULT ''",
+            "ALTER TABLE candidate_profiles ADD COLUMN experience TEXT DEFAULT ''",
+            "ALTER TABLE candidate_profiles ADD COLUMN resume_filename TEXT",
+            "ALTER TABLE recruiter_profiles ADD COLUMN phone TEXT DEFAULT ''",
+            "ALTER TABLE recruiter_profiles ADD COLUMN job_title TEXT DEFAULT ''",
+            "ALTER TABLE recruiter_profiles ADD COLUMN company_size TEXT DEFAULT ''",
+            "ALTER TABLE recruiter_profiles ADD COLUMN industry TEXT DEFAULT ''",
+            "ALTER TABLE recruiter_profiles ADD COLUMN company_location TEXT DEFAULT ''",
+        ]:
+            try:
+                db.execute(stmt)
+            except Exception:
+                pass
         db.commit()
 
 
@@ -244,6 +278,82 @@ def get_current_user():
     if 'user_id' not in session:
         return None
     return get_db().execute('SELECT * FROM users WHERE id = ?', [session['user_id']]).fetchone()
+
+
+_PW_SPECIAL = r'[@#$%&*!]'
+
+def validate_password(password):
+    if not password:
+        return 'Password is required'
+    if password != password.strip():
+        return 'Password cannot start or end with spaces'
+    if len(password) < 8:
+        return 'Password must be at least 8 characters'
+    if not re.search(r'[A-Z]', password):
+        return 'Password must include at least one uppercase letter'
+    if not re.search(r'[a-z]', password):
+        return 'Password must include at least one lowercase letter'
+    if not re.search(r'\d', password):
+        return 'Password must include at least one number'
+    if not re.search(_PW_SPECIAL, password):
+        return 'Password must include at least one special character (@#$%&*!)'
+    return None
+
+
+def allowed_resume(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_RESUME_EXT
+
+
+_serializer = URLSafeTimedSerializer(app.secret_key)
+
+
+def generate_verification_token(email):
+    return _serializer.dumps(email, salt='email-verify')
+
+
+def verify_email_token(token, expiration=86400):
+    try:
+        return _serializer.loads(token, salt='email-verify', max_age=expiration)
+    except (SignatureExpired, BadSignature):
+        return None
+
+
+def send_verification_email(to_email, name, token):
+    verify_url = url_for('verify_email', token=token, _external=True)
+    subject = 'Verify your SkillBaseHire account'
+    html_body = f'''
+    <div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#fff">
+      <div style="text-align:center;margin-bottom:24px">
+        <span style="font-size:1.25rem;font-weight:800;color:#1e293b">SkillBaseHire</span>
+      </div>
+      <h2 style="font-size:1.25rem;font-weight:700;color:#1e293b;margin:0 0 8px">Hi {name},</h2>
+      <p style="color:#475569;margin:0 0 24px">Click the button below to verify your email address and activate your account.</p>
+      <div style="text-align:center;margin:28px 0">
+        <a href="{verify_url}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-weight:600;padding:12px 32px;border-radius:8px">Verify Email Address</a>
+      </div>
+      <p style="color:#94a3b8;font-size:.8125rem;margin:0">This link expires in 24 hours. If you didn't create an account, you can ignore this email.</p>
+    </div>
+    '''
+    smtp_user = os.environ.get('SMTP_USER')
+    smtp_pass = os.environ.get('SMTP_PASS')
+    if not smtp_user or not smtp_pass:
+        print(f'[DEV] Verification link for {to_email}: {verify_url}')
+        return
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From'] = smtp_user
+    msg['To'] = to_email
+    msg.attach(MIMEText(html_body, 'html'))
+    smtp_host = os.environ.get('SMTP_HOST', 'smtp.gmail.com')
+    smtp_port = int(os.environ.get('SMTP_PORT', 587))
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(smtp_user, to_email, msg.as_string())
+    except Exception as e:
+        print(f'[EMAIL ERROR] {e}')
+        print(f'[DEV] Verification link for {to_email}: {verify_url}')
 
 
 def parse_skills_data(raw):
@@ -664,6 +774,15 @@ def exam_ended(skill_id):
     return render_template('exam_ended.html', data=data, user=get_current_user())
 
 
+# ── Registration type selector ────────────────────────────────────────────────
+
+@app.route('/register')
+def register():
+    if session.get('user_id'):
+        return redirect(url_for('candidate_dashboard' if session.get('role') == 'candidate' else 'recruiter_dashboard'))
+    return render_template('register.html', user=None)
+
+
 # ── Candidate auth ────────────────────────────────────────────────────────────
 
 @app.route('/candidate/signup', methods=['GET', 'POST'])
@@ -671,33 +790,80 @@ def candidate_signup():
     if session.get('role') == 'candidate':
         return redirect(url_for('candidate_dashboard'))
 
+    all_skills = get_db().execute('SELECT * FROM skills ORDER BY category, name').fetchall()
+
     if request.method == 'POST':
-        name = request.form.get('name', '').strip()
-        email = request.form.get('email', '').strip().lower()
-        password = request.form.get('password', '')
-        confirm = request.form.get('confirm_password', '')
+        name        = request.form.get('name', '').strip()
+        email       = request.form.get('email', '').strip().lower()
+        phone       = request.form.get('phone', '').strip()
+        job_title   = request.form.get('job_title', '').strip()
+        experience  = request.form.get('experience', '').strip()
+        headline    = request.form.get('headline', '').strip()
+        location    = request.form.get('location', '').strip()
+        bio         = request.form.get('bio', '').strip()
+        linkedin    = request.form.get('linkedin', '').strip()
+        github      = request.form.get('github', '').strip()
+        skill_ids   = request.form.getlist('skills', type=int)
+        password    = request.form.get('password', '')
+        confirm     = request.form.get('confirm_password', '')
+        terms       = request.form.get('terms')
 
-        if not all([name, email, password, confirm]):
-            flash('All fields are required.', 'error')
-        elif password != confirm:
-            flash('Passwords do not match.', 'error')
-        elif len(password) < 6:
-            flash('Password must be at least 6 characters.', 'error')
-        elif get_db().execute('SELECT id FROM users WHERE email=?', [email]).fetchone():
-            flash('An account with this email already exists.', 'error')
-        else:
-            db = get_db()
-            cur = db.execute(
-                'INSERT INTO users (name, email, password_hash, role) VALUES (?,?,?,?)',
-                [name, email, generate_password_hash(password), 'candidate']
-            )
-            db.execute('INSERT INTO candidate_profiles (user_id) VALUES (?)', [cur.lastrowid])
-            db.commit()
-            session.update({'user_id': cur.lastrowid, 'role': 'candidate', 'name': name})
-            flash(f'Welcome, {name}! Your account is ready.', 'success')
-            return redirect(url_for('candidate_dashboard'))
+        errors = []
+        if not name:   errors.append('Full name is required.')
+        if not email:  errors.append('Email address is required.')
+        if not terms:  errors.append('You must accept the terms.')
+        pw_err = validate_password(password)
+        if pw_err:     errors.append(pw_err)
+        if not pw_err and password != confirm:
+            errors.append('Passwords do not match.')
+        if not errors and get_db().execute('SELECT id FROM users WHERE email=?', [email]).fetchone():
+            errors.append('An account with this email already exists.')
 
-    return render_template('candidate_signup.html', user=None)
+        if errors:
+            for e in errors:
+                flash(e, 'error')
+            return render_template('candidate_signup.html', user=None, all_skills=all_skills,
+                                   form=request.form, sel_skills=skill_ids)
+
+        # Handle resume upload
+        resume_filename = None
+        resume_file = request.files.get('resume')
+        if resume_file and resume_file.filename:
+            if not allowed_resume(resume_file.filename):
+                flash('Resume must be PDF, DOC, or DOCX.', 'error')
+                return render_template('candidate_signup.html', user=None, all_skills=all_skills,
+                                       form=request.form, sel_skills=skill_ids)
+            if len(resume_file.read()) > MAX_RESUME_SIZE:
+                flash('Resume file must be under 5 MB.', 'error')
+                return render_template('candidate_signup.html', user=None, all_skills=all_skills,
+                                       form=request.form, sel_skills=skill_ids)
+            resume_file.seek(0)
+            os.makedirs(RESUME_UPLOAD_FOLDER, exist_ok=True)
+            resume_filename = secure_filename(f'{email}_{resume_file.filename}')
+            resume_file.save(os.path.join(RESUME_UPLOAD_FOLDER, resume_filename))
+
+        db = get_db()
+        token = generate_verification_token(email)
+        cur = db.execute(
+            'INSERT INTO users (name, email, password_hash, role, email_verified, verification_token) VALUES (?,?,?,?,0,?)',
+            [name, email, generate_password_hash(password), 'candidate', token]
+        )
+        uid = cur.lastrowid
+        db.execute('''INSERT INTO candidate_profiles
+                      (user_id, headline, location, bio, linkedin, github, phone, job_title, experience, resume_filename)
+                      VALUES (?,?,?,?,?,?,?,?,?,?)''',
+                   [uid, headline, location, bio, linkedin, github, phone, job_title, experience, resume_filename])
+        for sid in skill_ids:
+            db.execute('INSERT OR IGNORE INTO user_skills (user_id, skill_id) VALUES (?,?)', [uid, sid])
+        db.commit()
+
+        send_verification_email(email, name, token)
+        session.update({'user_id': uid, 'role': 'candidate', 'name': name})
+        flash('Account created! A verification email is on its way — check your inbox to unlock full access.', 'success')
+        return redirect(url_for('candidate_dashboard'))
+
+    return render_template('candidate_signup.html', user=None, all_skills=all_skills,
+                           form={}, sel_skills=[])
 
 
 @app.route('/candidate/login', methods=['GET', 'POST'])
@@ -849,34 +1015,62 @@ def recruiter_signup():
         return redirect(url_for('recruiter_dashboard'))
 
     if request.method == 'POST':
-        name = request.form.get('name', '').strip()
-        email = request.form.get('email', '').strip().lower()
-        company = request.form.get('company', '').strip()
-        password = request.form.get('password', '')
-        confirm = request.form.get('confirm_password', '')
+        name             = request.form.get('name', '').strip()
+        email            = request.form.get('email', '').strip().lower()
+        phone            = request.form.get('phone', '').strip()
+        job_title        = request.form.get('job_title', '').strip()
+        company          = request.form.get('company', '').strip()
+        company_size     = request.form.get('company_size', '').strip()
+        industry         = request.form.get('industry', '').strip()
+        company_location = request.form.get('company_location', '').strip()
+        company_bio      = request.form.get('company_bio', '').strip()
+        website          = request.form.get('website', '').strip()
+        password         = request.form.get('password', '')
+        confirm          = request.form.get('confirm_password', '')
+        terms            = request.form.get('terms')
 
-        if not all([name, email, company, password, confirm]):
-            flash('All fields are required.', 'error')
-        elif password != confirm:
-            flash('Passwords do not match.', 'error')
-        elif len(password) < 6:
-            flash('Password must be at least 6 characters.', 'error')
-        elif get_db().execute('SELECT id FROM users WHERE email=?', [email]).fetchone():
-            flash('An account with this email already exists.', 'error')
-        else:
-            db = get_db()
-            cur = db.execute(
-                'INSERT INTO users (name, email, password_hash, role) VALUES (?,?,?,?)',
-                [name, email, generate_password_hash(password), 'recruiter']
-            )
-            db.execute('INSERT INTO recruiter_profiles (user_id, company) VALUES (?,?)',
-                       [cur.lastrowid, company])
-            db.commit()
-            session.update({'user_id': cur.lastrowid, 'role': 'recruiter', 'name': name})
-            flash(f'Welcome, {name}!', 'success')
-            return redirect(url_for('recruiter_dashboard'))
+        errors = []
+        if not name:    errors.append('Full name is required.')
+        if not email:   errors.append('Work email is required.')
+        if not company: errors.append('Company name is required.')
+        if not terms:   errors.append('You must accept the terms.')
 
-    return render_template('recruiter_signup.html', user=None)
+        # Block personal email domains
+        domain = email.split('@')[-1] if '@' in email else ''
+        if domain in PERSONAL_EMAIL_DOMAINS:
+            errors.append(f'Please use a work email. Personal email providers ({domain}) are not allowed for recruiter accounts.')
+
+        pw_err = validate_password(password)
+        if pw_err:     errors.append(pw_err)
+        if not pw_err and password != confirm:
+            errors.append('Passwords do not match.')
+        if not errors and get_db().execute('SELECT id FROM users WHERE email=?', [email]).fetchone():
+            errors.append('An account with this email already exists.')
+
+        if errors:
+            for e in errors:
+                flash(e, 'error')
+            return render_template('recruiter_signup.html', user=None, form=request.form)
+
+        db = get_db()
+        token = generate_verification_token(email)
+        cur = db.execute(
+            'INSERT INTO users (name, email, password_hash, role, email_verified, verification_token) VALUES (?,?,?,?,0,?)',
+            [name, email, generate_password_hash(password), 'recruiter', token]
+        )
+        uid = cur.lastrowid
+        db.execute('''INSERT INTO recruiter_profiles
+                      (user_id, company, company_bio, website, phone, job_title, company_size, industry, company_location)
+                      VALUES (?,?,?,?,?,?,?,?,?)''',
+                   [uid, company, company_bio, website, phone, job_title, company_size, industry, company_location])
+        db.commit()
+
+        send_verification_email(email, name, token)
+        session.update({'user_id': uid, 'role': 'recruiter', 'name': name})
+        flash('Account created! A verification email is on its way — verify your work email to access all recruiter tools.', 'success')
+        return redirect(url_for('recruiter_dashboard'))
+
+    return render_template('recruiter_signup.html', user=None, form={})
 
 
 @app.route('/recruiter/login', methods=['GET', 'POST'])
@@ -961,6 +1155,10 @@ def post_job():
             return render_template('post_job.html', user=get_current_user(),
                                    all_skills=all_skills, profile=profile)
 
+        if not db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()['email_verified']:
+            flash('Please verify your work email before posting a live job.', 'error')
+            return redirect(url_for('recruiter_dashboard'))
+
         cur = db.execute('''
             INSERT INTO jobs (recruiter_id, title, company, location, job_type,
                               description, requirements, salary_min, salary_max)
@@ -1032,6 +1230,11 @@ def update_app_status(app_id):
         return redirect(url_for('recruiter_dashboard'))
 
     db = get_db()
+    if status == 'shortlisted':
+        verified = db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()['email_verified']
+        if not verified:
+            flash('Please verify your work email before shortlisting candidates.', 'error')
+            return redirect(url_for('recruiter_dashboard'))
     row = db.execute('''
         SELECT a.job_id FROM applications a JOIN jobs j ON a.job_id=j.id
         WHERE a.id=? AND j.recruiter_id=?
@@ -1051,6 +1254,10 @@ def update_app_status(app_id):
 @recruiter_required
 def search_candidates():
     db = get_db()
+    viewer = db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()
+    if viewer and not viewer['email_verified']:
+        flash('Please verify your work email to search and view candidate profiles.', 'error')
+        return redirect(url_for('recruiter_dashboard'))
     search = request.args.get('q', '').strip()
     skill_filter = request.args.get('skill', '').strip()
     location_filter = request.args.get('location', '').strip()
@@ -1102,22 +1309,33 @@ def search_candidates():
 @app.route('/candidates/<int:candidate_id>')
 def candidate_detail(candidate_id):
     db = get_db()
+
+    # Block unverified recruiters from viewing candidate profiles
+    if session.get('role') == 'recruiter':
+        viewer = db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()
+        if viewer and not viewer['email_verified']:
+            return render_template('candidate_detail.html', candidate=None, skills=[],
+                                   blocked_recruiter=True, user=get_current_user())
+
     candidate = db.execute('''
-        SELECT u.id, u.name, u.email, u.created_at,
+        SELECT u.id, u.name, u.email, u.created_at, u.email_verified,
                cp.headline, cp.location, cp.bio, cp.linkedin, cp.github
         FROM users u LEFT JOIN candidate_profiles cp ON u.id = cp.user_id
         WHERE u.id = ? AND u.role = 'candidate'
     ''', [candidate_id]).fetchone()
     if not candidate:
         return render_template('candidate_detail.html', candidate=None, skills=[],
-                               user=get_current_user())
+                               blocked_recruiter=False, user=get_current_user())
     skills = db.execute('''
         SELECT s.id, s.name, s.category, us.verified, us.score
         FROM user_skills us JOIN skills s ON us.skill_id = s.id
         WHERE us.user_id = ?
         ORDER BY us.verified DESC, s.name
     ''', [candidate_id]).fetchall()
+    # Skill verification scores are hidden from recruiters until candidate verifies email
+    show_verified_skills = bool(candidate['email_verified']) or (session.get('user_id') == candidate_id)
     return render_template('candidate_detail.html', candidate=candidate, skills=skills,
+                           blocked_recruiter=False, show_verified_skills=show_verified_skills,
                            user=get_current_user())
 
 
@@ -1145,6 +1363,84 @@ def recruiter_detail(recruiter_id):
     ''', [recruiter_id]).fetchall()
     return render_template('recruiter_detail.html', recruiter=recruiter, jobs=jobs,
                            user=get_current_user())
+
+
+# ── Email verification ────────────────────────────────────────────────────────
+
+@app.route('/email-sent')
+def email_sent():
+    pending_email = session.get('pending_email', '')
+    pending_name  = session.get('pending_name', '')
+    if not pending_email:
+        return redirect(url_for('home'))
+    return render_template('email_sent.html', user=None,
+                           pending_email=pending_email, pending_name=pending_name)
+
+
+@app.route('/verify-email/<token>')
+def verify_email(token):
+    email = verify_email_token(token)
+    if not email:
+        flash('This verification link is invalid or has expired. Please request a new one.', 'error')
+        return redirect(url_for('home'))
+    db = get_db()
+    user = db.execute('SELECT * FROM users WHERE email=?', [email]).fetchone()
+    if not user:
+        flash('Account not found.', 'error')
+        return redirect(url_for('home'))
+    if user['email_verified']:
+        flash('Your email is already verified. Please log in.', 'success')
+    else:
+        db.execute('UPDATE users SET email_verified=1, verification_token=NULL WHERE email=?', [email])
+        db.commit()
+        flash('Email verified! Welcome to SkillBaseHire.', 'success')
+    session.pop('pending_email', None)
+    session.pop('pending_name', None)
+    session.update({'user_id': user['id'], 'role': user['role'], 'name': user['name']})
+    if user['role'] == 'recruiter':
+        return redirect(url_for('recruiter_dashboard'))
+    return redirect(url_for('candidate_dashboard'))
+
+
+@app.route('/resend-verification', methods=['POST'])
+def resend_verification():
+    db = get_db()
+    # Logged-in user resending from dashboard banner
+    if session.get('user_id'):
+        user = db.execute('SELECT * FROM users WHERE id=?', [session['user_id']]).fetchone()
+        if not user:
+            flash('Account not found.', 'error')
+            return redirect(url_for('home'))
+        if user['email_verified']:
+            flash('Your email is already verified.', 'success')
+            return redirect(url_for('candidate_dashboard' if user['role'] == 'candidate' else 'recruiter_dashboard'))
+        token = generate_verification_token(user['email'])
+        db.execute('UPDATE users SET verification_token=? WHERE id=?', [token, user['id']])
+        db.commit()
+        send_verification_email(user['email'], user['name'], token)
+        flash('Verification email sent! Please check your inbox.', 'success')
+        return redirect(url_for('candidate_dashboard' if user['role'] == 'candidate' else 'recruiter_dashboard'))
+
+    # Pre-login flow (email_sent page)
+    email = session.get('pending_email', '').strip().lower()
+    if not email:
+        flash('No pending verification found. Please sign up again.', 'error')
+        return redirect(url_for('register'))
+    user = db.execute('SELECT * FROM users WHERE email=?', [email]).fetchone()
+    if not user:
+        flash('Account not found.', 'error')
+        return redirect(url_for('register'))
+    if user['email_verified']:
+        flash('Your email is already verified. Please log in.', 'success')
+        return redirect(url_for('candidate_login' if user['role'] == 'candidate' else 'recruiter_login'))
+    token = generate_verification_token(email)
+    db.execute('UPDATE users SET verification_token=? WHERE email=?', [token, email])
+    db.commit()
+    send_verification_email(email, user['name'], token)
+    flash('Verification email resent. Please check your inbox.', 'success')
+    session['pending_email'] = email
+    session['pending_name'] = user['name']
+    return redirect(url_for('email_sent'))
 
 
 # ── Logout ────────────────────────────────────────────────────────────────────

@@ -3,49 +3,368 @@
 
 {% block content %}
 <div class="auth-page">
-  <div class="auth-card">
+  <div class="auth-card auth-card-lg">
+
     <div class="auth-logo">
       <a href="{{ url_for('home') }}" class="auth-brand-link">
-        <svg width="28" height="28" viewBox="0 0 22 22" fill="none"><polygon points="11,2 20,7 20,15 11,20 2,15 2,7" fill="#4F46E5" opacity=".2" stroke="#4F46E5" stroke-width="1.5"/><polygon points="11,6 16,9 16,13 11,16 6,13 6,9" fill="#4F46E5"/></svg>
+        <svg width="28" height="28" viewBox="0 0 22 22" fill="none">
+          <polygon points="11,2 20,7 20,15 11,20 2,15 2,7" fill="#4F46E5" opacity=".2" stroke="#4F46E5" stroke-width="1.5"/>
+          <polygon points="11,6 16,9 16,13 11,16 6,13 6,9" fill="#4F46E5"/>
+        </svg>
         SkillBaseHire
       </a>
     </div>
 
-    <h1 class="auth-title">Create your account</h1>
+    <!-- Role toggle -->
+    <div class="signup-role-toggle">
+      <a href="{{ url_for('candidate_signup') }}" class="active">Candidate</a>
+      <a href="{{ url_for('recruiter_signup') }}">Recruiter</a>
+    </div>
+
+    <h1 class="auth-title">Create your candidate account</h1>
     <p class="auth-subtitle">Start your skill-first job search today</p>
 
-    <form method="post" action="{{ url_for('candidate_signup') }}">
-      <div class="form-group">
-        <label class="form-label" for="name">Full Name</label>
-        <input class="form-control" type="text" id="name" name="name" placeholder="Jane Doe" required autocomplete="name">
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="email">Email Address</label>
-        <input class="form-control" type="email" id="email" name="email" placeholder="jane@example.com" required autocomplete="email">
+    <form method="post" action="{{ url_for('candidate_signup') }}" enctype="multipart/form-data" id="candidateSignupForm" novalidate>
+
+      <!-- Basic Info -->
+      <div class="reg-section">Basic Information</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="name">Full Name <span style="color:#ef4444">*</span></label>
+          <input class="form-control" type="text" id="name" name="name"
+                 value="{{ form.get('name','') }}" placeholder="Jane Doe" required autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address <span style="color:#ef4444">*</span></label>
+          <input class="form-control" type="email" id="email" name="email"
+                 value="{{ form.get('email','') }}" placeholder="jane@example.com" required autocomplete="email">
+        </div>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label" for="password">Password</label>
-          <input class="form-control" type="password" id="password" name="password" placeholder="Min. 6 characters" required>
+          <label class="form-label" for="phone">Phone Number</label>
+          <input class="form-control" type="tel" id="phone" name="phone"
+                 value="{{ form.get('phone','') }}" placeholder="+1 555 000 0000">
         </div>
         <div class="form-group">
-          <label class="form-label" for="confirm_password">Confirm Password</label>
-          <input class="form-control" type="password" id="confirm_password" name="confirm_password" placeholder="Repeat password" required>
+          <label class="form-label" for="location">Location</label>
+          <input class="form-control" type="text" id="location" name="location"
+                 value="{{ form.get('location','') }}" placeholder="City, Country">
         </div>
       </div>
 
-      <button type="submit" class="btn btn-primary btn-full" style="margin-top:.5rem">
-        Create Candidate Account
+      <!-- Professional Details -->
+      <div class="reg-section">Professional Details</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="job_title">Current / Desired Job Title</label>
+          <input class="form-control" type="text" id="job_title" name="job_title"
+                 value="{{ form.get('job_title','') }}" placeholder="e.g. Frontend Developer">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="experience">Years of Experience</label>
+          <select class="form-control" id="experience" name="experience">
+            <option value="">Select…</option>
+            {% for opt in ['Less than 1 year','1–2 years','3–5 years','6–10 years','10+ years'] %}
+              <option value="{{ opt }}" {{ 'selected' if form.get('experience') == opt else '' }}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="headline">Profile Headline</label>
+        <input class="form-control" type="text" id="headline" name="headline"
+               value="{{ form.get('headline','') }}" placeholder="e.g. Python Developer · 4 years experience" maxlength="120">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="bio">Professional Summary</label>
+        <textarea class="form-control" id="bio" name="bio" rows="3"
+                  placeholder="Tell employers about yourself…" maxlength="800" style="resize:vertical">{{ form.get('bio','') }}</textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="linkedin">LinkedIn URL</label>
+          <input class="form-control" type="url" id="linkedin" name="linkedin"
+                 value="{{ form.get('linkedin','') }}" placeholder="https://linkedin.com/in/…">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="github">GitHub URL</label>
+          <input class="form-control" type="url" id="github" name="github"
+                 value="{{ form.get('github','') }}" placeholder="https://github.com/…">
+        </div>
+      </div>
+
+      <!-- Skills -->
+      <div class="reg-section">Skills <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.75rem">(select all that apply)</span></div>
+      <input type="text" class="form-control skills-picker-search" id="skillSearch"
+             placeholder="Search skills…" autocomplete="off" oninput="filterSkills(this.value)">
+      <p class="skills-hint" id="skillsHint">Start typing to search available skills.</p>
+      <p class="skills-hint" id="skillsNoResult" style="display:none">No matching skills found.</p>
+      <div class="skills-picker" id="skillsPicker">
+        {% for skill in all_skills %}
+          <span>
+            <input type="checkbox" class="skill-opt" id="sk{{ skill.id }}" name="skills" value="{{ skill.id }}"
+                   {{ 'checked' if skill.id in sel_skills else '' }}>
+            <label class="skill-opt-label" for="sk{{ skill.id }}">{{ skill.name }}</label>
+          </span>
+        {% endfor %}
+      </div>
+
+      <!-- Resume -->
+      <div class="reg-section">Resume / CV</div>
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" name="resume" id="resumeInput" accept=".pdf,.doc,.docx"
+               onchange="onFileChosen(this)">
+        <div class="upload-zone-icon">📄</div>
+        <div class="upload-zone-text">Drag &amp; drop or <strong>browse</strong></div>
+        <div class="upload-zone-hint">PDF, DOC, DOCX · Max 5 MB</div>
+        <div class="upload-zone-filename" id="resumeName"></div>
+      </div>
+
+      <!-- Password -->
+      <div class="reg-section">Password</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="password">Password <span style="color:#ef4444">*</span></label>
+          <div class="pw-wrap">
+            <input class="form-control" type="password" id="password" name="password"
+                   placeholder="Create a strong password" autocomplete="new-password"
+                   oninput="updateStrength(this.value)" required>
+            <button type="button" class="pw-toggle" onclick="togglePw('password')" aria-label="Show/hide password">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <div class="pw-strength-row" id="strengthRow" style="display:none">
+            <div class="pw-bars">
+              <div class="pw-bar" id="bar0"></div>
+              <div class="pw-bar" id="bar1"></div>
+              <div class="pw-bar" id="bar2"></div>
+            </div>
+            <span class="pw-strength-label" id="strengthLabel"></span>
+          </div>
+          <ul class="pw-rules">
+            <li class="pw-rule" id="rule-len">At least 8 characters</li>
+            <li class="pw-rule" id="rule-upper">One uppercase letter</li>
+            <li class="pw-rule" id="rule-lower">One lowercase letter</li>
+            <li class="pw-rule" id="rule-num">One number</li>
+            <li class="pw-rule" id="rule-special">One special char (@#$%&amp;*!)</li>
+            <li class="pw-rule" id="rule-space">No leading/trailing spaces</li>
+          </ul>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="confirm_password">Confirm Password <span style="color:#ef4444">*</span></label>
+          <div class="pw-wrap">
+            <input class="form-control" type="password" id="confirm_password" name="confirm_password"
+                   placeholder="Repeat password" autocomplete="new-password"
+                   oninput="checkConfirm()" required>
+            <button type="button" class="pw-toggle" onclick="togglePw('confirm_password')" aria-label="Show/hide password">
+              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <div id="confirmMsg" class="field-error" style="display:none">Passwords do not match</div>
+        </div>
+      </div>
+
+      <!-- Terms -->
+      <div style="margin:1.25rem 0 1rem;display:flex;align-items:flex-start;gap:.625rem">
+        <input type="checkbox" id="terms" name="terms" value="1" required
+               style="margin-top:.2rem;flex-shrink:0" onchange="onTermsChange()">
+        <label for="terms" style="font-size:.875rem;color:var(--text-muted);cursor:pointer">
+          I agree to the
+          <a href="#" style="color:var(--primary)" onclick="openModal('termsModal');return false;">Terms of Use</a>
+          and
+          <a href="#" style="color:var(--primary)" onclick="openModal('privacyModal');return false;">Privacy Policy</a>
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-full" id="submitBtn" disabled>
+        Create Account &amp; Verify Email
       </button>
     </form>
 
-    <div class="auth-divider"><span>or</span></div>
+    <p class="auth-footer">Already have an account? <a href="{{ url_for('candidate_login') }}">Log in</a></p>
 
-    <a href="{{ url_for('recruiter_signup') }}" class="btn btn-outline btn-full">Sign up as Recruiter instead</a>
-
-    <p class="auth-footer">
-      Already have an account? <a href="{{ url_for('candidate_login') }}">Log in</a>
-    </p>
   </div>
 </div>
+
+<!-- Terms of Use modal -->
+<div class="modal-overlay" id="termsModal" style="display:none" onclick="onOverlayClick(event,'termsModal')">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Terms of Use</h3>
+      <button class="modal-close" onclick="closeModal('termsModal')" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <h4>1. Acceptance of Terms</h4>
+      <p>By creating an account on SkillBaseHire, you agree to these Terms of Use. If you do not agree, please do not register or use the platform.</p>
+
+      <h4>2. Platform Use</h4>
+      <p>SkillBaseHire is a skill-based hiring platform that connects verified talent with employers. Candidates may create profiles, take skill assessments, and apply for jobs. Recruiters may post jobs and search for qualified candidates.</p>
+
+      <h4>3. Account Responsibilities</h4>
+      <p>You are responsible for maintaining the confidentiality of your account credentials. You must provide accurate and truthful information during registration. Any fraudulent or misleading information may result in account suspension.</p>
+
+      <h4>4. Skill Assessments</h4>
+      <p>Skill verification tests must be taken in good faith without external assistance. Attempting to manipulate assessment results, including exiting fullscreen mode, may result in automatic test termination and score invalidation.</p>
+
+      <h4>5. Conduct</h4>
+      <p>Users must not use the platform for any unlawful purpose, harass or contact other users outside of the platform's intended use, or attempt to circumvent any platform security measures.</p>
+
+      <h4>6. Intellectual Property</h4>
+      <p>All content on SkillBaseHire, including skill assessments, platform design, and documentation, is the property of SkillBaseHire and is protected by applicable intellectual property laws.</p>
+
+      <h4>7. Limitation of Liability</h4>
+      <p>SkillBaseHire is not liable for any employment decisions made by recruiters based on platform data, or for any loss or damage arising from platform use beyond what is required by applicable law.</p>
+
+      <h4>8. Changes to Terms</h4>
+      <p>We may update these terms from time to time. Continued use of the platform after changes constitutes acceptance of the revised terms. We will notify users of significant changes via email.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-sm" onclick="acceptAndClose('termsModal')">I Understand</button>
+    </div>
+  </div>
+</div>
+
+<!-- Privacy Policy modal -->
+<div class="modal-overlay" id="privacyModal" style="display:none" onclick="onOverlayClick(event,'privacyModal')">
+  <div class="modal-card" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Privacy Policy</h3>
+      <button class="modal-close" onclick="closeModal('privacyModal')" aria-label="Close">×</button>
+    </div>
+    <div class="modal-body">
+      <h4>1. Information We Collect</h4>
+      <p>We collect information you provide directly: name, email address, professional details, skills, resume, and job application data. We also collect usage data such as pages visited and features used to improve the platform.</p>
+
+      <h4>2. How We Use Your Information</h4>
+      <p>Your data is used to operate your account, match you with relevant jobs or candidates, send verification and transactional emails, and improve platform features. We do not use your data for unrelated advertising.</p>
+
+      <h4>3. Information Sharing</h4>
+      <p>Candidate profiles and verified skills are visible to registered recruiters after email verification. We do not sell your personal information to third parties. We may share data with service providers who help operate the platform under strict confidentiality agreements.</p>
+
+      <h4>4. Data Security</h4>
+      <p>We use industry-standard security measures including password hashing, HTTPS encryption, and secure token-based email verification. No system is 100% secure, and we encourage you to use a strong, unique password.</p>
+
+      <h4>5. Data Retention</h4>
+      <p>Your data is retained as long as your account is active. You may request deletion of your account and associated data by contacting our support team. Some data may be retained for legal or compliance purposes.</p>
+
+      <h4>6. Your Rights</h4>
+      <p>Depending on your jurisdiction, you may have the right to access, correct, or delete your personal data. To exercise these rights, please contact us at privacy@skillbasehire.com.</p>
+
+      <h4>7. Cookies</h4>
+      <p>We use session cookies strictly necessary for platform operation (e.g. keeping you logged in). We do not use tracking or advertising cookies.</p>
+
+      <h4>8. Contact</h4>
+      <p>For privacy-related questions or requests, contact us at privacy@skillbasehire.com.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary btn-sm" onclick="acceptAndClose('privacyModal')">I Understand</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── Modal ── */
+function openModal(id) {
+  document.getElementById(id).style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+function closeModal(id) {
+  document.getElementById(id).style.display = 'none';
+  document.body.style.overflow = '';
+}
+function onOverlayClick(e, id) {
+  if (e.target === document.getElementById(id)) closeModal(id);
+}
+function acceptAndClose(id) {
+  closeModal(id);
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    ['termsModal','privacyModal'].forEach(id => {
+      if (document.getElementById(id).style.display !== 'none') closeModal(id);
+    });
+  }
+});
+
+/* ── Terms checkbox → enable/disable submit ── */
+function onTermsChange() {
+  document.getElementById('submitBtn').disabled = !document.getElementById('terms').checked;
+}
+
+/* ── Password ── */
+function togglePw(id) {
+  const inp = document.getElementById(id);
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+function updateStrength(val) {
+  const row = document.getElementById('strengthRow');
+  if (!val) { row.style.display = 'none'; return; }
+  row.style.display = 'flex';
+  const checks = [val.length >= 8, /[A-Z]/.test(val), /[a-z]/.test(val), /\d/.test(val), /[@#$%&*!]/.test(val), val === val.trim()];
+  const ids = ['rule-len','rule-upper','rule-lower','rule-num','rule-special','rule-space'];
+  const passed = checks.filter(Boolean).length;
+  checks.forEach((ok, i) => {
+    document.getElementById(ids[i]).classList.toggle('ok', ok);
+    document.getElementById(ids[i]).classList.toggle('fail', !ok && val.length > 0);
+  });
+  const bars = [document.getElementById('bar0'), document.getElementById('bar1'), document.getElementById('bar2')];
+  const label = document.getElementById('strengthLabel');
+  bars.forEach(b => b.className = 'pw-bar');
+  if (passed <= 2)      { bars[0].classList.add('weak');   label.textContent = 'Weak';   label.className = 'pw-strength-label weak'; }
+  else if (passed <= 4) { bars[0].classList.add('medium'); bars[1].classList.add('medium'); label.textContent = 'Medium'; label.className = 'pw-strength-label medium'; }
+  else                  { bars.forEach(b => b.classList.add('strong')); label.textContent = 'Strong'; label.className = 'pw-strength-label strong'; }
+  checkConfirm();
+}
+function checkConfirm() {
+  const pw = document.getElementById('password').value;
+  const cf = document.getElementById('confirm_password').value;
+  const msg = document.getElementById('confirmMsg');
+  const inp = document.getElementById('confirm_password');
+  if (!cf) { msg.style.display = 'none'; inp.classList.remove('input-ok','input-error'); return; }
+  if (pw === cf) { msg.style.display = 'none'; inp.classList.add('input-ok'); inp.classList.remove('input-error'); }
+  else           { msg.style.display = 'block'; inp.classList.add('input-error'); inp.classList.remove('input-ok'); }
+}
+
+/* ── Skills picker ── */
+function filterSkills(q) {
+  const hint     = document.getElementById('skillsHint');
+  const noResult = document.getElementById('skillsNoResult');
+  const spans    = document.querySelectorAll('#skillsPicker > span');
+  let visible = 0;
+  const lq = q.trim().toLowerCase();
+  spans.forEach(span => {
+    const name      = span.querySelector('label').textContent.toLowerCase();
+    const isChecked = span.querySelector('input').checked;
+    const matches   = name.includes(lq);
+    const show      = isChecked || (lq.length > 0 && matches);
+    span.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  hint.style.display     = (lq.length === 0 && visible === 0) ? 'block' : 'none';
+  noResult.style.display = (lq.length > 0  && visible === 0) ? 'block' : 'none';
+}
+
+/* ── File upload ── */
+function onFileChosen(input) {
+  document.getElementById('resumeName').textContent = input.files[0] ? input.files[0].name : '';
+}
+const zone = document.getElementById('uploadZone');
+zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+zone.addEventListener('drop', e => {
+  e.preventDefault(); zone.classList.remove('drag-over');
+  if (e.dataTransfer.files.length) {
+    document.getElementById('resumeInput').files = e.dataTransfer.files;
+    onFileChosen({ files: e.dataTransfer.files });
+  }
+});
+
+/* ── Init ── */
+document.addEventListener('DOMContentLoaded', () => filterSkills(''));
+</script>
 {% endblock %}

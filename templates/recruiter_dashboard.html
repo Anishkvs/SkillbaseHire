@@ -1,172 +1,627 @@
-{% extends "base.html" %}
-{% block title %}Recruiter Dashboard — SkillBaseHire{% endblock %}
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Recruiter Dashboard · SkillBaseHire</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#0E0F1A;--ink-2:#3A3C52;--ink-3:#7A7C94;--ink-4:#A8A9B8;
+  --surface:#F5F4F0;--surface-2:#EFEEE9;--white:#FFFFFF;
+  --line:rgba(14,15,26,.08);--line-2:rgba(14,15,26,.05);
+  --accent:#4F46E5;--accent-light:#EEF2FF;--accent-mid:#818CF8;
+  --green:#0F6E56;--green-light:#E1F5EE;
+  --amber:#854F0B;--amber-light:#FAEEDA;
+  --coral:#993C1D;--coral-light:#FAECE7;
+  --purple:#534AB7;--purple-light:#EEEDFE;
+  --r:12px;--r-sm:8px;--rpill:999px;
+}
+html,body{background:var(--surface);font-family:'DM Sans','Inter',sans-serif;color:var(--ink);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;height:100%}
+.syne{font-family:'Syne',sans-serif}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
 
-{% block content %}
-<div class="page-header">
-  <div class="container page-header-inner">
-    <div>
-      <div style="display:flex;align-items:center;gap:.625rem;flex-wrap:wrap">
-        <h1 style="margin:0">{{ profile.company }} Dashboard</h1>
-        {% if user.email_verified %}
-          <span class="badge-verified">✓ Account Verified</span>
+/* Sidebar */
+.side{background:var(--white);border-right:.5px solid var(--line);padding:22px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
+.logo{display:flex;align-items:center;gap:10px;padding:4px 10px 22px}
+.logo-mark{width:30px;height:30px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center}
+.logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;letter-spacing:-.2px}
+.logo-text span{color:var(--accent)}
+.side-section{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-4);padding:14px 12px 6px}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:var(--r-sm);font-size:13px;font-weight:500;color:var(--ink-2);cursor:pointer;transition:background .15s,color .15s}
+.nav-item:hover{background:var(--surface)}
+.nav-item.active{background:var(--accent-light);color:var(--accent);font-weight:600}
+.nav-item svg{flex-shrink:0;opacity:.75}
+.nav-item.active svg{opacity:1}
+.nav-count{margin-left:auto;background:var(--surface);color:var(--ink-3);font-size:11px;font-weight:600;padding:1px 7px;border-radius:var(--rpill)}
+.nav-item.active .nav-count{background:var(--white);color:var(--accent)}
+.side-footer{margin-top:auto;padding:14px 10px 0;border-top:.5px solid var(--line)}
+.side-user{display:flex;align-items:center;gap:10px}
+.side-user-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-mid));color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;flex-shrink:0}
+.side-user-name{font-size:13px;font-weight:600;color:var(--ink)}
+.side-user-role{font-size:11px;color:var(--ink-3)}
+
+/* Main */
+.main{display:flex;flex-direction:column;min-width:0}
+
+/* Topbar */
+.top{display:flex;align-items:center;gap:18px;padding:14px 32px;background:var(--white);border-bottom:.5px solid var(--line);position:sticky;top:0;z-index:50}
+.crumbs{font-size:12px;color:var(--ink-3);display:flex;align-items:center;gap:6px}
+.crumbs strong{color:var(--ink);font-weight:600}
+.top-actions{display:flex;align-items:center;gap:10px;margin-left:auto}
+.divider-v{width:1px;height:14px;background:var(--line)}
+.btn{display:inline-flex;align-items:center;gap:6px;font-family:'Syne',sans-serif;font-weight:600;font-size:12px;border-radius:var(--rpill);padding:8px 16px;transition:all .15s;cursor:pointer;border:none}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#4338CA}
+.btn-ghost{background:transparent;color:var(--ink-2);border:.5px solid var(--line)}
+.btn-ghost:hover{background:var(--surface)}
+.btn-soft{background:var(--accent-light);color:var(--accent)}
+.btn-soft:hover{background:#dde4ff}
+.btn-danger-soft{background:var(--coral-light);color:var(--coral)}
+.icon-btn{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:var(--white);border:.5px solid var(--line);color:var(--ink-2);position:relative}
+.icon-btn:hover{background:var(--surface)}
+
+/* Flash */
+.flash-bar{padding:10px 32px;background:#FFFBEB;border-bottom:.5px solid #FDE68A;font-size:13px;color:#92400E;display:flex;align-items:center;gap:8px}
+.flash-bar.success{background:#F0FDF4;border-bottom-color:#BBF7D0;color:#15803D}
+.flash-bar.error{background:#FEF2F2;border-bottom-color:#FECACA;color:#DC2626}
+.flash-bar .flash-close{margin-left:auto;background:none;border:none;cursor:pointer;color:inherit;font-size:16px;line-height:1;opacity:.6}
+.flash-bar .flash-close:hover{opacity:1}
+
+/* Verification banner */
+.verify-bar{display:flex;align-items:center;gap:12px;padding:12px 32px;background:#FFF7ED;border-bottom:1px solid #FED7AA;font-size:13px;color:#92400E;flex-wrap:wrap}
+.verify-bar strong{font-weight:600;color:#9A3412}
+.verify-bar form{margin-left:auto}
+
+/* Page */
+.page{padding:28px 32px 56px;max-width:1480px;width:100%;margin:0 auto}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:24px;flex-wrap:wrap}
+.page-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.5px;color:var(--ink)}
+.page-sub{font-size:13.5px;color:var(--ink-3);margin-top:4px}
+
+/* KPI row */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.kpi{background:var(--white);border:.5px solid var(--line);border-radius:var(--r);padding:18px 20px;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden}
+.kpi-head{display:flex;align-items:center;justify-content:space-between}
+.kpi-label{font-size:12px;color:var(--ink-3);font-weight:500}
+.kpi-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.kpi-icon.blue{background:var(--accent-light);color:var(--accent)}
+.kpi-icon.green{background:var(--green-light);color:var(--green)}
+.kpi-icon.amber{background:var(--amber-light);color:var(--amber)}
+.kpi-icon.purple{background:var(--purple-light);color:var(--purple)}
+.kpi-num{font-family:'Syne',sans-serif;font-size:30px;font-weight:800;letter-spacing:-1px;color:var(--ink);line-height:1}
+.kpi-foot{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink-3)}
+.kpi-delta{display:inline-flex;align-items:center;gap:3px;font-weight:600;padding:2px 8px;border-radius:var(--rpill);font-size:11px}
+.kpi-delta.up{background:var(--green-light);color:var(--green)}
+.kpi-delta.warn{background:var(--amber-light);color:var(--amber)}
+.spark{position:absolute;right:14px;bottom:12px;opacity:.45;pointer-events:none}
+
+/* Grid */
+.grid-2{display:grid;grid-template-columns:1.65fr 1fr;gap:16px;margin-bottom:16px}
+
+/* Card */
+.card{background:var(--white);border:.5px solid var(--line);border-radius:var(--r);overflow:hidden}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:.5px solid var(--line-2)}
+.card-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;letter-spacing:-.2px}
+.card-sub{font-size:12px;color:var(--ink-3);margin-top:2px}
+.card-link{font-size:12px;font-weight:600;color:var(--accent);display:inline-flex;align-items:center;gap:4px}
+.card-link:hover{text-decoration:underline}
+
+/* Activity feed */
+.feed{padding:6px 0 12px}
+.feed-item{display:flex;gap:12px;padding:12px 22px;align-items:flex-start;border-bottom:.5px solid var(--line-2)}
+.feed-item:last-child{border-bottom:none}
+.feed-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.feed-icon.green{background:var(--green-light);color:var(--green)}
+.feed-icon.blue{background:var(--accent-light);color:var(--accent)}
+.feed-icon.amber{background:var(--amber-light);color:var(--amber)}
+.feed-icon.grey{background:var(--surface);color:var(--ink-3)}
+.feed-icon.coral{background:var(--coral-light);color:var(--coral)}
+.feed-body{flex:1;min-width:0}
+.feed-text{font-size:13px;color:var(--ink-2);line-height:1.5}
+.feed-text strong{color:var(--ink);font-weight:600}
+.feed-text em{font-style:normal;color:var(--accent);font-weight:600}
+.feed-time{font-size:11px;color:var(--ink-3);margin-top:3px}
+.feed-empty{padding:28px 22px;text-align:center;color:var(--ink-3);font-size:13px}
+
+/* Stats card (mini) */
+.mini-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:18px 22px}
+.mini-stat{background:var(--surface);border-radius:10px;padding:14px 16px;text-align:center}
+.mini-stat-num{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--ink);line-height:1}
+.mini-stat-label{font-size:11px;color:var(--ink-3);margin-top:4px}
+
+/* Jobs grid */
+.jobs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:18px 22px 22px}
+.job-card{background:var(--surface);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:12px;border:.5px solid transparent;transition:all .18s}
+.job-card:hover{background:var(--white);border-color:var(--accent-mid);box-shadow:0 4px 16px rgba(79,70,229,.08);transform:translateY(-2px)}
+.job-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.job-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13.5px;color:var(--ink);line-height:1.3}
+.job-dept{font-size:11.5px;color:var(--ink-3);margin-top:3px}
+.job-pill{font-family:'Syne',sans-serif;font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:3px 8px;border-radius:var(--rpill);text-transform:uppercase;white-space:nowrap;flex-shrink:0}
+.job-pill.active{background:var(--green-light);color:var(--green)}
+.job-pill.paused{background:var(--surface-2,#EFEEE9);color:var(--ink-3)}
+.job-meta{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:var(--rpill);font-size:10.5px;font-weight:600}
+.chip-blue{background:var(--accent-light);color:var(--accent)}
+.chip-grey{background:var(--surface);color:var(--ink-3)}
+.job-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;padding-top:12px;border-top:.5px solid var(--line-2)}
+.job-stat-num{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--ink)}
+.job-stat-label{font-size:10.5px;color:var(--ink-3)}
+.job-foot{display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:.5px solid var(--line-2);font-size:11.5px;color:var(--ink-3)}
+.job-foot-actions{display:flex;gap:6px}
+.empty-card{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 24px;color:var(--ink-3);gap:10px}
+.empty-card svg{opacity:.3}
+.empty-card p{font-size:13px}
+
+/* Applications table */
+.tbl-wrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;font-family:'Syne',sans-serif;font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--ink-3);padding:10px 22px;border-bottom:.5px solid var(--line-2);background:var(--surface);white-space:nowrap}
+.tbl td{padding:13px 22px;border-bottom:.5px solid var(--line-2);vertical-align:middle;font-size:13px;color:var(--ink-2)}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--surface)}
+.cand-name-cell{font-weight:600;color:var(--ink);font-size:13.5px}
+.cand-email-cell{font-size:11.5px;color:var(--ink-3);margin-top:2px}
+
+.status-badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:var(--rpill);font-size:11px;font-weight:600}
+.status-badge::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.status-applied{background:var(--accent-light);color:var(--accent)}
+.status-applied::before{background:var(--accent)}
+.status-shortlisted{background:var(--green-light);color:var(--green)}
+.status-shortlisted::before{background:var(--green)}
+.status-rejected{background:var(--coral-light);color:var(--coral)}
+.status-rejected::before{background:var(--coral)}
+.status-reviewing{background:var(--amber-light);color:var(--amber)}
+.status-reviewing::before{background:var(--amber)}
+
+.row-actions{display:flex;gap:6px;justify-content:flex-end}
+.row-act-btn{width:28px;height:28px;border-radius:7px;background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--ink-2);border:.5px solid transparent;cursor:pointer;transition:all .15s}
+.row-act-btn:hover{background:var(--accent-light);color:var(--accent);border-color:var(--accent-mid)}
+.row-act-btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.row-act-btn.primary:hover{background:#4338CA}
+
+/* Responsive */
+@media(max-width:1180px){
+  .kpis{grid-template-columns:repeat(2,1fr)}
+  .grid-2{grid-template-columns:1fr}
+  .jobs-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:820px){
+  .app{grid-template-columns:1fr}
+  .side{display:none}
+  .page{padding:20px}
+  .top{padding:12px 18px}
+  .verify-bar{padding:10px 18px}
+  .flash-bar{padding:10px 18px}
+  .jobs-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="side">
+    <a href="{{ url_for('home') }}" class="logo">
+      <div class="logo-mark">
+        <svg width="16" height="16" viewBox="0 0 22 22" fill="none">
+          <polygon points="11,2 20,7 20,15 11,20 2,15 2,7" stroke="white" stroke-width="1.5" fill="none"/>
+          <path d="M7 11l3 3 5-5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span class="logo-text">Skill<span>BaseHire</span></span>
+    </a>
+
+    <div class="side-section">Workspace</div>
+    <a href="{{ url_for('recruiter_dashboard') }}" class="nav-item active">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="9" rx="1.4"/><rect x="14" y="3" width="7" height="5" rx="1.4"/><rect x="14" y="12" width="7" height="9" rx="1.4"/><rect x="3" y="16" width="7" height="5" rx="1.4"/></svg>
+      Dashboard
+    </a>
+    <a href="{{ url_for('search_candidates') }}" class="nav-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 21l-4.5-4.5"/><circle cx="11" cy="11" r="7"/></svg>
+      Find Candidates
+    </a>
+    <a href="{{ url_for('post_job') }}" class="nav-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      Jobs
+      {% if stats.total_jobs > 0 %}
+        <span class="nav-count">{{ stats.total_jobs }}</span>
+      {% endif %}
+    </a>
+    <a href="{{ url_for('skills_page') }}" class="nav-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Skill Assessments
+    </a>
+
+    <div class="side-section">Account</div>
+    <a href="{{ url_for('recruiter_detail', recruiter_id=user.id) }}" class="nav-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>
+      Profile
+    </a>
+    <a href="#" class="nav-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 005 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 005 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 5a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      Settings
+    </a>
+    <form action="{{ url_for('logout') }}" method="post" style="margin-top:4px">
+      <button type="submit" class="nav-item" style="width:100%;background:none;text-align:left">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Log Out
+      </button>
+    </form>
+
+    <div class="side-footer">
+      <div class="side-user">
+        <div class="side-user-avatar">{{ user.name[0].upper() }}</div>
+        <div>
+          <div class="side-user-name">{{ user.name }}</div>
+          <div class="side-user-role">{{ profile.job_title or 'Recruiter' }} · {{ profile.company or '' }}</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- Top bar -->
+    <header class="top">
+      <div class="crumbs">
+        <span>{{ profile.company or 'My Company' }}</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+        <strong>Dashboard</strong>
+      </div>
+      <div class="top-actions">
+        {% if not user.email_verified %}
+          <span style="font-size:12px;color:#C2410C;font-weight:600;background:#FFF7ED;padding:5px 12px;border-radius:999px;border:.5px solid #FED7AA">⚠ Email not verified</span>
         {% else %}
-          <span class="badge-unverified">Account Not Verified</span>
+          <span style="font-size:12px;color:#15803D;font-weight:600;background:#DCFCE7;padding:5px 12px;border-radius:999px;border:.5px solid #BBF7D0">✓ Verified</span>
+        {% endif %}
+        <div class="divider-v"></div>
+        <a href="{{ url_for('search_candidates') }}" class="btn btn-ghost">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></svg>
+          Find Candidates
+        </a>
+        <a href="{{ url_for('post_job') }}" class="btn btn-primary">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Post a Job
+        </a>
+      </div>
+    </header>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash-bar {{ category }}" id="flashMsg">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            {% if category == 'success' %}<path d="M5 12l5 5L20 7"/>
+            {% elif category == 'error' %}<path d="M18 6L6 18M6 6l12 12"/>
+            {% else %}<circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/>{% endif %}
+          </svg>
+          {{ message }}
+          <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+        </div>
+      {% endfor %}
+    {% endwith %}
+
+    <!-- Verification banner -->
+    {% if not user.email_verified %}
+    <div class="verify-bar">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01" stroke-linecap="round"/></svg>
+      <div><strong>Verify your work email</strong> — You need to verify your company email address to access candidate profiles, post jobs, and shortlist candidates.</div>
+      <form action="{{ url_for('resend_verification') }}" method="post">
+        <button type="submit" class="btn btn-ghost" style="font-size:12px;padding:5px 14px;border-color:#FED7AA;color:#C2410C">Resend verification email</button>
+      </form>
+    </div>
+    {% endif %}
+
+    <div class="page">
+
+      <!-- Page head -->
+      <div class="page-head">
+        <div>
+          <h1 class="page-title">Good to see you, {{ user.name.split()[0] }} 👋</h1>
+          <p class="page-sub">Here's what's happening in your hiring pipeline.</p>
+        </div>
+        <a href="{{ url_for('post_job') }}" class="btn btn-primary">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Post a New Job
+        </a>
+      </div>
+
+      <!-- KPI row -->
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpi-head">
+            <span class="kpi-label">Active Jobs</span>
+            <div class="kpi-icon blue">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+            </div>
+          </div>
+          <div class="kpi-num">{{ stats.active_jobs }}</div>
+          <div class="kpi-foot">
+            <span class="kpi-delta up">{{ stats.total_jobs }} total</span>
+            <span>job postings</span>
+          </div>
+          <svg class="spark" width="80" height="32" viewBox="0 0 80 32" fill="none">
+            <path d="M2 24 L14 18 L26 22 L38 14 L50 17 L62 8 L78 11" stroke="var(--accent)" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="kpi">
+          <div class="kpi-head">
+            <span class="kpi-label">Total Applications</span>
+            <div class="kpi-icon green">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>
+            </div>
+          </div>
+          <div class="kpi-num">{{ stats.total_applications }}</div>
+          <div class="kpi-foot">
+            <span class="kpi-delta up">{{ stats.new_applications }} new</span>
+            <span>need review</span>
+          </div>
+          <svg class="spark" width="80" height="32" viewBox="0 0 80 32" fill="none">
+            <path d="M2 26 L14 22 L26 24 L38 17 L50 14 L62 9 L78 5" stroke="var(--green)" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="kpi">
+          <div class="kpi-head">
+            <span class="kpi-label">Pending Review</span>
+            <div class="kpi-icon amber">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2" stroke-linecap="round"/></svg>
+            </div>
+          </div>
+          <div class="kpi-num">{{ stats.new_applications }}</div>
+          <div class="kpi-foot">
+            {% if stats.new_applications > 0 %}
+              <span class="kpi-delta warn">Needs attention</span>
+            {% else %}
+              <span style="color:var(--green);font-weight:600;font-size:11px;background:var(--green-light);padding:2px 8px;border-radius:999px">All clear</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-head">
+            <span class="kpi-label">Account Status</span>
+            <div class="kpi-icon {{ 'green' if user.email_verified else 'amber' }}">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+                {% if user.email_verified %}
+                  <path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4" stroke-linecap="round"/>
+                {% else %}
+                  <circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01" stroke-linecap="round"/>
+                {% endif %}
+              </svg>
+            </div>
+          </div>
+          <div class="kpi-num" style="font-size:18px;margin-top:4px">{{ '✓ Verified' if user.email_verified else 'Unverified' }}</div>
+          <div class="kpi-foot">
+            {% if user.email_verified %}
+              <span class="kpi-delta up">Full access</span>
+            {% else %}
+              <span class="kpi-delta warn">Limited access</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity feed + Quick stats -->
+      <div class="grid-2" style="margin-bottom:16px">
+
+        <!-- Recent applications as activity feed -->
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Recent Applications</div>
+              <div class="card-sub">Latest activity across your job postings</div>
+            </div>
+          </div>
+          <div class="feed">
+            {% if recent_apps %}
+              {% for app in recent_apps[:6] %}
+              <div class="feed-item">
+                <div class="feed-icon {{ 'green' if app.status == 'shortlisted' else ('amber' if app.status == 'reviewing' else ('coral' if app.status == 'rejected' else 'blue')) }}">
+                  {% if app.status == 'shortlisted' %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+                  {% elif app.status == 'rejected' %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                  {% elif app.status == 'reviewing' %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2" stroke-linecap="round"/></svg>
+                  {% else %}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>
+                  {% endif %}
+                </div>
+                <div class="feed-body">
+                  <div class="feed-text">
+                    <a href="{{ url_for('candidate_detail', candidate_id=app.candidate_id) }}" style="color:var(--ink);font-weight:600">{{ app.candidate_name }}</a>
+                    applied for <em>{{ app.job_title }}</em>
+                    {% if app.status != 'applied' %} · <span class="status-badge status-{{ app.status }}">{{ app.status | capitalize }}</span>{% endif %}
+                  </div>
+                  <div class="feed-time">{{ app.applied_at | timeago }}</div>
+                </div>
+                <a href="{{ url_for('job_applications', job_id=app.job_id) }}" class="btn btn-soft" style="padding:4px 10px;font-size:11px;flex-shrink:0">Review</a>
+              </div>
+              {% endfor %}
+            {% else %}
+              <div class="feed-empty">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>
+                <p>No applications yet.<br>Post a job to start receiving candidates.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Summary stats card -->
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Pipeline Summary</div>
+              <div class="card-sub">Overview of your recruitment funnel</div>
+            </div>
+          </div>
+          <div class="mini-stats">
+            <div class="mini-stat">
+              <div class="mini-stat-num">{{ stats.total_jobs }}</div>
+              <div class="mini-stat-label">Total Jobs Posted</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-num">{{ stats.active_jobs }}</div>
+              <div class="mini-stat-label">Active Listings</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-num">{{ stats.total_applications }}</div>
+              <div class="mini-stat-label">Total Applicants</div>
+            </div>
+            <div class="mini-stat">
+              <div class="mini-stat-num">{{ stats.new_applications }}</div>
+              <div class="mini-stat-label">Awaiting Review</div>
+            </div>
+          </div>
+
+          <!-- Quick actions -->
+          <div style="padding:0 22px 20px;display:flex;flex-direction:column;gap:8px">
+            <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-4);margin-bottom:4px">Quick Actions</div>
+            <a href="{{ url_for('post_job') }}" class="btn btn-primary" style="justify-content:flex-start">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              Post a New Job
+            </a>
+            <a href="{{ url_for('search_candidates') }}" class="btn btn-ghost" style="justify-content:flex-start">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.5-4.5"/></svg>
+              Search Candidates
+            </a>
+            <a href="{{ url_for('skills_page') }}" class="btn btn-ghost" style="justify-content:flex-start">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+              View Skill Assessments
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Job postings grid -->
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-head">
+          <div>
+            <div class="card-title">My Job Postings</div>
+            <div class="card-sub">{{ stats.active_jobs }} active · {{ stats.total_jobs }} total</div>
+          </div>
+          <a href="{{ url_for('post_job') }}" class="btn btn-soft">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            New Job
+          </a>
+        </div>
+
+        {% if my_jobs %}
+        <div class="jobs-grid">
+          {% for job in my_jobs %}
+          <div class="job-card">
+            <div class="job-top">
+              <div>
+                <div class="job-title">{{ job.title }}</div>
+                <div class="job-dept">{{ job.job_type }} · {{ job.location }}</div>
+              </div>
+              <span class="job-pill {{ 'active' if job.active else 'paused' }}">{{ 'Active' if job.active else 'Paused' }}</span>
+            </div>
+            <div class="job-meta">
+              <span class="chip chip-blue">{{ job.job_type }}</span>
+              <span class="chip chip-grey">{{ job.location }}</span>
+            </div>
+            <div class="job-stats">
+              <div>
+                <div class="job-stat-num">{{ job.app_count }}</div>
+                <div class="job-stat-label">Applicants</div>
+              </div>
+              <div>
+                <div class="job-stat-num">{{ 'Active' if job.active else 'Paused' }}</div>
+                <div class="job-stat-label">Status</div>
+              </div>
+              <div>
+                <div class="job-stat-num" style="font-size:12px;font-weight:600;color:var(--ink-3)">{{ job.created_at | timeago }}</div>
+                <div class="job-stat-label">Posted</div>
+              </div>
+            </div>
+            <div class="job-foot">
+              <div class="job-foot-actions">
+                <a href="{{ url_for('job_applications', job_id=job.id) }}" class="btn btn-soft" style="padding:5px 12px;font-size:11px">View Apps</a>
+                <form action="{{ url_for('toggle_job', job_id=job.id) }}" method="post" style="display:inline">
+                  <button type="submit" class="btn btn-ghost" style="padding:5px 12px;font-size:11px">{{ 'Pause' if job.active else 'Activate' }}</button>
+                </form>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-card">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          <p>No jobs posted yet.<br>Create your first job listing to start finding candidates.</p>
+          <a href="{{ url_for('post_job') }}" class="btn btn-primary" style="margin-top:4px">Post Your First Job</a>
+        </div>
         {% endif %}
       </div>
-      <p style="margin:.25rem 0 0">Welcome back, {{ user.name }}</p>
-    </div>
-    <div style="display:flex;gap:.75rem">
-      <a href="{{ url_for('search_candidates') }}" class="btn btn-outline">Find Candidates</a>
-      <a href="{{ url_for('post_job') }}" class="btn btn-primary">+ Post a Job</a>
-    </div>
-  </div>
-</div>
 
-<div class="container" style="padding:2.5rem 1.5rem">
-
-  {% if not user.email_verified %}
-  <div class="verify-banner" style="margin-bottom:2rem">
-    <div class="verify-banner-content">
-      <div class="verify-banner-icon">⚠️</div>
-      <div>
-        <div class="verify-banner-title">Verify Your Work Email</div>
-        <div class="verify-banner-msg">Your recruiter account is not verified. Please verify your official company email address to access candidate profiles and hiring tools.</div>
-      </div>
-    </div>
-    <form action="{{ url_for('resend_verification') }}" method="post" style="flex-shrink:0">
-      <button type="submit" class="btn btn-sm verify-banner-btn">Resend Verification Email</button>
-    </form>
-  </div>
-  {% endif %}
-
-  <!-- Stats -->
-  <div class="stats-grid" style="margin-bottom:2rem">
-    <div class="stat-card">
-      <div class="number">{{ stats.total_jobs }}</div>
-      <div class="label">Total Jobs Posted</div>
-    </div>
-    <div class="stat-card">
-      <div class="number">{{ stats.active_jobs }}</div>
-      <div class="label">Active Listings</div>
-    </div>
-    <div class="stat-card">
-      <div class="number">{{ stats.total_applications }}</div>
-      <div class="label">Total Applications</div>
-    </div>
-    <div class="stat-card stat-card-highlight">
-      <div class="number">{{ stats.new_applications }}</div>
-      <div class="label">New — Needs Review</div>
-    </div>
-  </div>
-
-  <div class="recruiter-grid">
-
-    <!-- My Jobs -->
-    <div class="card" style="grid-column:1/-1">
-      <div class="card-header">
-        <h2 class="card-title">My Job Postings</h2>
-        <a href="{{ url_for('post_job') }}" class="btn btn-sm btn-primary">+ New Job</a>
-      </div>
-      {% if my_jobs %}
-        <div class="table-wrap">
-          <table>
+      <!-- All applications table -->
+      {% if recent_apps %}
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">All Recent Applications</div>
+            <div class="card-sub">Showing the latest {{ recent_apps | length }} applications across your roles</div>
+          </div>
+        </div>
+        <div class="tbl-wrap">
+          <table class="tbl">
             <thead>
               <tr>
-                <th>Job Title</th>
-                <th>Location</th>
-                <th>Type</th>
-                <th>Applications</th>
+                <th>Candidate</th>
+                <th>Job</th>
                 <th>Status</th>
-                <th>Posted</th>
-                <th>Actions</th>
+                <th>Applied</th>
+                <th style="text-align:right;padding-right:22px">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {% for job in my_jobs %}
-                <tr>
-                  <td><strong>{{ job.title }}</strong></td>
-                  <td>{{ job.location }}</td>
-                  <td><span class="badge badge-gray">{{ job.job_type }}</span></td>
-                  <td>
-                    <a href="{{ url_for('job_applications', job_id=job.id) }}" class="apps-count">
-                      {{ job.app_count }} applicant{{ 's' if job.app_count != 1 else '' }}
+              {% for app in recent_apps %}
+              <tr>
+                <td>
+                  <a href="{{ url_for('candidate_detail', candidate_id=app.candidate_id) }}" style="text-decoration:none">
+                    <div class="cand-name-cell">{{ app.candidate_name }}</div>
+                    <div class="cand-email-cell">{{ app.candidate_email }}</div>
+                  </a>
+                </td>
+                <td style="font-weight:500;color:var(--ink)">{{ app.job_title }}</td>
+                <td><span class="status-badge status-{{ app.status }}">{{ app.status | capitalize }}</span></td>
+                <td style="color:var(--ink-3);font-size:12px">{{ app.applied_at | timeago }}</td>
+                <td>
+                  <div class="row-actions">
+                    <a href="{{ url_for('candidate_detail', candidate_id=app.candidate_id) }}" class="row-act-btn" title="View profile">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>
                     </a>
-                  </td>
-                  <td>
-                    {% if job.active %}
-                      <span class="badge badge-success">Active</span>
-                    {% else %}
-                      <span class="badge badge-gray">Paused</span>
-                    {% endif %}
-                  </td>
-                  <td style="color:var(--text-muted);font-size:.85rem">{{ job.created_at | timeago }}</td>
-                  <td>
-                    <div style="display:flex;gap:.5rem">
-                      <a href="{{ url_for('job_applications', job_id=job.id) }}" class="btn btn-sm btn-outline">View Apps</a>
-                      <form action="{{ url_for('toggle_job', job_id=job.id) }}" method="post" style="display:inline">
-                        <button type="submit" class="btn btn-sm {{ 'btn-ghost' if job.active else 'btn-outline' }}">
-                          {{ 'Pause' if job.active else 'Activate' }}
-                        </button>
-                      </form>
-                    </div>
-                  </td>
-                </tr>
+                    <a href="{{ url_for('job_applications', job_id=app.job_id) }}" class="row-act-btn primary" title="Manage application">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                    </a>
+                  </div>
+                </td>
+              </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
-      {% else %}
-        <div class="empty-state">
-          <div class="empty-icon">📝</div>
-          <h3>No jobs posted yet</h3>
-          <p>Post your first job to start receiving applications.</p>
-          <a href="{{ url_for('post_job') }}" class="btn btn-primary">Post a Job</a>
-        </div>
+      </div>
       {% endif %}
-    </div>
 
-    <!-- Recent Applications -->
-    {% if recent_apps %}
-    <div class="card" style="grid-column:1/-1">
-      <div class="card-header">
-        <h2 class="card-title">Recent Applications</h2>
+      <div style="text-align:center;color:var(--ink-3);font-size:11.5px;margin-top:24px">
+        SkillBaseHire · {{ profile.company or user.name }} workspace
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Candidate</th>
-              <th>Job</th>
-              <th>Status</th>
-              <th>Applied</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for app in recent_apps %}
-              <tr>
-                <td>
-                  <div style="font-weight:600">
-                    <a href="{{ url_for('candidate_detail', candidate_id=app.candidate_id) }}" class="profile-name-link">{{ app.candidate_name }}</a>
-                  </div>
-                  <div style="font-size:.8rem;color:var(--text-muted)">{{ app.candidate_email }}</div>
-                </td>
-                <td>{{ app.job_title }}</td>
-                <td>
-                  <span class="app-status status-{{ app.status }}">{{ app.status | capitalize }}</span>
-                </td>
-                <td style="color:var(--text-muted);font-size:.85rem">{{ app.applied_at | timeago }}</td>
-                <td>
-                  <a href="{{ url_for('job_applications', job_id=app.job_id) }}" class="btn btn-sm btn-outline">View</a>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-    {% endif %}
 
-  </div>
+    </div>
+  </main>
 </div>
-{% endblock %}
+
+<script>
+  setTimeout(() => {
+    const f = document.getElementById('flashMsg');
+    if (f) { f.style.opacity = '0'; f.style.transition = 'opacity .4s'; setTimeout(() => f.remove(), 400); }
+  }, 4000);
+</script>
+</body>
+</html>

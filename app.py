@@ -939,24 +939,93 @@ def candidate_profile():
                          [session['user_id']]).fetchone()
 
     if request.method == 'POST':
-        name = request.form.get('name', '').strip()
-        headline = request.form.get('headline', '').strip()
-        location = request.form.get('location', '').strip()
-        bio = request.form.get('bio', '').strip()
-        linkedin = request.form.get('linkedin', '').strip()
-        github = request.form.get('github', '').strip()
+        # Handle resume delete
+        if request.form.get('delete_resume') == '1':
+            old = db.execute('SELECT resume_filename FROM candidate_profiles WHERE user_id=?',
+                             [session['user_id']]).fetchone()
+            if old and old['resume_filename']:
+                try:
+                    os.remove(os.path.join(RESUME_UPLOAD_FOLDER, old['resume_filename']))
+                except OSError:
+                    pass
+            db.execute('UPDATE candidate_profiles SET resume_filename=NULL WHERE user_id=?',
+                       [session['user_id']])
+            db.commit()
+            flash('Resume deleted.', 'success')
+            return redirect(url_for('candidate_profile'))
+
+        name       = request.form.get('name', '').strip()
+        headline   = request.form.get('headline', '').strip()
+        location   = request.form.get('location', '').strip()
+        bio        = request.form.get('bio', '').strip()
+        linkedin   = request.form.get('linkedin', '').strip()
+        github     = request.form.get('github', '').strip()
+        job_title  = request.form.get('job_title', '').strip()
+        experience = request.form.get('experience', '').strip()
+
+        if not name:
+            flash('Name is required.', 'error')
+            return redirect(url_for('candidate_profile'))
 
         db.execute('UPDATE users SET name=? WHERE id=?', [name, session['user_id']])
         db.execute('''UPDATE candidate_profiles
-                      SET headline=?, location=?, bio=?, linkedin=?, github=?
+                      SET headline=?, location=?, bio=?, linkedin=?, github=?,
+                          job_title=?, experience=?
                       WHERE user_id=?''',
-                   [headline, location, bio, linkedin, github, session['user_id']])
+                   [headline, location, bio, linkedin, github,
+                    job_title, experience, session['user_id']])
         db.commit()
         session['name'] = name
-        flash('Profile updated!', 'success')
-        return redirect(url_for('candidate_dashboard'))
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('candidate_profile'))
 
-    return render_template('candidate_profile.html', user=get_current_user(), profile=profile)
+    my_skills = db.execute('''
+        SELECT s.*, us.verified, us.score, us.added_at
+        FROM user_skills us JOIN skills s ON us.skill_id = s.id
+        WHERE us.user_id=? ORDER BY us.verified DESC, s.name
+    ''', [session['user_id']]).fetchall()
+
+    return render_template('candidate_profile.html',
+                           user=get_current_user(), profile=profile, my_skills=my_skills)
+
+
+@app.route('/candidate/profile/upload-resume', methods=['POST'])
+@candidate_required
+def upload_resume():
+    if 'resume' not in request.files:
+        flash('No file selected.', 'error')
+        return redirect(url_for('candidate_profile'))
+    file = request.files['resume']
+    if not file or not file.filename:
+        flash('No file selected.', 'error')
+        return redirect(url_for('candidate_profile'))
+    ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+    if ext not in ALLOWED_RESUME_EXT:
+        flash(f'Invalid file type ".{ext}". Only PDF, DOC, and DOCX are allowed.', 'error')
+        return redirect(url_for('candidate_profile'))
+    file.seek(0, 2)
+    size = file.tell()
+    file.seek(0)
+    if size > MAX_RESUME_SIZE:
+        flash('File exceeds the 5 MB limit. Please upload a smaller file.', 'error')
+        return redirect(url_for('candidate_profile'))
+    os.makedirs(RESUME_UPLOAD_FOLDER, exist_ok=True)
+    filename = secure_filename(f"resume_{session['user_id']}_{file.filename}")
+    db = get_db()
+    # Delete old file if exists
+    old = db.execute('SELECT resume_filename FROM candidate_profiles WHERE user_id=?',
+                     [session['user_id']]).fetchone()
+    if old and old['resume_filename']:
+        try:
+            os.remove(os.path.join(RESUME_UPLOAD_FOLDER, old['resume_filename']))
+        except OSError:
+            pass
+    file.save(os.path.join(RESUME_UPLOAD_FOLDER, filename))
+    db.execute('UPDATE candidate_profiles SET resume_filename=? WHERE user_id=?',
+               [filename, session['user_id']])
+    db.commit()
+    flash('Resume uploaded successfully!', 'success')
+    return redirect(url_for('candidate_profile'))
 
 
 @app.route('/candidate/skills/remove/<int:skill_id>', methods=['POST'])

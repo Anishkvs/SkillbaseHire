@@ -39,15 +39,13 @@
 
     <div class="navbar-actions">
       {% if session.get('user_id') %}
-        <a href="{{ url_for('recruiter_detail', recruiter_id=session.get('user_id')) if session.get('role') == 'recruiter' else url_for('candidate_detail', candidate_id=session.get('user_id')) }}"
+        <a href="{{ url_for('recruiter_detail', recruiter_id=session.get('user_id')) if session.get('role') == 'recruiter' else url_for('candidate_profile') }}"
            class="nav-user-info nav-profile-link"
            aria-label="View my profile">
           <div class="nav-avatar">{{ session.get('name','?')[0].upper() }}</div>
           <span class="nav-name">{{ session.get('name','') }}</span>
         </a>
-        {% if session.get('role') == 'candidate' %}
-          <a href="{{ url_for('candidate_dashboard') }}" class="btn btn-sm btn-primary">Dashboard</a>
-        {% else %}
+        {% if session.get('role') == 'recruiter' %}
           <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-sm btn-primary">Dashboard</a>
         {% endif %}
         <form action="{{ url_for('logout') }}" method="post" style="display:inline">

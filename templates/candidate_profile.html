@@ -2,368 +2,370 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>{{ user.name }} — Candidate Profile | SkillBaseHire</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ── Tokens ── */
-:root {
-  --bg:          #0B0D14;
-  --bg-2:        #0F1220;
-  --bg-3:        #141828;
-  --bg-4:        #1A2038;
-  --border:      #1E2640;
-  --border-2:    #2A3358;
-  --text:        #EDF0FA;
-  --text-2:      #8691B2;
-  --text-3:      #4C5470;
-  --accent:      #4F46E5;
-  --accent-2:    #818CF8;
-  --accent-dim:  rgba(79,70,229,.12);
-  --green:       #22C55E;
-  --green-dim:   rgba(34,197,94,.11);
-  --amber:       #FBBF24;
-  --amber-dim:   rgba(251,191,36,.11);
-  --red:         #F87171;
-  --red-dim:     rgba(248,113,113,.11);
-  --grey:        #94A3B8;
-  --grey-dim:    rgba(148,163,184,.08);
-  --topbar-h:    62px;
-  --sidebar-w:   236px;
-  --radius:      14px;
-  --radius-sm:   9px;
-  --radius-xs:   6px;
-  --mono:        'JetBrains Mono', monospace;
+:root{
+  --page-bg:#F0F2F7;
+  --white:#FFFFFF;
+  --border:#E2E8F0;
+  --border-2:#CBD5E1;
+  --text:#1A202C;
+  --text-2:#4A5568;
+  --text-3:#94A3B8;
+  --accent:#4F46E5;
+  --accent-light:#EEF2FF;
+  --accent-2:#6366F1;
+  --green:#16A34A;
+  --green-light:#DCFCE7;
+  --green-2:#22C55E;
+  --amber:#D97706;
+  --amber-light:#FEF3C7;
+  --amber-2:#F59E0B;
+  --red:#DC2626;
+  --red-light:#FEE2E2;
+  --blue:#2563EB;
+  --blue-light:#DBEAFE;
+  --purple:#7C3AED;
+  --purple-light:#EDE9FE;
+  --topbar-h:62px;
+  --radius:12px;
+  --radius-sm:8px;
+  --radius-xs:6px;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
+  --shadow-md:0 4px 12px rgba(0,0,0,.1);
 }
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
-a { color: inherit; text-decoration: none; }
-button { cursor: pointer; font-family: inherit; }
-input, textarea, select { font-family: inherit; }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--page-bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{cursor:pointer;font-family:inherit}
+input,textarea,select{font-family:inherit}
+img{max-width:100%}
 
 /* ── Topbar ── */
-.topbar {
-  position: fixed; top: 0; left: 0; right: 0; height: var(--topbar-h);
-  background: rgba(11,13,20,.96); backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--border); z-index: 200;
-  display: flex; align-items: center; gap: 1rem; padding: 0 1.5rem;
-}
-.tb-brand { display: flex; align-items: center; gap: 8px; font-size: .9375rem; font-weight: 800; color: var(--text); flex-shrink: 0; letter-spacing: -.015em; }
-.tb-brand svg { flex-shrink: 0; }
-.tb-nav { display: flex; align-items: center; gap: 2px; margin-left: .5rem; }
-.tb-nav a { padding: .375rem .75rem; border-radius: var(--radius-xs); font-size: .8125rem; font-weight: 500; color: var(--text-2); transition: color .15s, background .15s; white-space: nowrap; }
-.tb-nav a:hover { color: var(--text); background: var(--bg-4); }
-.tb-nav a.active { color: var(--accent-2); background: var(--accent-dim); }
-.tb-search-wrap { flex: 1; max-width: 360px; position: relative; margin-left: auto; }
-.tb-search-wrap svg { position: absolute; left: .75rem; top: 50%; transform: translateY(-50%); color: var(--text-3); pointer-events: none; }
-.tb-search { width: 100%; background: var(--bg-3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: .4375rem .75rem .4375rem 2.25rem; font-size: .8125rem; color: var(--text); outline: none; transition: border-color .15s; }
-.tb-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
-.tb-search::placeholder { color: var(--text-3); }
-.tb-right { display: flex; align-items: center; gap: .625rem; flex-shrink: 0; }
-.tb-icon-btn { width: 36px; height: 36px; border-radius: var(--radius-xs); background: var(--bg-3); border: 1px solid var(--border); color: var(--text-2); display: flex; align-items: center; justify-content: center; position: relative; transition: all .15s; }
-.tb-icon-btn:hover { background: var(--bg-4); color: var(--text); }
-.notif-dot { position: absolute; top: 7px; right: 7px; width: 6px; height: 6px; border-radius: 50%; background: var(--red); border: 1.5px solid var(--bg); }
-.tb-avatar-wrap { position: relative; }
-.tb-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #7C3AED); display: flex; align-items: center; justify-content: center; font-size: .875rem; font-weight: 700; color: #fff; border: 2px solid var(--border-2); cursor: pointer; transition: border-color .15s; flex-shrink: 0; }
-.tb-avatar:hover { border-color: var(--accent); }
-.tb-drop { display: none; position: absolute; top: calc(100% + 8px); right: 0; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 8px 28px rgba(0,0,0,.45); min-width: 176px; z-index: 300; overflow: hidden; }
-.tb-avatar-wrap:hover .tb-drop { display: block; }
-.tb-drop a, .tb-drop button { display: flex; align-items: center; gap: .5rem; width: 100%; padding: .5625rem .875rem; font-size: .8125rem; color: var(--text-2); background: none; border: none; text-align: left; transition: background .15s, color .15s; }
-.tb-drop a:hover, .tb-drop button:hover { background: var(--bg-4); color: var(--text); }
-.tb-drop hr { border: none; border-top: 1px solid var(--border); margin: .25rem 0; }
-.tb-drop .drop-danger { color: var(--red); }
-.tb-drop .drop-danger:hover { background: var(--red-dim); color: var(--red); }
+.topbar{position:sticky;top:0;left:0;right:0;height:var(--topbar-h);background:var(--white);border-bottom:1px solid var(--border);z-index:200;display:flex;align-items:center;gap:1rem;padding:0 1.5rem;box-shadow:var(--shadow)}
+.tb-brand{display:flex;align-items:center;gap:8px;font-size:.9375rem;font-weight:800;color:var(--text);flex-shrink:0;letter-spacing:-.015em}
+.tb-brand-icon{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.tb-nav{display:flex;align-items:center;gap:2px;margin-left:1.5rem}
+.tb-nav a{padding:.375rem .75rem;border-radius:var(--radius-xs);font-size:.875rem;font-weight:500;color:var(--text-2);transition:color .15s,background .15s;white-space:nowrap}
+.tb-nav a:hover{color:var(--text);background:var(--page-bg)}
+.tb-nav a.active{color:var(--accent);background:var(--accent-light);font-weight:600}
+.tb-search-wrap{flex:1;max-width:380px;position:relative;margin-left:auto}
+.tb-search-wrap svg{position:absolute;left:.75rem;top:50%;transform:translateY(-50%);color:var(--text-3);pointer-events:none}
+.tb-search{width:100%;background:var(--page-bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.4375rem .75rem .4375rem 2.25rem;font-size:.875rem;color:var(--text);outline:none;transition:border-color .15s}
+.tb-search:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.12);background:var(--white)}
+.tb-search::placeholder{color:var(--text-3)}
+.tb-right{display:flex;align-items:center;gap:.75rem;flex-shrink:0}
+.notif-btn{width:36px;height:36px;border-radius:var(--radius-xs);background:var(--page-bg);border:1px solid var(--border);color:var(--text-2);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:all .15s}
+.notif-btn:hover{background:var(--border);color:var(--text)}
+.notif-badge{position:absolute;top:5px;right:5px;width:16px;height:16px;border-radius:50%;background:var(--red);color:#fff;font-size:.5rem;font-weight:700;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--white)}
+.tb-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:.875rem;font-weight:700;color:#fff;border:2px solid var(--border);cursor:pointer;flex-shrink:0}
 
-/* ── Shell ── */
-.app-shell { display: flex; padding-top: var(--topbar-h); min-height: 100vh; }
-
-/* ── Sidebar ── */
-.sidebar {
-  width: var(--sidebar-w); flex-shrink: 0;
-  position: sticky; top: var(--topbar-h); height: calc(100vh - var(--topbar-h));
-  overflow-y: auto; background: var(--bg-2); border-right: 1px solid var(--border);
-  padding: 1.25rem .875rem 2rem; display: flex; flex-direction: column; gap: 1.25rem;
-}
-.sidebar::-webkit-scrollbar { width: 3px; }
-.sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-.sb-mini-profile { display: flex; flex-direction: column; align-items: center; gap: .5rem; text-align: center; padding: 1rem .5rem .625rem; }
-.sb-avatar-ring { padding: 3px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--green)); }
-.sb-avatar-inner { width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #7C3AED); display: flex; align-items: center; justify-content: center; font-size: 1.625rem; font-weight: 800; color: #fff; border: 2.5px solid var(--bg-2); }
-.sb-name { font-size: .875rem; font-weight: 700; color: var(--text); }
-.sb-role { font-size: .6875rem; color: var(--text-3); line-height: 1.4; }
-.sb-completion { background: var(--bg-3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: .75rem; }
-.sb-comp-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: .4375rem; }
-.sb-comp-label { font-size: .625rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-3); }
-.sb-comp-pct { font-family: var(--mono); font-size: .8125rem; font-weight: 700; color: var(--green); }
-.sb-track { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
-.sb-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green)); border-radius: 3px; }
-.sb-nav-title { font-size: .5938rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3); padding: 0 .5rem; margin-bottom: .375rem; }
-.sb-nav { display: flex; flex-direction: column; gap: 1px; }
-.sb-link { display: flex; align-items: center; gap: .5rem; padding: .4375rem .625rem; border-radius: var(--radius-xs); font-size: .8125rem; font-weight: 500; color: var(--text-2); transition: background .15s, color .15s; cursor: pointer; border: none; background: none; width: 100%; text-align: left; text-decoration: none; }
-.sb-link svg { flex-shrink: 0; width: 15px; height: 15px; opacity: .6; }
-.sb-link:hover { background: var(--bg-4); color: var(--text); }
-.sb-link:hover svg { opacity: 1; }
-.sb-link.active { background: var(--accent-dim); color: var(--accent-2); font-weight: 600; }
-.sb-link.active svg { opacity: 1; }
-
-/* ── Main ── */
-.profile-main { flex: 1; min-width: 0; padding: 1.75rem 2rem 5.5rem; max-width: 880px; }
-
-/* ── Flash ── */
-.flash-list { list-style: none; display: flex; flex-direction: column; gap: .5rem; margin-bottom: 1.25rem; }
-.flash { display: flex; align-items: center; gap: .625rem; padding: .6875rem 1rem; border-radius: var(--radius-sm); font-size: .875rem; font-weight: 500; animation: fIn .2s ease; }
-.flash.success { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,.25); }
-.flash.error   { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(248,113,113,.25); }
-.flash.warning { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(251,191,36,.25); }
-@keyframes fIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+/* ── Layout ── */
+.page-wrap{max-width:1200px;margin:0 auto;padding:1.5rem 1.25rem 4rem}
+.two-col{display:grid;grid-template-columns:1fr 340px;gap:1.25rem;align-items:start}
 
 /* ── Cards ── */
-.card { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 1.25rem; overflow: hidden; transition: border-color .2s; }
-.card:hover { border-color: var(--border-2); }
-.card-head { display: flex; align-items: center; justify-content: space-between; padding: 1.125rem 1.5rem; border-bottom: 1px solid var(--border); gap: 1rem; }
-.card-title { display: flex; align-items: center; gap: .625rem; font-size: .9375rem; font-weight: 700; color: var(--text); }
-.card-title svg { color: var(--accent-2); flex-shrink: 0; width: 18px; height: 18px; }
-.card-title-badge { font-family: var(--mono); font-size: .625rem; font-weight: 700; padding: .125rem .375rem; border-radius: 8px; background: var(--accent-dim); color: var(--accent-2); }
-.card-actions { display: flex; align-items: center; gap: .5rem; }
-.card-body { padding: 1.25rem 1.5rem; }
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:1.25rem;overflow:hidden}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--border)}
+.card-title{display:flex;align-items:center;gap:.5rem;font-size:.9375rem;font-weight:700;color:var(--text)}
+.card-title svg{color:var(--accent);flex-shrink:0}
+.card-body{padding:1.25rem}
+.card-body-np{padding:0}
 
-/* Empty states */
-.empty-state { text-align: center; padding: 2.25rem 1rem; color: var(--text-3); }
-.empty-state svg { width: 36px; height: 36px; margin: 0 auto .75rem; display: block; opacity: .3; }
-.empty-state p { font-size: .875rem; margin-bottom: .875rem; color: var(--text-2); }
+/* Empty state */
+.empty-state{text-align:center;padding:2.5rem 1rem;color:var(--text-3)}
+.empty-state svg{width:36px;height:36px;margin:0 auto .75rem;display:block;opacity:.4}
+.empty-state p{font-size:.875rem;color:var(--text-2);margin-bottom:.875rem}
 
 /* ── Buttons ── */
-.btn { display: inline-flex; align-items: center; gap: .375rem; padding: .5rem 1rem; border-radius: var(--radius-sm); font-size: .8125rem; font-weight: 600; border: 1px solid transparent; cursor: pointer; transition: all .15s; text-decoration: none; font-family: 'Inter', sans-serif; white-space: nowrap; }
-.btn svg { flex-shrink: 0; }
-.btn-primary  { background: var(--accent); color: #fff; border-color: var(--accent); }
-.btn-primary:hover { filter: brightness(1.15); }
-.btn-ghost    { background: var(--bg-3); color: var(--text-2); border-color: var(--border); }
-.btn-ghost:hover { background: var(--bg-4); color: var(--text); border-color: var(--border-2); }
-.btn-outline-accent { background: var(--accent-dim); color: var(--accent-2); border-color: rgba(79,70,229,.28); }
-.btn-outline-accent:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
-.btn-green  { background: var(--green-dim); color: var(--green); border-color: rgba(34,197,94,.28); }
-.btn-green:hover { background: var(--green); color: #000; }
-.btn-amber  { background: var(--amber-dim); color: var(--amber); border-color: rgba(251,191,36,.28); }
-.btn-amber:hover { background: var(--amber); color: #000; }
-.btn-red    { background: var(--red-dim);   color: var(--red);   border-color: rgba(248,113,113,.28); }
-.btn-red:hover { background: var(--red); color: #fff; }
-.btn-sm { padding: .3125rem .6875rem; font-size: .75rem; }
-.btn-xs { padding: .1875rem .5rem; font-size: .6875rem; }
-.btn-icon { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-xs); background: var(--bg-3); border: 1px solid var(--border); color: var(--text-2); cursor: pointer; transition: all .15s; }
-.btn-icon:hover { background: var(--bg-4); color: var(--text); border-color: var(--border-2); }
+.btn{display:inline-flex;align-items:center;gap:.375rem;padding:.5rem 1.125rem;border-radius:var(--radius-sm);font-size:.8125rem;font-weight:600;border:1px solid transparent;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:'Inter',sans-serif;text-decoration:none}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:var(--accent-2);border-color:var(--accent-2)}
+.btn-outline{background:var(--white);color:var(--accent);border-color:var(--accent)}
+.btn-outline:hover{background:var(--accent-light)}
+.btn-ghost{background:var(--white);color:var(--text-2);border-color:var(--border)}
+.btn-ghost:hover{background:var(--page-bg);color:var(--text);border-color:var(--border-2)}
+.btn-green{background:var(--green-light);color:var(--green);border-color:rgba(22,163,74,.25)}
+.btn-green:hover{background:var(--green);color:#fff}
+.btn-amber{background:var(--amber-light);color:var(--amber);border-color:rgba(217,119,6,.25)}
+.btn-amber:hover{background:var(--amber);color:#fff}
+.btn-red{background:var(--red-light);color:var(--red);border-color:rgba(220,38,38,.25)}
+.btn-red:hover{background:var(--red);color:#fff}
+.btn-purple{background:var(--purple-light);color:var(--purple);border-color:rgba(124,58,237,.25)}
+.btn-purple:hover{background:var(--purple);color:#fff}
+.btn-sm{padding:.3125rem .75rem;font-size:.75rem}
+.btn-xs{padding:.1875rem .5rem;font-size:.6875rem}
+.btn-full{width:100%;justify-content:center}
+.btn-icon{width:32px;height:32px;padding:0;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius-xs);background:var(--white);border:1px solid var(--border);color:var(--text-2);cursor:pointer;transition:all .15s}
+.btn-icon:hover{background:var(--page-bg);color:var(--text);border-color:var(--border-2)}
 
 /* ── Badges ── */
-.badge { display: inline-flex; align-items: center; gap: .25rem; padding: .1875rem .5625rem; border-radius: 20px; font-size: .6875rem; font-weight: 700; white-space: nowrap; letter-spacing: .01em; }
-.badge-verified { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,.28); }
-.badge-pending  { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(251,191,36,.28); }
-.badge-grey     { background: var(--grey-dim);  color: var(--grey);  border: 1px solid rgba(148,163,184,.2); }
-.badge-failed   { background: var(--red-dim);   color: var(--red);   border: 1px solid rgba(248,113,113,.28); }
-.badge-accent   { background: var(--accent-dim); color: var(--accent-2); border: 1px solid rgba(79,70,229,.28); }
+.badge{display:inline-flex;align-items:center;gap:.25rem;padding:.1875rem .5625rem;border-radius:20px;font-size:.6875rem;font-weight:600;white-space:nowrap}
+.badge-green{background:var(--green-light);color:var(--green);border:1px solid rgba(22,163,74,.25)}
+.badge-amber{background:var(--amber-light);color:var(--amber);border:1px solid rgba(217,119,6,.25)}
+.badge-blue{background:var(--blue-light);color:var(--blue);border:1px solid rgba(37,99,235,.25)}
+.badge-purple{background:var(--purple-light);color:var(--purple);border:1px solid rgba(124,58,237,.25)}
+.badge-grey{background:#F1F5F9;color:var(--text-2);border:1px solid var(--border)}
+.badge-red{background:var(--red-light);color:var(--red);border:1px solid rgba(220,38,38,.25)}
+.badge-accent{background:var(--accent-light);color:var(--accent);border:1px solid rgba(79,70,229,.25)}
+
+/* ── Flash ── */
+.flash-list{list-style:none;display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.25rem}
+.flash{display:flex;align-items:center;gap:.625rem;padding:.6875rem 1rem;border-radius:var(--radius-sm);font-size:.875rem;font-weight:500}
+.flash.success{background:var(--green-light);color:var(--green);border:1px solid rgba(22,163,74,.25)}
+.flash.error{background:var(--red-light);color:var(--red);border:1px solid rgba(220,38,38,.25)}
+.flash.warning{background:var(--amber-light);color:var(--amber);border:1px solid rgba(217,119,6,.25)}
 
 /* ── Hero ── */
-#overview { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 1.25rem; overflow: hidden; transition: border-color .2s; }
-#overview:hover { border-color: var(--border-2); }
-.hero-banner { height: 90px; background: linear-gradient(120deg, #110d3a 0%, #1a2055 50%, #0e1e42 100%); position: relative; overflow: hidden; }
-.hero-banner::after { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 70% 50%, rgba(79,70,229,.18) 0%, transparent 65%); }
-.hero-body { padding: 0 1.75rem 1.75rem; }
-.hero-top-row { display: flex; align-items: flex-end; justify-content: space-between; margin-top: -44px; margin-bottom: 1rem; flex-wrap: wrap; gap: .75rem; }
-.hero-avatar { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #7C3AED); display: flex; align-items: center; justify-content: center; font-size: 2.25rem; font-weight: 800; color: #fff; border: 4px solid var(--bg-2); box-shadow: 0 0 0 2px var(--accent); flex-shrink: 0; }
-.hero-info { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; }
-.hero-left { flex: 1; min-width: 0; }
-.hero-name { font-size: 1.5rem; font-weight: 800; color: var(--text); letter-spacing: -.025em; margin-bottom: .1875rem; }
-.hero-headline { font-size: .9375rem; color: var(--text-2); margin-bottom: .625rem; }
-.hero-meta { display: flex; flex-wrap: wrap; gap: .625rem; margin-bottom: .875rem; }
-.hero-meta-chip { display: flex; align-items: center; gap: .3125rem; font-size: .8125rem; color: var(--text-2); }
-.hero-meta-chip svg { color: var(--text-3); flex-shrink: 0; width: 13px; height: 13px; }
-.hero-sep { width: 1px; height: 14px; background: var(--border-2); align-self: center; }
-.hero-badges { display: flex; flex-wrap: wrap; gap: .4375rem; margin-bottom: 1rem; }
-.hero-cta { display: flex; flex-wrap: wrap; gap: .5rem; }
+.hero-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:1.25rem;overflow:hidden}
+.hero-body{padding:1.5rem}
+.hero-main{display:flex;align-items:flex-start;gap:1.25rem;margin-bottom:1.25rem}
+.hero-avatar{width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--purple));display:flex;align-items:center;justify-content:center;font-size:2.25rem;font-weight:800;color:#fff;flex-shrink:0;border:3px solid var(--white);box-shadow:0 0 0 3px var(--accent)}
+.hero-avatar-online{position:relative}
+.hero-avatar-dot{position:absolute;bottom:4px;right:4px;width:14px;height:14px;border-radius:50%;background:var(--green-2);border:2px solid var(--white)}
+.hero-info{flex:1;min-width:0}
+.hero-name-row{display:flex;align-items:center;gap:.625rem;flex-wrap:wrap;margin-bottom:.25rem}
+.hero-name{font-size:1.375rem;font-weight:800;color:var(--text);letter-spacing:-.02em}
+.hero-role{font-size:.9375rem;color:var(--accent);font-weight:600;margin-bottom:.5rem}
+.hero-meta{display:flex;flex-wrap:wrap;gap:.875rem;margin-bottom:.75rem}
+.hero-meta-item{display:flex;align-items:center;gap:.3125rem;font-size:.8125rem;color:var(--text-2)}
+.hero-meta-item svg{color:var(--text-3);flex-shrink:0;width:14px;height:14px}
+.hero-badges{display:flex;flex-wrap:wrap;gap:.4375rem;margin-bottom:.875rem}
+.hero-dates{display:flex;flex-wrap:wrap;gap:1.5rem;padding-top:.875rem;border-top:1px solid var(--border)}
+.hero-date-item{display:flex;align-items:center;gap:.375rem;font-size:.8125rem;color:var(--text-2)}
+.hero-date-item svg{color:var(--text-3);flex-shrink:0}
 
-/* Score widget */
-.score-widget {
-  background: var(--bg-3); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); padding: 1rem 1.125rem;
-  display: flex; gap: 1.125rem; align-items: flex-start;
-  flex-shrink: 0; min-width: 264px;
-}
-.score-ring-container { position: relative; flex-shrink: 0; width: 88px; height: 88px; }
-.score-ring-svg { transform: rotate(-90deg); }
-.ring-track { fill: none; stroke: var(--border-2); stroke-width: 8; }
-.ring-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 1s cubic-bezier(.4,0,.2,1); }
-.score-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; pointer-events: none; }
-.score-num { display: block; font-family: var(--mono); font-size: 1.1875rem; font-weight: 700; color: var(--text); line-height: 1; }
-.score-sub { display: block; font-size: .5rem; color: var(--text-3); margin-top: .125rem; text-transform: uppercase; letter-spacing: .05em; }
-.score-stats { flex: 1; min-width: 0; }
-.score-stats-title { font-size: .625rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-3); margin-bottom: .625rem; }
-.score-row { display: flex; justify-content: space-between; align-items: center; padding: .3rem 0; border-bottom: 1px solid var(--border); }
-.score-row:last-child { border-bottom: none; }
-.score-row-label { font-size: .75rem; color: var(--text-2); }
-.score-row-val { font-family: var(--mono); font-size: .8125rem; font-weight: 700; }
-.score-row-val.green  { color: var(--green); }
-.score-row-val.amber  { color: var(--amber); }
-.score-row-val.accent { color: var(--accent-2); }
+/* Completion widget */
+.hero-completion{flex-shrink:0;width:200px;background:var(--page-bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;text-align:center}
+.completion-pct{font-size:2rem;font-weight:800;color:var(--accent);line-height:1;margin-bottom:.375rem}
+.completion-track{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-bottom:.5rem}
+.completion-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent),var(--green-2));transition:width .8s}
+.completion-label{font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);margin-bottom:.5rem}
+.strength-badge{display:inline-flex;align-items:center;gap:.3125rem;font-size:.8125rem;font-weight:700;color:var(--green);background:var(--green-light);padding:.25rem .625rem;border-radius:20px;border:1px solid rgba(22,163,74,.25);margin-bottom:.375rem}
+.completion-hint{font-size:.6875rem;color:var(--accent);cursor:pointer;font-weight:500}
+.completion-hint:hover{text-decoration:underline}
 
-/* ── Info grid ── */
-.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 2.5rem; }
-.info-row { padding: .5625rem 0; border-bottom: 1px solid var(--border); }
-.info-row:last-child { border-bottom: none; }
-.info-label { font-size: .6875rem; color: var(--text-3); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; margin-bottom: .1875rem; }
-.info-value { font-size: .875rem; color: var(--text); font-weight: 500; }
-.info-value a { color: var(--accent-2); }
-.info-value a:hover { text-decoration: underline; }
+/* ── Action buttons bar ── */
+.actions-bar{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:1.25rem;padding:.875rem 1.25rem;display:flex;align-items:center;gap:.625rem;flex-wrap:wrap}
+.actions-divider{width:1px;height:28px;background:var(--border);flex-shrink:0}
 
-/* ── Preferences ── */
-.pref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
-.pref-label { font-size: .6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); margin-bottom: .5rem; }
-.chips-row { display: flex; flex-wrap: wrap; gap: .375rem; }
-.chip { background: var(--bg-3); border: 1px solid var(--border); border-radius: 20px; padding: .25rem .6875rem; font-size: .8125rem; color: var(--text-2); font-weight: 500; }
-.chip.accent { background: var(--accent-dim); border-color: rgba(79,70,229,.25); color: var(--accent-2); }
+/* ── Profile strength recommendations ── */
+.reco-grid{display:grid;grid-template-columns:1fr 1fr;gap:.625rem}
+.reco-item{display:flex;align-items:center;gap:.625rem;padding:.625rem .875rem;background:var(--page-bg);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:border-color .15s}
+.reco-item:hover{border-color:var(--border-2)}
+.reco-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.reco-icon.done{background:var(--green-light);color:var(--green)}
+.reco-icon.todo{background:var(--amber-light);color:var(--amber)}
+.reco-text{flex:1;font-size:.8125rem;font-weight:500;color:var(--text-2)}
+.reco-arrow{color:var(--text-3)}
 
-/* ── Timeline ── */
-.timeline { display: flex; flex-direction: column; }
-.tl-item { display: flex; gap: 1rem; padding: 1.25rem 0; border-bottom: 1px solid var(--border); }
-.tl-item:last-child { border-bottom: none; }
-.tl-icon { width: 40px; height: 40px; border-radius: var(--radius-xs); background: var(--bg-3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; color: var(--accent-2); flex-shrink: 0; font-size: 1.125rem; font-weight: 800; }
-.tl-body { flex: 1; min-width: 0; }
-.tl-top { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; margin-bottom: .25rem; }
-.tl-title { font-size: .9375rem; font-weight: 700; color: var(--text); }
-.tl-company { font-size: .875rem; color: var(--text-2); font-weight: 500; margin-bottom: .25rem; }
-.tl-meta { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .5rem; }
-.tl-meta span { font-size: .75rem; color: var(--text-3); display: flex; align-items: center; gap: .25rem; }
-.tl-desc { font-size: .8125rem; color: var(--text-2); line-height: 1.65; }
-.tl-actions { display: flex; gap: .375rem; flex-shrink: 0; }
+/* ── Verified skills ── */
+.skill-cards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:.75rem}
+.skill-card{border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:.875rem;position:relative;transition:border-color .2s,box-shadow .2s;background:var(--white)}
+.skill-card.verified{border-color:rgba(22,163,74,.35);background:linear-gradient(135deg,#FAFFFE,#F0FDF4)}
+.skill-card.verified:hover{border-color:var(--green);box-shadow:0 2px 8px rgba(22,163,74,.15)}
+.skill-card.pending{border-color:rgba(217,119,6,.35);background:linear-gradient(135deg,#FFFDF0,#FFFBEB)}
+.skill-card.not-attempted{border-color:var(--border);background:var(--page-bg)}
+.skill-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.5rem}
+.skill-card-name{font-size:.875rem;font-weight:700;color:var(--text)}
+.skill-card-check{width:20px;height:20px;border-radius:50%;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.skill-card-pending-icon{width:20px;height:20px;border-radius:50%;background:var(--amber-light);border:2px solid var(--amber);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.skill-card-grey-icon{width:20px;height:20px;border-radius:50%;background:var(--border);flex-shrink:0}
+.skill-status{font-size:.6875rem;font-weight:600;margin-bottom:.5rem}
+.skill-status.verified{color:var(--green)}
+.skill-status.pending{color:var(--amber)}
+.skill-status.not-attempted{color:var(--text-3)}
+.skill-meta-row{display:flex;justify-content:space-between;margin-bottom:.1875rem}
+.skill-meta-label{font-size:.625rem;color:var(--text-3);font-weight:500}
+.skill-meta-value{font-size:.6875rem;font-weight:700;color:var(--text)}
+.skill-meta-value.green{color:var(--green)}
+.skill-verified-footer{margin-top:.625rem;padding-top:.5rem;border-top:1px solid rgba(22,163,74,.15);display:flex;align-items:center;gap:.3125rem;font-size:.625rem;color:var(--green);font-weight:600}
+.skill-pending-footer{margin-top:.625rem;padding-top:.5rem;border-top:1px solid rgba(217,119,6,.15);font-size:.6875rem;color:var(--amber)}
+.skill-not-footer{margin-top:.625rem;padding-top:.5rem;border-top:1px solid var(--border);font-size:.6875rem;color:var(--text-3)}
+.view-all-link{display:inline-flex;align-items:center;gap:.375rem;font-size:.8125rem;font-weight:600;color:var(--accent);margin-top:1rem;cursor:pointer}
+.view-all-link:hover{text-decoration:underline}
 
-/* ── Skills chips ── */
-.skill-group { margin-bottom: 1.5rem; }
-.skill-group:last-of-type { margin-bottom: 0; }
-.skill-group-head { display: flex; align-items: center; gap: .5rem; margin-bottom: .75rem; }
-.skill-group-label { font-size: .6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
-.skill-group-label.green { color: var(--green); }
-.skill-group-label.grey  { color: var(--grey); }
-.skill-group-count { font-family: var(--mono); font-size: .625rem; font-weight: 600; padding: .0625rem .3125rem; border-radius: 6px; background: var(--bg-3); border: 1px solid var(--border); color: var(--text-3); }
-.skills-chips { display: flex; flex-wrap: wrap; gap: .5rem; }
-.skill-chip { display: inline-flex; align-items: center; gap: .4375rem; padding: .4375rem .875rem; border-radius: 20px; font-size: .8125rem; font-weight: 600; transition: all .15s; white-space: nowrap; }
-.skill-chip.verified { background: var(--green-dim); border: 1.5px solid rgba(34,197,94,.28); color: var(--green); }
-.skill-chip.verified:hover { background: rgba(34,197,94,.18); }
-.skill-chip .sc-score { font-family: var(--mono); font-size: .6rem; font-weight: 700; background: var(--green); color: #0B0D14; padding: .0625rem .3125rem; border-radius: 4px; }
+/* ── Skill Match Summary (sidebar) ── */
+.match-ring-wrap{display:flex;justify-content:center;margin:.75rem 0}
+.match-ring{position:relative;width:100px;height:100px}
+.match-ring svg{transform:rotate(-90deg)}
+.match-ring-track{fill:none;stroke:var(--border);stroke-width:8}
+.match-ring-fill{fill:none;stroke:var(--green);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1s}
+.match-ring-label{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.match-ring-pct{display:block;font-size:1.125rem;font-weight:800;color:var(--text);line-height:1}
+.match-ring-sub{display:block;font-size:.5625rem;color:var(--text-3);margin-top:.125rem}
+.match-stat-row{display:flex;align-items:center;justify-content:space-between;padding:.4375rem 0;border-bottom:1px solid var(--border)}
+.match-stat-row:last-child{border-bottom:none}
+.match-stat-label{display:flex;align-items:center;gap:.375rem;font-size:.8125rem;color:var(--text-2)}
+.match-stat-label svg{flex-shrink:0;width:14px;height:14px}
+.match-stat-val{font-size:.875rem;font-weight:700;color:var(--text)}
+.match-stat-val.green{color:var(--green)}
+.match-stat-val.amber{color:var(--amber)}
+.suggested-chips{display:flex;flex-wrap:wrap;gap:.375rem;margin-top:.625rem}
+.sug-chip{background:var(--page-bg);border:1px solid var(--border);border-radius:20px;padding:.1875rem .625rem;font-size:.75rem;color:var(--text-2);font-weight:500}
 
-/* unverified skill cards */
-.unverified-chips { display: flex; flex-wrap: wrap; gap: .5rem; }
-.uv-chip { display: flex; align-items: center; gap: .5rem; background: var(--grey-dim); border: 1.5px solid rgba(148,163,184,.14); color: var(--grey); border-radius: var(--radius-sm); padding: .375rem .625rem .375rem .875rem; transition: border-color .15s; position: relative; }
-.uv-chip:hover { border-color: rgba(148,163,184,.28); }
-.uv-name { font-size: .8125rem; font-weight: 600; color: var(--text-2); }
-.uv-info { position: relative; display: flex; align-items: center; cursor: help; }
-.uv-info:hover .tooltip { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
-.tooltip { position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%) translateY(4px); background: var(--bg-4); border: 1px solid var(--border-2); border-radius: var(--radius-xs); padding: .5rem .75rem; font-size: .6875rem; color: var(--text-2); width: 200px; white-space: normal; text-align: left; opacity: 0; pointer-events: none; transition: opacity .15s, transform .15s; z-index: 50; box-shadow: 0 6px 16px rgba(0,0,0,.35); }
-.skills-cta { margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .75rem; }
-.skills-cta-text { font-size: .8125rem; color: var(--text-2); }
-.skills-cta-text strong { color: var(--text); }
+/* ── About ── */
+.about-text{font-size:.9375rem;color:var(--text-2);line-height:1.75;white-space:pre-wrap}
 
-/* ── Assessment table ── */
-.assess-wrap { overflow-x: auto; }
-.assess-table { width: 100%; border-collapse: collapse; font-size: .8125rem; }
-.assess-table th { text-align: left; padding: .5625rem .875rem; font-size: .625rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-3); border-bottom: 1px solid var(--border); background: var(--bg-3); white-space: nowrap; }
-.assess-table th:first-child { padding-left: 1.25rem; border-radius: var(--radius-xs) 0 0 0; }
-.assess-table th:last-child  { padding-right: 1.25rem; border-radius: 0 var(--radius-xs) 0 0; }
-.assess-table td { padding: .875rem; border-bottom: 1px solid var(--border); color: var(--text-2); vertical-align: middle; }
-.assess-table td:first-child { padding-left: 1.25rem; color: var(--text); font-weight: 600; }
-.assess-table td:last-child  { padding-right: 1.25rem; }
-.assess-table tr:last-child td { border-bottom: none; }
-.assess-table tr:hover td { background: var(--bg-3); }
-.score-pill { font-family: var(--mono); font-size: .6875rem; font-weight: 700; padding: .1875rem .5rem; border-radius: 4px; display: inline-block; }
-.score-pill.green  { background: var(--green-dim); color: var(--green); }
-.score-pill.amber  { background: var(--amber-dim); color: var(--amber); }
-.score-pill.grey   { background: var(--grey-dim);  color: var(--grey); }
-.score-pill.red    { background: var(--red-dim);   color: var(--red); }
-.validity-ok  { font-size: .75rem; color: var(--green); display: flex; align-items: center; gap: .25rem; }
-.validity-na  { font-size: .75rem; color: var(--text-3); }
+/* ── Experience timeline ── */
+.tl{display:flex;flex-direction:column}
+.tl-item{display:flex;gap:1rem;padding:1.25rem 0;border-bottom:1px solid var(--border)}
+.tl-item:last-child{border-bottom:none;padding-bottom:0}
+.tl-left{display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0}
+.tl-logo{width:44px;height:44px;border-radius:var(--radius-xs);background:var(--page-bg);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.875rem;font-weight:800;color:var(--accent)}
+.tl-line{width:2px;flex:1;background:var(--border);margin-top:.375rem}
+.tl-body{flex:1;min-width:0}
+.tl-role{font-size:.9375rem;font-weight:700;color:var(--text);margin-bottom:.125rem}
+.tl-company{font-size:.875rem;color:var(--accent);font-weight:600;margin-bottom:.25rem}
+.tl-meta{display:flex;flex-wrap:wrap;gap:.625rem;margin-bottom:.625rem}
+.tl-meta span{display:flex;align-items:center;gap:.25rem;font-size:.75rem;color:var(--text-3)}
+.tl-meta span svg{flex-shrink:0;width:12px;height:12px}
+.tl-bullets{margin:0;padding-left:1.125rem;display:flex;flex-direction:column;gap:.25rem;margin-bottom:.625rem}
+.tl-bullets li{font-size:.8125rem;color:var(--text-2);line-height:1.5}
+.tl-skill-chips{display:flex;flex-wrap:wrap;gap:.375rem}
+.tl-chip{background:var(--page-bg);border:1px solid var(--border);border-radius:4px;padding:.125rem .5rem;font-size:.75rem;color:var(--text-2);font-weight:500}
+.tl-edit{flex-shrink:0}
+.view-full-btn{display:inline-flex;align-items:center;gap:.375rem;font-size:.8125rem;font-weight:600;color:var(--accent);margin-top:.875rem;cursor:pointer}
+.view-full-btn:hover{text-decoration:underline}
+
+/* ── Education ── */
+.edu-item{display:flex;align-items:flex-start;gap:1rem;padding:.875rem 0;border-bottom:1px solid var(--border)}
+.edu-item:last-child{border-bottom:none;padding-bottom:0}
+.edu-icon{width:44px;height:44px;border-radius:var(--radius-xs);background:var(--blue-light);border:1px solid rgba(37,99,235,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.edu-info{flex:1}
+.edu-degree{font-size:.9375rem;font-weight:700;color:var(--text);margin-bottom:.125rem}
+.edu-uni{font-size:.875rem;color:var(--accent);font-weight:500;margin-bottom:.25rem}
+.edu-meta{font-size:.75rem;color:var(--text-3)}
 
 /* ── Certifications ── */
-.cert-list { display: flex; flex-direction: column; gap: .625rem; }
-.cert-item { display: flex; align-items: center; gap: 1rem; padding: .875rem 1rem; background: var(--bg-3); border: 1px solid var(--border); border-radius: var(--radius-sm); transition: border-color .15s; }
-.cert-item:hover { border-color: var(--border-2); }
-.cert-icon { width: 40px; height: 40px; border-radius: var(--radius-xs); background: linear-gradient(135deg,var(--amber-dim),rgba(251,191,36,.22)); border: 1px solid rgba(251,191,36,.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.cert-info { flex: 1; min-width: 0; }
-.cert-name { font-size: .875rem; font-weight: 700; color: var(--text); margin-bottom: .1875rem; }
-.cert-meta { font-size: .75rem; color: var(--text-3); }
-.cert-actions { display: flex; gap: .375rem; flex-shrink: 0; flex-wrap: wrap; }
+.cert-list{display:flex;flex-direction:column;gap:.625rem}
+.cert-item{display:flex;align-items:center;gap:.875rem;padding:.875rem 1rem;background:var(--page-bg);border:1px solid var(--border);border-radius:var(--radius-sm);transition:border-color .15s}
+.cert-item:hover{border-color:var(--border-2)}
+.cert-icon{width:40px;height:40px;border-radius:var(--radius-xs);background:var(--amber-light);border:1px solid rgba(217,119,6,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cert-info{flex:1;min-width:0}
+.cert-name{font-size:.875rem;font-weight:700;color:var(--text);margin-bottom:.125rem}
+.cert-meta{font-size:.75rem;color:var(--text-3)}
+.cert-actions{display:flex;gap:.375rem;flex-shrink:0}
 
-/* ── Resume ── */
-.resume-file { display: flex; align-items: center; gap: 1.125rem; padding: 1rem 1.125rem; background: var(--bg-3); border: 1px solid var(--border); border-radius: var(--radius-sm); transition: border-color .15s; }
-.resume-file:hover { border-color: var(--border-2); }
-.resume-icon { width: 46px; height: 46px; border-radius: var(--radius-xs); background: var(--red-dim); border: 1px solid rgba(248,113,113,.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.resume-info { flex: 1; min-width: 0; }
-.resume-filename { font-size: .9375rem; font-weight: 700; color: var(--text); margin-bottom: .125rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.resume-filemeta { font-size: .75rem; color: var(--text-3); }
-.resume-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
-.upload-zone { border: 2px dashed var(--border); border-radius: var(--radius-sm); padding: 2.25rem 1.5rem; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; }
-.upload-zone:hover, .upload-zone.drag { border-color: var(--accent); background: var(--accent-dim); }
-.upload-zone svg { color: var(--text-3); margin: 0 auto .75rem; display: block; }
-.upload-zone h4 { font-size: .9375rem; font-weight: 600; color: var(--text-2); margin-bottom: .375rem; }
-.upload-zone p { font-size: .8125rem; color: var(--text-3); margin-bottom: .5rem; }
-.upload-err { display: none; color: var(--red); font-size: .8125rem; font-weight: 500; margin-top: .5rem; padding: .5rem .75rem; background: var(--red-dim); border-radius: var(--radius-xs); border: 1px solid rgba(248,113,113,.25); }
+/* ── Projects ── */
+.proj-item{padding:1rem 0;border-bottom:1px solid var(--border)}
+.proj-item:last-child{border-bottom:none;padding-bottom:0}
+.proj-name{font-size:.9375rem;font-weight:700;color:var(--text);margin-bottom:.125rem}
+.proj-domain{font-size:.8125rem;color:var(--accent);font-weight:500;margin-bottom:.375rem}
+.proj-desc{font-size:.8125rem;color:var(--text-2);line-height:1.65;margin-bottom:.5rem}
+.proj-tools{display:flex;flex-wrap:wrap;gap:.375rem}
 
-/* ── Edit panels ── */
-.edit-panel { display: none; padding: 1.25rem 1.5rem; background: var(--bg-3); border-top: 1px solid var(--border); }
-.edit-panel.open { display: block; }
-.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .875rem; }
-.form-grid.c1 { grid-template-columns: 1fr; }
-.fg { display: flex; flex-direction: column; gap: .3125rem; }
-.fg.span-2 { grid-column: 1/-1; }
-.fg label { font-size: .75rem; font-weight: 600; color: var(--text-2); }
-.fc { background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: .4875rem .75rem; font-size: .875rem; color: var(--text); outline: none; transition: border-color .15s; }
-.fc:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
-.fc::placeholder { color: var(--text-3); }
-textarea.fc { resize: vertical; min-height: 80px; }
-.form-actions { display: flex; gap: .5rem; margin-top: .875rem; }
+/* ── Resume sidebar ── */
+.resume-file{display:flex;align-items:center;gap:.875rem;padding:.875rem;background:var(--page-bg);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:.75rem;transition:border-color .15s}
+.resume-file:hover{border-color:var(--border-2)}
+.resume-icon{width:44px;height:44px;border-radius:var(--radius-xs);background:var(--red-light);border:1px solid rgba(220,38,38,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.resume-info{flex:1;min-width:0}
+.resume-fname{font-size:.875rem;font-weight:700;color:var(--text);margin-bottom:.125rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.resume-meta{font-size:.75rem;color:var(--text-3)}
+.resume-visibility{display:inline-flex;align-items:center;gap:.25rem;font-size:.6875rem;color:var(--green);font-weight:600;margin-top:.125rem}
+.resume-actions{display:flex;gap:.5rem;flex-direction:column}
 
-/* ── Verify banner ── */
-.verify-banner { background: var(--amber-dim); border: 1px solid rgba(251,191,36,.28); border-radius: var(--radius-sm); padding: .875rem 1rem; margin-bottom: 1.25rem; display: flex; align-items: flex-start; gap: .875rem; flex-wrap: wrap; }
-.verify-banner-body { flex: 1; min-width: 0; }
-.verify-banner-title { font-size: .875rem; font-weight: 700; color: var(--amber); margin-bottom: .125rem; }
-.verify-banner-msg { font-size: .8125rem; color: var(--text-2); }
+/* ── Job Preferences ── */
+.pref-row{display:flex;align-items:flex-start;padding:.4375rem 0;border-bottom:1px solid var(--border)}
+.pref-row:last-child{border-bottom:none}
+.pref-label{font-size:.75rem;color:var(--text-3);font-weight:500;min-width:110px;flex-shrink:0;display:flex;align-items:center;gap:.375rem;padding-top:.0625rem}
+.pref-label svg{flex-shrink:0;width:13px;height:13px}
+.pref-value{font-size:.8125rem;color:var(--text);font-weight:500;flex:1}
 
-/* ── Bottom bar ── */
-.bottom-bar { position: fixed; bottom: 0; left: var(--sidebar-w); right: 0; background: rgba(15,18,32,.97); backdrop-filter: blur(10px); border-top: 1px solid var(--border); padding: .75rem 2rem; display: flex; align-items: center; gap: 1.5rem; z-index: 150; }
-.bb-progress { display: flex; flex-direction: column; gap: .3rem; flex: 1; max-width: 320px; }
-.bb-progress-label { font-size: .6875rem; color: var(--text-2); font-weight: 500; }
-.bb-track { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
-.bb-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--green)); border-radius: 3px; transition: width .8s; }
-.bb-pct { font-family: var(--mono); font-size: .875rem; font-weight: 700; color: var(--green); flex-shrink: 0; }
-.bb-text { flex: 1; font-size: .8125rem; color: var(--text-2); }
-.bb-text strong { color: var(--text); }
+/* ── Profile visibility ── */
+.vis-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border)}
+.vis-row:last-child{border-bottom:none}
+.vis-label{font-size:.8125rem;color:var(--text-2);font-weight:500}
+.toggle-wrap{position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0}
+.toggle-wrap input{opacity:0;width:0;height:0;position:absolute}
+.toggle-slider{position:absolute;inset:0;background:var(--border-2);border-radius:20px;cursor:pointer;transition:background .2s}
+.toggle-slider::before{content:'';position:absolute;left:2px;bottom:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.toggle-wrap input:checked+.toggle-slider{background:var(--green)}
+.toggle-wrap input:checked+.toggle-slider::before{transform:translateX(16px)}
+
+/* ── Recruiter actions ── */
+.recruiter-actions-panel{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:1.25rem;overflow:hidden}
+.match-score-banner{background:linear-gradient(135deg,var(--accent),var(--purple));padding:1.25rem;text-align:center}
+.match-score-num{font-size:2rem;font-weight:800;color:#fff;line-height:1}
+.match-score-label{font-size:.75rem;color:rgba(255,255,255,.8);margin-top:.25rem}
+.recruiter-actions-body{padding:1rem}
+.ra-stat-row{display:flex;justify-content:space-between;align-items:center;padding:.375rem 0;border-bottom:1px solid var(--border)}
+.ra-stat-row:last-of-type{border-bottom:none;margin-bottom:.875rem}
+.ra-label{font-size:.75rem;color:var(--text-3)}
+.ra-val{font-size:.8125rem;font-weight:700;color:var(--text)}
+.ra-val.green{color:var(--green)}
+.recruiter-btns{display:flex;flex-direction:column;gap:.5rem}
+
+/* ── Edit panel ── */
+.edit-panel{display:none;padding:1.25rem;background:var(--page-bg);border-top:1px solid var(--border)}
+.edit-panel.open{display:block}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:.875rem}
+.form-grid.c1{grid-template-columns:1fr}
+.fg{display:flex;flex-direction:column;gap:.3125rem}
+.fg.span-2{grid-column:1/-1}
+.fg label{font-size:.75rem;font-weight:600;color:var(--text-2)}
+.fc{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-xs);padding:.4875rem .75rem;font-size:.875rem;color:var(--text);outline:none;transition:border-color .15s}
+.fc:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.fc::placeholder{color:var(--text-3)}
+textarea.fc{resize:vertical;min-height:80px}
+.form-actions{display:flex;gap:.5rem;margin-top:.875rem}
+
+/* ── Modal ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.open{display:flex}
+.modal-box{background:var(--white);border-radius:var(--radius);box-shadow:0 20px 60px rgba(0,0,0,.2);width:100%;max-width:520px;overflow:hidden}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid var(--border)}
+.modal-title{font-size:.9375rem;font-weight:700;color:var(--text)}
+.modal-close{width:28px;height:28px;border-radius:var(--radius-xs);background:var(--page-bg);border:1px solid var(--border);color:var(--text-2);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.modal-body{padding:1.25rem;max-height:70vh;overflow-y:auto}
+.modal-foot{padding:.875rem 1.25rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:.5rem}
+.skill-check-row{display:flex;align-items:center;gap:.625rem;padding:.4375rem 0;border-bottom:1px solid var(--border)}
+.skill-check-row:last-child{border-bottom:none}
+.skill-check-row input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);flex-shrink:0}
+.skill-check-label{font-size:.875rem;font-weight:500;color:var(--text);flex:1}
+.skill-check-status{font-size:.6875rem;color:var(--text-3)}
+
+/* Verify email banner */
+.verify-banner{background:var(--amber-light);border:1px solid rgba(217,119,6,.3);border-radius:var(--radius-sm);padding:.875rem 1rem;margin-bottom:1.25rem;display:flex;align-items:flex-start;gap:.75rem;flex-wrap:wrap}
+.verify-banner-body{flex:1;min-width:0}
+.verify-banner-title{font-size:.875rem;font-weight:700;color:var(--amber);margin-bottom:.125rem}
+.verify-banner-msg{font-size:.8125rem;color:var(--text-2)}
 
 /* ── Responsive ── */
-@media (max-width: 1060px) {
-  .tb-nav { display: none; }
-  .score-widget { min-width: unset; }
+@media(max-width:1024px){.two-col{grid-template-columns:1fr}.sidebar-col{display:none}}
+@media(max-width:768px){
+  .tb-nav{display:none}
+  .hero-main{flex-direction:column;align-items:center;text-align:center}
+  .hero-meta{justify-content:center}
+  .hero-badges{justify-content:center}
+  .hero-completion{width:100%}
+  .reco-grid{grid-template-columns:1fr}
+  .skill-cards-grid{grid-template-columns:repeat(2,1fr)}
+  .form-grid{grid-template-columns:1fr}
+  .page-wrap{padding:1rem .75rem 3rem}
+  .actions-bar{justify-content:center}
 }
-@media (max-width: 860px) {
-  :root { --sidebar-w: 0px; }
-  .sidebar { display: none; }
-  .profile-main { padding: 1.25rem 1rem 5.5rem; }
-  .bottom-bar { left: 0; padding: .75rem 1rem; }
-}
-@media (max-width: 640px) {
-  .pref-grid, .info-grid, .form-grid { grid-template-columns: 1fr; }
-  .hero-info { flex-direction: column; }
-  .score-widget { width: 100%; }
-  .tb-search-wrap { display: none; }
-  .bb-text { display: none; }
+@media(max-width:480px){
+  .tb-search-wrap{display:none}
+  .hero-completion{width:100%}
+  .skill-cards-grid{grid-template-columns:1fr 1fr}
+  .hero-dates{flex-direction:column;gap:.375rem}
 }
 </style>
 </head>
 <body>
 
+{# ── compute data ── #}
 {% set verified_skills = my_skills | selectattr('verified', 'equalto', 1) | list %}
 {% set unverified_skills = my_skills | selectattr('verified', 'equalto', 0) | list %}
 {% set ns = namespace(v=0) %}
 {% for sk in verified_skills %}{% set ns.v = ns.v + sk.score %}{% endfor %}
 {% set avg_score = (ns.v / verified_skills|length)|int if verified_skills|length > 0 else 0 %}
-
 {% set c = namespace(f=0) %}
 {% if user.name %}{% set c.f = c.f + 1 %}{% endif %}
 {% if profile and profile.headline %}{% set c.f = c.f + 1 %}{% endif %}
@@ -375,118 +377,40 @@ textarea.fc { resize: vertical; min-height: 80px; }
 {% if verified_skills|length > 0 %}{% set c.f = c.f + 1 %}{% endif %}
 {% set completion = ((c.f / 8) * 100)|int %}
 
-<!-- ══ Topbar ══════════════════════════════════════════════════════════════ -->
+<!-- ── Topbar ── -->
 <header class="topbar">
-  <a href="{{ url_for('candidate_dashboard') }}" class="tb-brand">
-    <svg width="26" height="26" viewBox="0 0 22 22" fill="none">
-      <polygon points="11,2 20,7 20,15 11,20 2,15 2,7" fill="#4F46E5" opacity=".25" stroke="#4F46E5" stroke-width="1.5"/>
-      <polygon points="11,6 16,9 16,13 11,16 6,13 6,9" fill="#4F46E5"/>
-    </svg>
+  <a href="{{ url_for('home') }}" class="tb-brand">
+    <div class="tb-brand-icon">
+      <svg width="16" height="16" viewBox="0 0 22 22" fill="none">
+        <polygon points="11,2 20,7 20,15 11,20 2,15 2,7" fill="rgba(255,255,255,.3)" stroke="#fff" stroke-width="1.5"/>
+        <polygon points="11,6 16,9 16,13 11,16 6,13 6,9" fill="#fff"/>
+      </svg>
+    </div>
     SkillBaseHire
   </a>
-
   <nav class="tb-nav">
-    <a href="{{ url_for('home') }}">Home</a>
     <a href="{{ url_for('jobs') }}">Jobs</a>
-    <a href="{{ url_for('skills_page') }}">Skill Tests</a>
+    <a href="{{ url_for('search_candidates') }}">Candidates</a>
+    <a href="{{ url_for('skills_page') }}">Skills</a>
     <a href="{{ url_for('candidate_dashboard') }}">Applications</a>
     <a href="{{ url_for('candidate_profile') }}" class="active">My Profile</a>
   </nav>
-
   <div class="tb-search-wrap">
     <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
     <input class="tb-search" type="text" placeholder="Search jobs, skills, or companies">
   </div>
-
   <div class="tb-right">
-    <button class="tb-icon-btn" title="Notifications" aria-label="Notifications">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-      <span class="notif-dot"></span>
-    </button>
-
-    <a href="{{ url_for('candidate_profile') }}" class="tb-avatar-wrap" title="{{ user.name }} — View Profile" style="text-decoration:none">
-      <div class="tb-avatar">{{ user.name[0].upper() }}</div>
+    <div class="notif-btn">
+      <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <span class="notif-badge">3</span>
+    </div>
+    <a href="{{ url_for('candidate_profile') }}">
+      <div class="tb-avatar" title="{{ user.name }}">{{ user.name[0].upper() }}</div>
     </a>
   </div>
 </header>
 
-<div class="app-shell">
-
-<!-- ══ Sidebar ══════════════════════════════════════════════════════════════ -->
-<aside class="sidebar">
-  <div class="sb-mini-profile">
-    <div class="sb-avatar-ring">
-      <div class="sb-avatar-inner">{{ user.name[0].upper() }}</div>
-    </div>
-    <div class="sb-name">{{ user.name }}</div>
-    <div class="sb-role">{{ profile.headline if profile and profile.headline else 'Add a headline' }}</div>
-  </div>
-
-  <div class="sb-completion">
-    <div class="sb-comp-top">
-      <span class="sb-comp-label">Profile Strength</span>
-      <span class="sb-comp-pct">{{ completion }}%</span>
-    </div>
-    <div class="sb-track"><div class="sb-fill" style="width:{{ completion }}%"></div></div>
-  </div>
-
-  <div>
-    <div class="sb-nav-title">Sections</div>
-    <nav class="sb-nav">
-      <a href="#overview" class="sb-link active" data-sec="overview">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
-        Overview
-      </a>
-      <a href="#preferences" class="sb-link" data-sec="preferences">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M2 12h2M20 12h2"/></svg>
-        Preferences
-      </a>
-      <a href="#professional" class="sb-link" data-sec="professional">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
-        Professional Details
-      </a>
-      <a href="#experience" class="sb-link" data-sec="experience">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        Experience
-      </a>
-      <a href="#skills" class="sb-link" data-sec="skills">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        Verified Skills
-      </a>
-      <a href="#assessments" class="sb-link" data-sec="assessments">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        Skill Assessments
-      </a>
-      <a href="#education" class="sb-link" data-sec="education">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-        Education
-      </a>
-      <a href="#projects" class="sb-link" data-sec="projects">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>
-        Projects
-      </a>
-      <a href="#certifications" class="sb-link" data-sec="certifications">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-        Certifications
-      </a>
-      <a href="#resume" class="sb-link" data-sec="resume">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-        Resume
-      </a>
-      <a href="#contact" class="sb-link" data-sec="contact">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        Contact Details
-      </a>
-      <a href="#personal" class="sb-link" data-sec="personal">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Personal Details
-      </a>
-    </nav>
-  </div>
-</aside>
-
-<!-- ══ Main Content ═════════════════════════════════════════════════════════ -->
-<main class="profile-main">
+<div class="page-wrap">
 
   <!-- Flash messages -->
   {% with messages = get_flashed_messages(with_categories=true) %}
@@ -495,192 +419,156 @@ textarea.fc { resize: vertical; min-height: 80px; }
     {% for cat, msg in messages %}
     <li class="flash {{ cat }}">
       {% if cat == 'success' %}<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-      {% elif cat == 'error' %}<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-      {% else %}<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-      {% endif %}
-      {{ msg }}
+      {% else %}<svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      {% endif %}{{ msg }}
     </li>
     {% endfor %}
   </ul>
   {% endif %}
   {% endwith %}
 
-  <!-- Verify email banner -->
+  <!-- Email verify banner -->
   {% if not user.email_verified %}
   <div class="verify-banner">
     <svg width="18" height="18" fill="none" stroke="var(--amber)" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:.125rem"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
     <div class="verify-banner-body">
-      <div class="verify-banner-title">Your account is not verified</div>
-      <div class="verify-banner-msg">Please verify your email to improve recruiter trust and unlock all platform features.</div>
+      <div class="verify-banner-title">Verify Your Email</div>
+      <div class="verify-banner-msg">Your account is not verified. Please verify your email address to improve account security and access all platform features.</div>
     </div>
-    <form method="post" action="{{ url_for('resend_verification') }}" style="flex-shrink:0">
+    <form method="post" action="{{ url_for('resend_verification') }}" style="flex-shrink:0;align-self:center">
       <button type="submit" class="btn btn-amber btn-sm">Resend Verification Email</button>
     </form>
   </div>
   {% endif %}
 
-  <!-- ══════════════════════════════════════════════════════
-       SECTION 0 — Hero / Overview
-  ══════════════════════════════════════════════════════ -->
-  <section id="overview">
-    <div class="hero-banner"></div>
+  <!-- ══ Hero ══ -->
+  <div class="hero-card">
     <div class="hero-body">
-      <div class="hero-top-row">
-        <div class="hero-avatar">{{ user.name[0].upper() }}</div>
-        <div class="hero-edit-btn">
-          <button class="btn btn-ghost btn-sm" onclick="toggleEdit('editHero')">
-            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Edit Profile
-          </button>
-        </div>
-      </div>
-
-      <div class="hero-info">
-        <div class="hero-left">
-          <div class="hero-name">{{ user.name }}</div>
-          <div class="hero-headline">{{ profile.headline if profile and profile.headline else 'Add your professional headline' }}</div>
-
-          <div class="hero-meta">
-            {% if profile and profile.location %}
-            <div class="hero-meta-chip">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              {{ profile.location }}
+      <div style="display:flex;align-items:flex-start;gap:1.25rem;flex-wrap:wrap">
+        <!-- Left: profile info -->
+        <div style="flex:1;min-width:0">
+          <div class="hero-main">
+            <div class="hero-avatar-online">
+              <div class="hero-avatar">{{ user.name[0].upper() }}</div>
+              <div class="hero-avatar-dot"></div>
             </div>
-            <div class="hero-sep"></div>
-            {% endif %}
-            {% if profile and profile.experience %}
-            <div class="hero-meta-chip">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
-              {{ profile.experience }}
+            <div class="hero-info">
+              <div class="hero-name-row">
+                <span class="hero-name">{{ user.name }}</span>
+                {% if user.email_verified %}
+                <svg width="20" height="20" fill="var(--accent)" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" fill="none" stroke="var(--accent)" stroke-width="2"/><path d="M9 12l2 2 4-4" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                {% endif %}
+              </div>
+              <div class="hero-role">{{ profile.headline if profile and profile.headline else profile.job_title if profile and profile.job_title else 'Add your job title' }}</div>
+              <div class="hero-meta">
+                {% if profile and profile.location %}
+                <div class="hero-meta-item">
+                  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  {{ profile.location }}
+                </div>
+                {% endif %}
+                {% if profile and profile.experience %}
+                <div class="hero-meta-item">
+                  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+                  {{ profile.experience }}
+                </div>
+                {% endif %}
+                {% if profile and profile.job_title and profile.headline %}
+                <div class="hero-meta-item">
+                  <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+                  {{ profile.job_title }}
+                </div>
+                {% endif %}
+              </div>
+              <div class="hero-badges">
+                {% if user.email_verified %}
+                <span class="badge badge-green"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Verified Account</span>
+                {% else %}
+                <span class="badge badge-amber">⚠ Not Verified</span>
+                {% endif %}
+                {% if profile and profile.work_status %}
+                <span class="badge badge-blue"><svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>Open to Work</span>
+                {% endif %}
+                <span class="badge badge-purple"><svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Available in 30 Days</span>
+              </div>
+              <div class="hero-dates">
+                <div class="hero-date-item">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  Last Updated: {{ "09 May 2026" }}
+                </div>
+                {% if profile and profile.resume_filename %}
+                <div class="hero-date-item" style="color:var(--green)">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  Resume Uploaded
+                  <svg width="12" height="12" fill="none" stroke="var(--green)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                </div>
+                {% else %}
+                <div class="hero-date-item" style="color:var(--amber)">
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  No Resume Uploaded
+                </div>
+                {% endif %}
+              </div>
             </div>
-            <div class="hero-sep"></div>
-            {% endif %}
-            {% if profile and profile.work_status %}
-            <div class="hero-meta-chip">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-              {{ 'Experienced' if profile.work_status == 'experienced' else 'Fresher' }}
-            </div>
-            {% endif %}
-          </div>
-
-          <div class="hero-badges">
-            {% if user.email_verified %}
-            <span class="badge badge-verified">
-              <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-              SkillBaseHire Verified
-            </span>
-            <span class="badge badge-verified">
-              <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-              Email Verified
-            </span>
-            {% else %}
-            <span class="badge badge-pending">⚠ Account Not Verified</span>
-            {% endif %}
-            {% if verified_skills|length > 0 %}
-            <span class="badge badge-accent">
-              <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-              {{ verified_skills|length }} Skill{{ 's' if verified_skills|length != 1 }} Verified
-            </span>
-            {% endif %}
-            {% if profile and profile.work_status %}
-            <span class="badge badge-grey">Open to Opportunities</span>
-            {% endif %}
-          </div>
-
-          <div class="hero-cta">
-            <button class="btn btn-primary btn-sm" onclick="toggleEdit('editHero')">
-              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              Edit Profile
-            </button>
-            <label class="btn btn-ghost btn-sm" for="resumeInput" style="cursor:pointer">
-              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              Upload Resume
-            </label>
           </div>
         </div>
-
-        <!-- Score Widget -->
-        <div class="hero-right">
-          <div class="score-widget">
-            {% set circ = 263.89 %}
-            {% set offset = (circ * (1 - avg_score/100))|round(2) if avg_score > 0 else circ %}
-            <div class="score-ring-container">
-              <svg width="88" height="88" viewBox="0 0 88 88" class="score-ring-svg">
-                <defs>
-                  <linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#4F46E5"/>
-                    <stop offset="100%" stop-color="#22C55E"/>
-                  </linearGradient>
-                </defs>
-                <circle class="ring-track" cx="44" cy="44" r="42"/>
-                <circle class="ring-fill" cx="44" cy="44" r="42"
-                        stroke="url(#sg)"
-                        stroke-dasharray="{{ circ }}"
-                        stroke-dashoffset="{{ offset }}"
-                        transform="rotate(-90 44 44)"/>
-              </svg>
-              <div class="score-overlay">
-                <span class="score-num">{{ avg_score }}%</span>
-                <span class="score-sub">Skill Score</span>
-              </div>
-            </div>
-
-            <div class="score-stats">
-              <div class="score-stats-title">Profile Stats</div>
-              <div class="score-row">
-                <span class="score-row-label">Verified Skills</span>
-                <span class="score-row-val green">{{ verified_skills|length }}</span>
-              </div>
-              <div class="score-row">
-                <span class="score-row-label">Pending Tests</span>
-                <span class="score-row-val amber">{{ unverified_skills|length }}</span>
-              </div>
-              <div class="score-row">
-                <span class="score-row-label">Profile Complete</span>
-                <span class="score-row-val accent">{{ completion }}%</span>
-              </div>
-              <div class="score-row">
-                <span class="score-row-label">Total Skills</span>
-                <span class="score-row-val">{{ my_skills|length }}</span>
-              </div>
-            </div>
+        <!-- Right: completion widget -->
+        <div class="hero-completion">
+          <div style="font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);margin-bottom:.375rem">Profile Completion</div>
+          <div class="completion-pct">{{ completion }}%</div>
+          <div class="completion-track"><div class="completion-fill" style="width:{{ completion }}%"></div></div>
+          <div class="completion-label">Profile Strength</div>
+          <div class="strength-badge">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+            {% if completion >= 80 %}Strong{% elif completion >= 50 %}Good{% else %}Weak{% endif %}
           </div>
+          <div><span class="completion-hint" onclick="document.getElementById('recoSection').scrollIntoView({behavior:'smooth'})">How to improve?</span></div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Edit hero form -->
-    <div id="editHero" class="edit-panel">
+  <!-- ══ Action Buttons ══ -->
+  <div class="actions-bar">
+    <button class="btn btn-primary btn-sm" onclick="toggleEdit('editHero')">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Edit Profile
+    </button>
+    <label for="resumeFileInput" class="btn btn-ghost btn-sm" style="cursor:pointer">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Upload / Replace Resume
+    </label>
+    {% if profile and profile.resume_filename %}
+    <a href="/static/uploads/resumes/{{ profile.resume_filename }}" download class="btn btn-ghost btn-sm">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Download Resume
+    </a>
+    {% endif %}
+    <button class="btn btn-ghost btn-sm">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      Share Profile
+    </button>
+  </div>
+
+  <!-- Hidden edit hero form (full-width card) -->
+  <div id="editHero" class="card" style="display:none;margin-bottom:1.25rem">
+    <div class="card-head">
+      <div class="card-title">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Edit Profile
+      </div>
+      <button class="btn-icon" onclick="toggleEdit('editHero')"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="card-body">
       <form method="post" action="{{ url_for('candidate_profile') }}">
         <div class="form-grid">
-          <div class="fg">
-            <label for="name">Full Name <span style="color:var(--red)">*</span></label>
-            <input class="fc" type="text" id="name" name="name" value="{{ user.name }}" required placeholder="Your full name">
-          </div>
-          <div class="fg">
-            <label for="headline">Professional Headline</label>
-            <input class="fc" type="text" id="headline" name="headline" value="{{ profile.headline if profile else '' }}" placeholder="e.g. Senior QA Automation Engineer">
-          </div>
-          <div class="fg">
-            <label for="location">Location</label>
-            <input class="fc" type="text" id="location" name="location" value="{{ profile.location if profile else '' }}" placeholder="e.g. Bangalore, India">
-          </div>
-          <div class="fg">
-            <label for="job_title">Current / Target Role</label>
-            <input class="fc" type="text" id="job_title" name="job_title" value="{{ profile.job_title if profile else '' }}" placeholder="e.g. QA Automation Engineer">
-          </div>
-          <div class="fg">
-            <label for="experience">Years of Experience</label>
-            <input class="fc" type="text" id="experience" name="experience" value="{{ profile.experience if profile else '' }}" placeholder="e.g. 5 years">
-          </div>
-          <div class="fg">
-            <label for="linkedin">LinkedIn URL</label>
-            <input class="fc" type="url" id="linkedin" name="linkedin" value="{{ profile.linkedin if profile else '' }}" placeholder="https://linkedin.com/in/...">
-          </div>
-          <div class="fg span-2">
-            <label for="bio">About Me</label>
-            <textarea class="fc" id="bio" name="bio" rows="4" placeholder="Tell recruiters about your background, skills, and what you're looking for...">{{ profile.bio if profile else '' }}</textarea>
-          </div>
+          <div class="fg"><label>Full Name *</label><input class="fc" type="text" name="name" value="{{ user.name }}" required></div>
+          <div class="fg"><label>Professional Headline</label><input class="fc" type="text" name="headline" value="{{ profile.headline if profile else '' }}" placeholder="e.g. QA Automation Engineer"></div>
+          <div class="fg"><label>Current / Target Role</label><input class="fc" type="text" name="job_title" value="{{ profile.job_title if profile else '' }}" placeholder="e.g. QA Automation Engineer"></div>
+          <div class="fg"><label>Location</label><input class="fc" type="text" name="location" value="{{ profile.location if profile else '' }}" placeholder="e.g. Kochi, Kerala"></div>
+          <div class="fg"><label>Years of Experience</label><input class="fc" type="text" name="experience" value="{{ profile.experience if profile else '' }}" placeholder="e.g. 5 Years"></div>
+          <div class="fg"><label>LinkedIn URL</label><input class="fc" type="url" name="linkedin" value="{{ profile.linkedin if profile else '' }}" placeholder="https://linkedin.com/in/..."></div>
+          <div class="fg span-2"><label>About Me</label><textarea class="fc" name="bio" rows="4" placeholder="Describe your background, expertise, and goals...">{{ profile.bio if profile else '' }}</textarea></div>
           <input type="hidden" name="github" value="{{ profile.github if profile else '' }}">
         </div>
         <div class="form-actions">
@@ -689,761 +577,525 @@ textarea.fc { resize: vertical; min-height: 80px; }
         </div>
       </form>
     </div>
-  </section>
+  </div>
 
-  <!-- ══════════════════════════════════════════════════════
-       SECTION 1 — Preferences
-  ══════════════════════════════════════════════════════ -->
-  <section id="preferences" class="card">
-    <div class="card-head">
-      <div class="card-title">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M2 12h2M20 12h2"/></svg>
-        Preferences
-      </div>
-      <div class="card-actions">
-        <button class="btn-icon" onclick="toggleEdit('editPreferences')" title="Edit">
-          <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </button>
-      </div>
-    </div>
-    <div class="card-body">
-      <div class="empty-state">
-        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41M2 12h2M20 12h2"/></svg>
-        <p>No preferences set yet. Tell recruiters what kind of roles and locations you're open to.</p>
-        <button class="btn btn-outline-accent btn-sm" onclick="toggleEdit('editPreferences')">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Set Preferences
-        </button>
-      </div>
-    </div>
-    <div id="editPreferences" class="edit-panel">
-      <form method="post" action="{{ url_for('candidate_profile') }}">
-        <input type="hidden" name="name" value="{{ user.name }}">
-        <input type="hidden" name="headline" value="{{ profile.headline if profile else '' }}">
-        <input type="hidden" name="location" value="{{ profile.location if profile else '' }}">
-        <input type="hidden" name="bio" value="{{ profile.bio if profile else '' }}">
-        <input type="hidden" name="linkedin" value="{{ profile.linkedin if profile else '' }}">
-        <input type="hidden" name="github" value="{{ profile.github if profile else '' }}">
-        <div class="form-grid">
-          <div class="fg">
-            <label>Preferred Job Roles</label>
-            <input class="fc" type="text" name="preferred_roles" placeholder="e.g. QA Lead, SDET, Automation Engineer">
-          </div>
-          <div class="fg">
-            <label>Preferred Locations</label>
-            <input class="fc" type="text" name="preferred_locations" placeholder="e.g. Bangalore, Remote, UAE">
-          </div>
-          <div class="fg">
-            <label>Expected Salary</label>
-            <input class="fc" type="text" name="expected_salary" placeholder="e.g. ₹30,00,000">
-          </div>
-          <div class="fg">
-            <label>Work Mode</label>
-            <input class="fc" type="text" name="work_mode" placeholder="e.g. Remote, Hybrid, Work from Office">
-          </div>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary btn-sm">Save Preferences</button>
-          <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editPreferences')">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </section>
+  <!-- ══ Two-column layout ══ -->
+  <div class="two-col">
 
-  <!-- ══════════════════════════════════════════════════════
-       SECTION 2 — Professional Details
-  ══════════════════════════════════════════════════════ -->
-  <section id="professional" class="card">
-    <div class="card-head">
-      <div class="card-title">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
-        Professional Details
-      </div>
-      <button class="btn-icon" onclick="toggleEdit('editProfessional')" title="Edit">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      </button>
-    </div>
-    <div class="card-body">
-      {% if profile and (profile.job_title or profile.experience or profile.location) %}
-      <div class="info-grid">
-        <div class="info-row">
-          <div class="info-label">Total Experience</div>
-          <div class="info-value">{{ profile.experience or '—' }}</div>
-        </div>
-        <div class="info-row">
-          <div class="info-label">Current / Target Role</div>
-          <div class="info-value">{{ profile.job_title or '—' }}</div>
-        </div>
-        <div class="info-row">
-          <div class="info-label">Current Location</div>
-          <div class="info-value">{{ profile.location or '—' }}</div>
-        </div>
-        <div class="info-row">
-          <div class="info-label">Work Status</div>
-          <div class="info-value">
-            {% if profile.work_status == 'experienced' %}Experienced Professional
-            {% elif profile.work_status == 'fresher' %}Fresher / Recent Graduate
-            {% else %}—{% endif %}
-          </div>
-        </div>
-      </div>
-      {% else %}
-      <div class="empty-state">
-        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
-        <p>Add your professional details so recruiters know your background.</p>
-        <button class="btn btn-outline-accent btn-sm" onclick="toggleEdit('editProfessional')">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Details
-        </button>
-      </div>
-      {% endif %}
-    </div>
-    <div id="editProfessional" class="edit-panel">
-      <form method="post" action="{{ url_for('candidate_profile') }}">
-        <input type="hidden" name="name" value="{{ user.name }}">
-        <input type="hidden" name="headline" value="{{ profile.headline if profile else '' }}">
-        <input type="hidden" name="bio" value="{{ profile.bio if profile else '' }}">
-        <input type="hidden" name="linkedin" value="{{ profile.linkedin if profile else '' }}">
-        <input type="hidden" name="github" value="{{ profile.github if profile else '' }}">
-        <div class="form-grid">
-          <div class="fg">
-            <label>Current / Target Role</label>
-            <input class="fc" type="text" name="job_title" value="{{ profile.job_title if profile else '' }}" placeholder="e.g. QA Automation Engineer">
-          </div>
-          <div class="fg">
-            <label>Total Experience</label>
-            <input class="fc" type="text" name="experience" value="{{ profile.experience if profile else '' }}" placeholder="e.g. 5 years 3 months">
-          </div>
-          <div class="fg">
-            <label>Current Location</label>
-            <input class="fc" type="text" name="location" value="{{ profile.location if profile else '' }}" placeholder="e.g. Kochi, Kerala">
-          </div>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary btn-sm">Save</button>
-          <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editProfessional')">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </section>
+    <!-- ── Left main column ── -->
+    <div class="main-col">
 
-  <!-- ══════════════════════════════════════════════════════
-       SECTION 3 — Experience
-  ══════════════════════════════════════════════════════ -->
-  <section id="experience" class="card">
-    <div class="card-head">
-      <div class="card-title">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        Experience
-      </div>
-      <button class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddExp')">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add Experience
-      </button>
-    </div>
-    <div class="card-body">
-      <div class="empty-state">
-        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        <p>Add your work experience to show recruiters your career history.</p>
-        <button class="btn btn-outline-accent btn-sm" onclick="toggleEdit('editAddExp')">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Experience
-        </button>
-      </div>
-    </div>
-    <div id="editAddExp" class="edit-panel">
-      <div style="font-size:.8125rem;color:var(--text-3);margin-bottom:.875rem;padding:.5rem .75rem;background:var(--accent-dim);border-radius:var(--radius-xs);border:1px solid rgba(79,70,229,.2);">
-        Experience section is coming soon. The database schema will be extended to support work history entries.
-      </div>
-      <div class="form-grid">
-        <div class="fg"><label>Company Name</label><input class="fc" type="text" placeholder="e.g. Aspire Systems" disabled></div>
-        <div class="fg"><label>Job Title</label><input class="fc" type="text" placeholder="e.g. Senior QA Automation Engineer" disabled></div>
-        <div class="fg"><label>Start Date</label><input class="fc" type="month" disabled></div>
-        <div class="fg"><label>End Date</label><input class="fc" type="month" placeholder="Present" disabled></div>
-        <div class="fg span-2"><label>Description</label><textarea class="fc" rows="3" placeholder="Describe your role and achievements..." disabled></textarea></div>
-      </div>
-      <div class="form-actions">
-        <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddExp')">Close</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════════════════
-       SECTION 4 — Verified Skills
-  ══════════════════════════════════════════════════════ -->
-  <section id="skills" class="card">
-    <div class="card-head">
-      <div class="card-title">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        Verified Skills
-        {% if my_skills|length > 0 %}<span class="card-title-badge">{{ my_skills|length }}</span>{% endif %}
-      </div>
-      <a href="{{ url_for('skills_page') }}" class="btn btn-ghost btn-sm">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add Skills
-      </a>
-    </div>
-    <div class="card-body">
-      {% if my_skills %}
-
-      {% if verified_skills %}
-      <div class="skill-group">
-        <div class="skill-group-head">
-          <svg width="13" height="13" fill="none" stroke="var(--green)" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-          <span class="skill-group-label green">Verified Skills</span>
-          <span class="skill-group-count">{{ verified_skills|length }}</span>
-        </div>
-        <div class="skills-chips">
-          {% for skill in verified_skills %}
-          <div class="skill-chip verified">
-            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-            {{ skill.name }}
-            {% if skill.score %}<span class="sc-score">{{ skill.score }}%</span>{% endif %}
+      <!-- Profile Strength Recommendations -->
+      <div id="recoSection" class="card">
+        <div class="card-head">
+          <div class="card-title">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Profile Strength Recommendations
           </div>
-          {% endfor %}
         </div>
-      </div>
-      {% endif %}
-
-      {% if unverified_skills %}
-      <div class="skill-group">
-        <div class="skill-group-head">
-          <svg width="13" height="13" fill="none" stroke="var(--grey)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          <span class="skill-group-label grey">Pending Verification</span>
-          <span class="skill-group-count">{{ unverified_skills|length }}</span>
-        </div>
-        <div class="unverified-chips">
-          {% for skill in unverified_skills %}
-          <div class="uv-chip">
-            <span class="uv-name">{{ skill.name }}</span>
-            <div class="uv-info">
-              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color:var(--text-3)"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              <div class="tooltip">This skill is not verified yet. Complete the skill test to get a verified badge visible to recruiters.</div>
+        <div class="card-body">
+          <p style="font-size:.8125rem;color:var(--text-2);margin-bottom:.875rem">Complete these actions to improve your profile ranking in recruiter searches.</p>
+          <div class="reco-grid">
+            <div class="reco-item">
+              <div class="reco-icon {{ 'done' if verified_skills|length >= 2 else 'todo' }}">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">{% if verified_skills|length >= 2 %}<path d="M20 6L9 17l-5-5"/>{% else %}<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>{% endif %}</svg>
+              </div>
+              <div class="reco-text">{{ 'Verified skills' if verified_skills|length >= 2 else 'Verify 2 more skills to improve recruiter visibility' }}</div>
+              <svg class="reco-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
-            <a href="{{ url_for('skills_page') }}" class="btn btn-amber btn-xs">Take Test</a>
+            <div class="reco-item" onclick="document.getElementById('resumeFileInput').click()">
+              <div class="reco-icon {{ 'done' if profile and profile.resume_filename else 'todo' }}">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">{% if profile and profile.resume_filename %}<path d="M20 6L9 17l-5-5"/>{% else %}<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>{% endif %}</svg>
+              </div>
+              <div class="reco-text">{{ 'Resume uploaded' if profile and profile.resume_filename else 'Upload updated resume' }}</div>
+              <svg class="reco-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="reco-item">
+              <div class="reco-icon todo">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
+              </div>
+              <div class="reco-text">Add project details</div>
+              <svg class="reco-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="reco-item">
+              <div class="reco-icon todo">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
+              </div>
+              <div class="reco-text">Update notice period</div>
+              <svg class="reco-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="reco-item">
+              <div class="reco-icon {{ 'done' if profile and profile.location else 'todo' }}">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">{% if profile and profile.location %}<path d="M20 6L9 17l-5-5"/>{% else %}<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>{% endif %}</svg>
+              </div>
+              <div class="reco-text">{{ 'Location added' if profile and profile.location else 'Add preferred job locations' }}</div>
+              <svg class="reco-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+            <div class="reco-item">
+              <div class="reco-icon todo">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
+              </div>
+              <div class="reco-text">Update interview availability</div>
+              <svg class="reco-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
           </div>
-          {% endfor %}
         </div>
       </div>
-      {% endif %}
 
-      <div class="skills-cta">
-        <div class="skills-cta-text">
-          <strong>{{ verified_skills|length }}</strong> verified · <strong>{{ unverified_skills|length }}</strong> pending · <strong>{{ my_skills|length }}</strong> total
+      <!-- Verified Skills -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            Verified Skills
+            {% if my_skills|length %}<span class="badge badge-accent" style="font-size:.625rem">{{ my_skills|length }}</span>{% endif %}
+          </div>
+          <a href="{{ url_for('skills_page') }}" class="btn btn-outline btn-sm">+ Add Skills</a>
         </div>
-        <a href="{{ url_for('skills_page') }}" class="btn btn-green btn-sm">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          Get More Skills Verified
-        </a>
-      </div>
-
-      {% else %}
-      <div class="empty-state">
-        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        <p>No skills added yet. Add and verify your skills to stand out to recruiters.</p>
-        <a href="{{ url_for('skills_page') }}" class="btn btn-green btn-sm">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add &amp; Verify Skills
-        </a>
-      </div>
-      {% endif %}
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════════════════
-       SECTION 5 — Skill Assessments
-  ══════════════════════════════════════════════════════ -->
-  <section id="assessments" class="card">
-    <div class="card-head">
-      <div class="card-title">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        Skill Assessments
-        {% if verified_skills|length > 0 %}<span class="card-title-badge">{{ verified_skills|length }}</span>{% endif %}
-      </div>
-      <a href="{{ url_for('skills_page') }}" class="btn btn-ghost btn-sm">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-        Take Assessment
-      </a>
-    </div>
-    <div class="card-body" style="padding:0">
-      {% if my_skills %}
-      <div class="assess-wrap">
-        <table class="assess-table">
-          <thead>
-            <tr>
-              <th>Skill</th>
-              <th>Category</th>
-              <th>Status</th>
-              <th>Score</th>
-              <th>Validity</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
+        <div class="card-body">
+          {% if my_skills %}
+          <div class="skill-cards-grid">
             {% for skill in my_skills %}
-            <tr>
-              <td>{{ skill.name }}</td>
-              <td style="color:var(--text-3);font-size:.75rem">{{ skill.category }}</td>
-              <td>
-                {% if skill.verified == 1 %}
-                <span class="badge badge-verified">
-                  <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-                  Verified
-                </span>
-                {% else %}
-                <span class="badge badge-grey">Not Attempted</span>
-                {% endif %}
-              </td>
-              <td>
-                {% if skill.verified == 1 and skill.score %}
-                <span class="score-pill green">{{ skill.score }}%</span>
-                {% elif skill.verified == 1 %}
-                <span class="score-pill green">Passed</span>
-                {% else %}
-                <span class="score-pill grey">—</span>
-                {% endif %}
-              </td>
-              <td>
-                {% if skill.verified == 1 %}
-                <span class="validity-ok">
-                  <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-                  Valid · 1 year
-                </span>
-                {% else %}
-                <span class="validity-na">—</span>
-                {% endif %}
-              </td>
-              <td>
-                {% if skill.verified == 1 %}
-                <a href="{{ url_for('skills_page') }}" class="btn btn-green btn-xs">View Result</a>
-                {% else %}
-                <a href="{{ url_for('verify_skill', skill_id=skill.id) }}" class="btn btn-amber btn-xs">Start Test</a>
-                {% endif %}
-              </td>
-            </tr>
+            {% if skill.verified == 1 %}
+            <div class="skill-card verified">
+              <div class="skill-card-top">
+                <div class="skill-card-name">{{ skill.name }}</div>
+                <div class="skill-card-check"><svg width="11" height="11" fill="none" stroke="#fff" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>
+              </div>
+              <div class="skill-status verified">Verified</div>
+              <div class="skill-meta-row"><span class="skill-meta-label">Score</span><span class="skill-meta-value green">{{ skill.score }}%</span></div>
+              <div class="skill-meta-row"><span class="skill-meta-label">Level</span><span class="skill-meta-value">{{ 'Advanced' if skill.score >= 80 else ('Intermediate' if skill.score >= 60 else 'Beginner') }}</span></div>
+              <div class="skill-meta-row"><span class="skill-meta-label">Valid for</span><span class="skill-meta-value">12 months</span></div>
+              <div class="skill-verified-footer">
+                <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+                Skill Verified
+              </div>
+            </div>
+            {% else %}
+            <div class="skill-card not-attempted">
+              <div class="skill-card-top">
+                <div class="skill-card-name">{{ skill.name }}</div>
+                <div class="skill-card-grey-icon"></div>
+              </div>
+              <div class="skill-status not-attempted">Not Attempted</div>
+              <div class="skill-not-footer">Skill test not attempted yet. Get verified now.</div>
+              <a href="{{ url_for('verify_skill', skill_id=skill.id) }}" class="btn btn-ghost btn-xs btn-full" style="margin-top:.625rem">Start Test</a>
+            </div>
+            {% endif %}
             {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      {% else %}
-      <div class="empty-state">
-        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        <p>No assessments taken yet. Take skill tests to earn verified badges.</p>
-        <a href="{{ url_for('skills_page') }}" class="btn btn-outline-accent btn-sm">Browse Skill Tests</a>
-      </div>
-      {% endif %}
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════════════════
-       SECTION 6 — Education
-  ══════════════════════════════════════════════════════ -->
-  <section id="education" class="card">
-    <div class="card-head">
-      <div class="card-title">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-        Education
-      </div>
-      <button class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddEdu')">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add Education
-      </button>
-    </div>
-    <div class="card-body">
-      <div class="empty-state">
-        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-        <p>Add your educational qualifications.</p>
-        <button class="btn btn-outline-accent btn-sm" onclick="toggleEdit('editAddEdu')">
-          <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Education
-        </button>
-      </div>
-    </div>
-    <div id="editAddEdu" class="edit-panel">
-      <div style="font-size:.8125rem;color:var(--text-3);margin-bottom:.875rem;padding:.5rem .75rem;background:var(--accent-dim);border-radius:var(--radius-xs);border:1px solid rgba(79,70,229,.2);">
-        Education section is coming soon.
-      </div>
-      <div class="form-grid">
-        <div class="fg"><label>College / University</label><input class="fc" type="text" placeholder="e.g. AVS Engineering College" disabled></div>
-        <div class="fg"><label>Degree</label><input class="fc" type="text" placeholder="e.g. B.Tech / B.E." disabled></div>
-        <div class="fg"><label>Start Year</label><input class="fc" type="number" placeholder="2009" disabled></div>
-        <div class="fg"><label>End Year</label><input class="fc" type="number" placeholder="2013" disabled></div>
-      </div>
-      <div class="form-actions">
-        <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddEdu')">Close</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════════════════
-       SECTION 7 — Projects
-  ══════════════════════════════════════════════════════ -->
-  <section id="projects" class="card">
-    <div class="card-head">
-      <div class="card-title">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/><line x1="12" y1="22" x2="12" y2="15.5"/><polyline points="22 8.5 12 15.5 2 8.5"/></svg>
-        Projects
-      </div>
-      <button class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddProject')">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add Project
-      </button>
-    </div>
-    <div class="card-body">
-      <div class="empty-state">
-        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg>
-        <p>Showcase your projects to demonstrate real-world skills to recruiters.</p>
-        <button class="btn btn-outline-accent btn-sm" onclick="toggleEdit('editAddProject')">Add Project</button>
-      </div>
-    </div>
-    <div id="editAddProject" class="edit-panel">
-      <div style="font-size:.8125rem;color:var(--text-3);margin-bottom:.875rem;padding:.5rem .75rem;background:var(--accent-dim);border-radius:var(--radius-xs);border:1px solid rgba(79,70,229,.2);">Projects section is coming soon.</div>
-      <div class="form-grid">
-        <div class="fg"><label>Project Name</label><input class="fc" type="text" placeholder="e.g. STC eStore Automation" disabled></div>
-        <div class="fg"><label>Domain</label><input class="fc" type="text" placeholder="e.g. Telecom / eCommerce" disabled></div>
-        <div class="fg span-2"><label>Description</label><textarea class="fc" rows="3" disabled></textarea></div>
-      </div>
-      <div class="form-actions">
-        <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddProject')">Close</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════════════════
-       SECTION 8 — Certifications
-  ══════════════════════════════════════════════════════ -->
-  <section id="certifications" class="card">
-    <div class="card-head">
-      <div class="card-title">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-        Certifications
-      </div>
-      <button class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddCert')">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add Certification
-      </button>
-    </div>
-    <div class="card-body">
-      <div class="cert-list" id="certList" style="display:none"></div>
-      <div class="empty-state" id="certEmpty">
-        <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-        <p>Add your professional certifications to build credibility with recruiters.</p>
-        <button class="btn btn-outline-accent btn-sm" onclick="toggleEdit('editAddCert')">Add Certification</button>
-      </div>
-    </div>
-    <div id="editAddCert" class="edit-panel">
-      <div style="font-size:.8125rem;color:var(--text-3);margin-bottom:.875rem;padding:.5rem .75rem;background:var(--accent-dim);border-radius:var(--radius-xs);border:1px solid rgba(79,70,229,.2);">Certifications section is coming soon.</div>
-      <div class="form-grid">
-        <div class="fg"><label>Certificate Name</label><input class="fc" type="text" placeholder="e.g. Selenium Professional Certification" disabled></div>
-        <div class="fg"><label>Issued By</label><input class="fc" type="text" placeholder="e.g. ISTQB" disabled></div>
-        <div class="fg"><label>Year</label><input class="fc" type="number" placeholder="2024" disabled></div>
-        <div class="fg"><label>Certificate URL</label><input class="fc" type="url" placeholder="https://..." disabled></div>
-      </div>
-      <div class="form-actions">
-        <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddCert')">Close</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════════════════
-       SECTION 9 — Resume
-  ══════════════════════════════════════════════════════ -->
-  <section id="resume" class="card">
-    <div class="card-head">
-      <div class="card-title">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        Resume
-      </div>
-      <label for="resumeInput" class="btn btn-ghost btn-sm" style="cursor:pointer">
-        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        {{ 'Replace Resume' if (profile and profile.resume_filename) else 'Upload Resume' }}
-      </label>
-    </div>
-    <div class="card-body">
-      {% if profile and profile.resume_filename %}
-      <div class="resume-file">
-        <div class="resume-icon">
-          <svg width="22" height="22" fill="none" stroke="var(--red)" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <a href="{{ url_for('skills_page') }}" class="view-all-link">
+            View All Skills &amp; Certifications
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+          </a>
+          {% else %}
+          <div class="empty-state">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+            <p>Complete your first skill test to earn a verified skill badge.</p>
+            <a href="{{ url_for('skills_page') }}" class="btn btn-primary btn-sm">Start Skill Test</a>
+          </div>
+          {% endif %}
         </div>
-        <div class="resume-info">
-          <div class="resume-filename">{{ profile.resume_filename }}</div>
-          <div class="resume-filemeta">PDF · Uploaded to SkillBaseHire</div>
+      </div>
+
+      <!-- About -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            About
+          </div>
+          <button class="btn-icon" onclick="toggleEdit('editAbout')"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
         </div>
-        <div class="resume-actions">
-          <a href="/static/uploads/resumes/{{ profile.resume_filename }}" target="_blank" class="btn btn-outline-accent btn-sm">Preview</a>
-          <label for="resumeInput" class="btn btn-ghost btn-sm" style="cursor:pointer">Replace</label>
-          <form method="post" action="{{ url_for('candidate_profile') }}" style="display:inline" onsubmit="return confirm('Delete resume?')">
+        <div class="card-body">
+          {% if profile and profile.bio %}
+          <p class="about-text">{{ profile.bio }}</p>
+          {% else %}
+          <div class="empty-state" style="padding:1.5rem 0">
+            <p>Add a summary about yourself to help recruiters understand your background and expertise.</p>
+            <button class="btn btn-outline btn-sm" onclick="toggleEdit('editAbout')">Add About</button>
+          </div>
+          {% endif %}
+        </div>
+        <div id="editAbout" class="edit-panel">
+          <form method="post" action="{{ url_for('candidate_profile') }}">
             <input type="hidden" name="name" value="{{ user.name }}">
-            <input type="hidden" name="delete_resume" value="1">
-            <button type="submit" class="btn btn-red btn-sm">Delete</button>
+            <input type="hidden" name="headline" value="{{ profile.headline if profile else '' }}">
+            <input type="hidden" name="location" value="{{ profile.location if profile else '' }}">
+            <input type="hidden" name="linkedin" value="{{ profile.linkedin if profile else '' }}">
+            <input type="hidden" name="github" value="{{ profile.github if profile else '' }}">
+            <div class="fg"><label>About Me</label><textarea class="fc" name="bio" rows="5" placeholder="Describe your experience, skills, and what you're looking for...">{{ profile.bio if profile else '' }}</textarea></div>
+            <div class="form-actions"><button type="submit" class="btn btn-primary btn-sm">Save</button><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAbout')">Cancel</button></div>
           </form>
         </div>
       </div>
-      {% else %}
-      <form method="post" action="{{ url_for('candidate_profile') }}" enctype="multipart/form-data" id="resumeForm">
-        <input type="hidden" name="name" value="{{ user.name }}">
-        <div class="upload-zone" id="uploadZone" onclick="document.getElementById('resumeInput').click()">
-          <svg width="36" height="36" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <h4>Upload your resume</h4>
-          <p>Drag & drop or click to browse</p>
-          <p style="font-size:.6875rem">Allowed: PDF, DOC, DOCX · Max 5 MB</p>
+
+      <!-- Work Experience -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Work Experience
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddExp')">+ Add Experience</button>
         </div>
-        <div class="upload-err" id="uploadErr"></div>
-      </form>
-      {% endif %}
-
-      <!-- Hidden file input (shared) -->
-      <form method="post" action="{{ url_for('upload_resume') }}" enctype="multipart/form-data" id="resumeUploadForm" style="display:none">
-        <input type="file" id="resumeInput" name="resume" accept=".pdf,.doc,.docx" onchange="handleResumeChange(this)">
-      </form>
-    </div>
-  </section>
-
-  <!-- ══════════════════════════════════════════════════════
-       SECTION 10 — Contact Details
-  ══════════════════════════════════════════════════════ -->
-  <section id="contact" class="card">
-    <div class="card-head">
-      <div class="card-title">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        Contact Details
+        <div class="card-body">
+          <div class="empty-state">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <p>Add your work experience to improve your profile strength.</p>
+            <button class="btn btn-outline btn-sm" onclick="toggleEdit('editAddExp')">Add Experience</button>
+          </div>
+        </div>
+        <div id="editAddExp" class="edit-panel">
+          <p style="font-size:.8125rem;color:var(--text-3);margin-bottom:.875rem;padding:.5rem .75rem;background:var(--accent-light);border-radius:var(--radius-xs);">Work experience section is coming soon — database support will be added.</p>
+          <div class="form-grid">
+            <div class="fg"><label>Company</label><input class="fc" type="text" placeholder="e.g. Aspire Systems" disabled></div>
+            <div class="fg"><label>Designation</label><input class="fc" type="text" placeholder="e.g. QA Automation Engineer" disabled></div>
+            <div class="fg"><label>Start Date</label><input class="fc" type="month" disabled></div>
+            <div class="fg"><label>End Date</label><input class="fc" type="month" placeholder="Present" disabled></div>
+            <div class="fg span-2"><label>Description</label><textarea class="fc" rows="3" disabled></textarea></div>
+          </div>
+          <div class="form-actions"><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddExp')">Close</button></div>
+        </div>
       </div>
-      <button class="btn-icon" onclick="toggleEdit('editContact')" title="Edit">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      </button>
-    </div>
-    <div class="card-body">
-      <div class="info-grid">
-        <div class="info-row">
-          <div class="info-label">Email</div>
-          <div class="info-value" style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-            {{ user.email }}
-            {% if user.email_verified %}
-            <span class="badge badge-verified" style="font-size:.625rem">
-              <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
-              Verified
+
+      <!-- Education -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            Education
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddEdu')">+ Add Education</button>
+        </div>
+        <div class="card-body">
+          <div class="empty-state">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            <p>Add your educational qualifications.</p>
+            <button class="btn btn-outline btn-sm" onclick="toggleEdit('editAddEdu')">Add Education</button>
+          </div>
+        </div>
+        <div id="editAddEdu" class="edit-panel">
+          <p style="font-size:.8125rem;color:var(--text-3);margin-bottom:.875rem;padding:.5rem .75rem;background:var(--accent-light);border-radius:var(--radius-xs);">Education section is coming soon.</p>
+          <div class="form-grid">
+            <div class="fg"><label>Degree</label><input class="fc" type="text" placeholder="e.g. B.Tech / MCA" disabled></div>
+            <div class="fg"><label>College / University</label><input class="fc" type="text" placeholder="e.g. Anna University" disabled></div>
+            <div class="fg"><label>Start Year</label><input class="fc" type="number" disabled></div>
+            <div class="fg"><label>End Year</label><input class="fc" type="number" disabled></div>
+          </div>
+          <div class="form-actions"><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddEdu')">Close</button></div>
+        </div>
+      </div>
+
+      <!-- Certifications -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+            Certifications
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddCert')">+ Add Certification</button>
+        </div>
+        <div class="card-body">
+          <div class="empty-state">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+            <p>Add your professional certifications to build credibility.</p>
+            <button class="btn btn-outline btn-sm" onclick="toggleEdit('editAddCert')">Add Certification</button>
+          </div>
+        </div>
+        <div id="editAddCert" class="edit-panel">
+          <p style="font-size:.8125rem;color:var(--text-3);margin-bottom:.875rem;padding:.5rem .75rem;background:var(--accent-light);border-radius:var(--radius-xs);">Certifications section is coming soon.</p>
+          <div class="form-grid">
+            <div class="fg"><label>Certificate Name</label><input class="fc" type="text" placeholder="e.g. ISTQB Foundation Level" disabled></div>
+            <div class="fg"><label>Issued By</label><input class="fc" type="text" placeholder="e.g. ISTQB" disabled></div>
+            <div class="fg"><label>Year</label><input class="fc" type="number" disabled></div>
+            <div class="fg"><label>Credential URL</label><input class="fc" type="url" disabled></div>
+          </div>
+          <div class="form-actions"><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddCert')">Close</button></div>
+        </div>
+      </div>
+
+      <!-- Projects -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg>
+            Projects
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddProj')">+ Add Project</button>
+        </div>
+        <div class="card-body">
+          <div class="empty-state">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg>
+            <p>Add projects to showcase your practical experience to recruiters.</p>
+            <button class="btn btn-outline btn-sm" onclick="toggleEdit('editAddProj')">Add Project</button>
+          </div>
+        </div>
+        <div id="editAddProj" class="edit-panel">
+          <p style="font-size:.8125rem;color:var(--text-3);margin-bottom:.875rem;padding:.5rem .75rem;background:var(--accent-light);border-radius:var(--radius-xs);">Projects section is coming soon.</p>
+          <div class="form-grid">
+            <div class="fg"><label>Project Name</label><input class="fc" type="text" disabled></div>
+            <div class="fg"><label>Domain</label><input class="fc" type="text" disabled></div>
+            <div class="fg span-2"><label>Description</label><textarea class="fc" rows="3" disabled></textarea></div>
+          </div>
+          <div class="form-actions"><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddProj')">Close</button></div>
+        </div>
+      </div>
+
+      <!-- Contact Details -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            Contact Details
+          </div>
+          <button class="btn-icon" onclick="toggleEdit('editContact')"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+        </div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 2rem">
+            <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Email</div><div class="pref-value" style="display:flex;align-items:center;gap:.375rem;flex-wrap:wrap">{{ user.email }}<span class="badge {{ 'badge-green' if user.email_verified else 'badge-amber' }}" style="font-size:.625rem">{{ 'Verified' if user.email_verified else 'Unverified' }}</span></div></div>
+            <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.18 6.18l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>Phone</div><div class="pref-value">{{ profile.phone if profile and profile.phone else '—' }}</div></div>
+            <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>LinkedIn</div><div class="pref-value">{% if profile and profile.linkedin %}<a href="{{ profile.linkedin }}" target="_blank" style="color:var(--accent)">{{ profile.linkedin }}</a>{% else %}—{% endif %}</div></div>
+            <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77 5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/></svg>GitHub</div><div class="pref-value">{% if profile and profile.github %}<a href="{{ profile.github }}" target="_blank" style="color:var(--accent)">{{ profile.github }}</a>{% else %}—{% endif %}</div></div>
+          </div>
+        </div>
+        <div id="editContact" class="edit-panel">
+          <form method="post" action="{{ url_for('candidate_profile') }}">
+            <input type="hidden" name="name" value="{{ user.name }}">
+            <input type="hidden" name="headline" value="{{ profile.headline if profile else '' }}">
+            <input type="hidden" name="location" value="{{ profile.location if profile else '' }}">
+            <input type="hidden" name="bio" value="{{ profile.bio if profile else '' }}">
+            <div class="form-grid">
+              <div class="fg"><label>LinkedIn URL</label><input class="fc" type="url" name="linkedin" value="{{ profile.linkedin if profile else '' }}" placeholder="https://linkedin.com/in/..."></div>
+              <div class="fg"><label>GitHub URL</label><input class="fc" type="url" name="github" value="{{ profile.github if profile else '' }}" placeholder="https://github.com/..."></div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn btn-primary btn-sm">Save</button><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editContact')">Cancel</button></div>
+          </form>
+        </div>
+      </div>
+
+      <!-- Profile Visibility -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Profile Visibility
+          </div>
+        </div>
+        <div class="card-body">
+          <p style="font-size:.8125rem;color:var(--text-2);margin-bottom:.875rem">Recruiters can discover your profile based on your verified skills and job preferences.</p>
+          <div class="vis-row"><span class="vis-label">Profile visible to recruiters</span><label class="toggle-wrap"><input type="checkbox" checked onchange="saveVisibility(this,'profile')"><span class="toggle-slider"></span></label></div>
+          <div class="vis-row"><span class="vis-label">Resume visible to recruiters</span><label class="toggle-wrap"><input type="checkbox" {{ 'checked' if profile and profile.resume_filename else '' }} onchange="saveVisibility(this,'resume')"><span class="toggle-slider"></span></label></div>
+          <div class="vis-row"><span class="vis-label">Contact details visible</span><label class="toggle-wrap"><input type="checkbox" checked onchange="saveVisibility(this,'contact')"><span class="toggle-slider"></span></label></div>
+          <div class="vis-row"><span class="vis-label">Verified skills visible</span><label class="toggle-wrap"><input type="checkbox" checked onchange="saveVisibility(this,'skills')"><span class="toggle-slider"></span></label></div>
+          <div class="vis-row" style="border-bottom:none"><span class="vis-label">Open to work</span><label class="toggle-wrap"><input type="checkbox" checked onchange="saveVisibility(this,'open_to_work')"><span class="toggle-slider"></span></label></div>
+          <div style="margin-top:.875rem;padding-top:.875rem;border-top:1px solid var(--border);display:flex;gap:.625rem;flex-wrap:wrap">
+            <button class="btn btn-ghost btn-sm">Manage Contact Visibility</button>
+            <button class="btn btn-ghost btn-sm" style="color:var(--red);border-color:rgba(220,38,38,.2)">Block Recruiter</button>
+            <button class="btn btn-ghost btn-sm" style="color:var(--text-3)">Report</button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main-col -->
+
+    <!-- ── Right sidebar ── -->
+    <div class="sidebar-col">
+
+      <!-- Skill Match Summary -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Skill Match Summary
+          </div>
+        </div>
+        <div class="card-body">
+          {% set circ = 175.93 %}
+          {% set offset = (circ * (1 - avg_score/100))|round(2) if avg_score > 0 else circ %}
+          <div class="match-ring-wrap">
+            <div class="match-ring">
+              <svg width="100" height="100" viewBox="0 0 100 100">
+                <circle class="match-ring-track" cx="50" cy="50" r="28"/>
+                <circle class="match-ring-fill" cx="50" cy="50" r="28"
+                        stroke-dasharray="{{ circ }}" stroke-dashoffset="{{ offset }}"
+                        transform="rotate(-90 50 50)"/>
+              </svg>
+              <div class="match-ring-label">
+                <span class="match-ring-pct">{{ avg_score }}%</span>
+                <span class="match-ring-sub">Skill Score</span>
+              </div>
+            </div>
+          </div>
+          <div style="text-align:center;margin-bottom:.875rem">
+            <span class="badge {{ 'badge-green' if avg_score >= 70 else ('badge-amber' if avg_score >= 40 else 'badge-grey') }}">
+              {% if avg_score >= 70 %}Strong Match{% elif avg_score >= 40 %}Good Match{% elif avg_score > 0 %}Developing{% else %}Not Started{% endif %}
             </span>
-            {% else %}
-            <span class="badge badge-pending" style="font-size:.625rem">⚠ Unverified</span>
-            {% endif %}
           </div>
-        </div>
-        <div class="info-row">
-          <div class="info-label">Phone</div>
-          <div class="info-value" style="display:flex;align-items:center;gap:.5rem">
-            {% if profile and profile.phone %}
-            {{ profile.phone }}
-            <span class="badge badge-grey" style="font-size:.625rem">Added</span>
-            {% else %}
-            <span style="color:var(--text-3)">Not added</span>
-            {% endif %}
+          <div class="match-stat-row"><div class="match-stat-label"><svg fill="none" stroke="var(--green)" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Verified Skills</div><div class="match-stat-val green">{{ verified_skills|length }}</div></div>
+          <div class="match-stat-row"><div class="match-stat-label"><svg fill="none" stroke="var(--amber)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Pending Tests</div><div class="match-stat-val amber">{{ unverified_skills|length }}</div></div>
+          <div class="match-stat-row"><div class="match-stat-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Overall Strength</div><div class="match-stat-val" style="{{ 'color:var(--green)' if avg_score >= 70 else '' }}">{{ 'Strong' if avg_score >= 70 else ('Good' if avg_score >= 40 else 'Building') }}</div></div>
+          <div class="match-stat-row"><div class="match-stat-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>Top Category</div><div class="match-stat-val">{{ verified_skills[0].category if verified_skills else '—' }}</div></div>
+          {% if unverified_skills %}
+          <div style="margin-top:.75rem">
+            <div style="font-size:.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);margin-bottom:.375rem">Suggested to Verify</div>
+            <div class="suggested-chips">
+              {% for sk in unverified_skills[:3] %}<span class="sug-chip">{{ sk.name }}</span>{% endfor %}
+            </div>
           </div>
-        </div>
-        <div class="info-row">
-          <div class="info-label">LinkedIn</div>
-          <div class="info-value">
-            {% if profile and profile.linkedin %}
-            <a href="{{ profile.linkedin }}" target="_blank" rel="noopener">{{ profile.linkedin }}</a>
-            {% else %}<span style="color:var(--text-3)">Not added</span>{% endif %}
-          </div>
-        </div>
-        <div class="info-row">
-          <div class="info-label">GitHub</div>
-          <div class="info-value">
-            {% if profile and profile.github %}
-            <a href="{{ profile.github }}" target="_blank" rel="noopener">{{ profile.github }}</a>
-            {% else %}<span style="color:var(--text-3)">Not added</span>{% endif %}
-          </div>
+          {% endif %}
         </div>
       </div>
-    </div>
-    <div id="editContact" class="edit-panel">
-      <form method="post" action="{{ url_for('candidate_profile') }}">
-        <input type="hidden" name="name" value="{{ user.name }}">
-        <input type="hidden" name="headline" value="{{ profile.headline if profile else '' }}">
-        <input type="hidden" name="location" value="{{ profile.location if profile else '' }}">
-        <input type="hidden" name="bio" value="{{ profile.bio if profile else '' }}">
-        <div class="form-grid">
-          <div class="fg">
-            <label>LinkedIn URL</label>
-            <input class="fc" type="url" name="linkedin" value="{{ profile.linkedin if profile else '' }}" placeholder="https://linkedin.com/in/...">
-          </div>
-          <div class="fg">
-            <label>GitHub URL</label>
-            <input class="fc" type="url" name="github" value="{{ profile.github if profile else '' }}" placeholder="https://github.com/...">
-          </div>
-        </div>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary btn-sm">Save</button>
-          <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editContact')">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </section>
 
-  <!-- ══════════════════════════════════════════════════════
-       SECTION 11 — Personal Details
-  ══════════════════════════════════════════════════════ -->
-  <section id="personal" class="card">
-    <div class="card-head">
-      <div class="card-title">
-        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        Personal Details
-      </div>
-      <button class="btn-icon" onclick="toggleEdit('editPersonal')" title="Edit">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      </button>
-    </div>
-    <div class="card-body">
-      <div class="info-grid">
-        <div class="info-row">
-          <div class="info-label">Full Name</div>
-          <div class="info-value">{{ user.name }}</div>
-        </div>
-        <div class="info-row">
-          <div class="info-label">Account Type</div>
-          <div class="info-value">Candidate</div>
-        </div>
-        <div class="info-row">
-          <div class="info-label">Work Status</div>
-          <div class="info-value">
-            {% if profile and profile.work_status == 'experienced' %}Experienced Professional
-            {% elif profile and profile.work_status == 'fresher' %}Fresher / Recent Graduate
-            {% else %}<span style="color:var(--text-3)">Not set</span>{% endif %}
+      <!-- Resume -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Resume
           </div>
         </div>
-        <div class="info-row">
-          <div class="info-label">Member Since</div>
-          <div class="info-value" style="color:var(--text-3);font-size:.8125rem">SkillBaseHire Candidate</div>
+        <div class="card-body">
+          {% if profile and profile.resume_filename %}
+          <div class="resume-file">
+            <div class="resume-icon"><svg width="22" height="22" fill="none" stroke="var(--red)" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div class="resume-info">
+              <div class="resume-fname">{{ profile.resume_filename }}</div>
+              <div class="resume-meta">Uploaded to SkillBaseHire</div>
+              <div class="resume-visibility"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Visible to Recruiters</div>
+            </div>
+          </div>
+          <div class="resume-actions">
+            <a href="/static/uploads/resumes/{{ profile.resume_filename }}" download class="btn btn-ghost btn-sm btn-full">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Download
+            </a>
+            <label for="resumeFileInput" class="btn btn-outline btn-sm btn-full" style="cursor:pointer">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Replace Resume
+            </label>
+            <a href="/static/uploads/resumes/{{ profile.resume_filename }}" target="_blank" class="btn btn-ghost btn-sm btn-full" style="color:var(--accent)">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Preview Resume
+            </a>
+          </div>
+          {% else %}
+          <div class="empty-state" style="padding:1.25rem 0">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            <p>Upload your resume to improve recruiter visibility.</p>
+            <label for="resumeFileInput" class="btn btn-primary btn-sm" style="cursor:pointer">Upload Resume</label>
+          </div>
+          {% endif %}
+          <div id="resumeErr" style="display:none;margin-top:.5rem;font-size:.8125rem;color:var(--red);padding:.4375rem .625rem;background:var(--red-light);border-radius:var(--radius-xs)"></div>
         </div>
       </div>
-    </div>
-    <div id="editPersonal" class="edit-panel">
-      <form method="post" action="{{ url_for('candidate_profile') }}">
-        <input type="hidden" name="headline" value="{{ profile.headline if profile else '' }}">
-        <input type="hidden" name="location" value="{{ profile.location if profile else '' }}">
-        <input type="hidden" name="bio" value="{{ profile.bio if profile else '' }}">
-        <input type="hidden" name="linkedin" value="{{ profile.linkedin if profile else '' }}">
-        <input type="hidden" name="github" value="{{ profile.github if profile else '' }}">
-        <div class="form-grid">
-          <div class="fg">
-            <label>Full Name <span style="color:var(--red)">*</span></label>
-            <input class="fc" type="text" name="name" value="{{ user.name }}" required>
+
+      <!-- Job Preferences -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+            Job Preferences
           </div>
+          <button class="btn-icon" onclick="toggleEdit('editPrefs')"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
         </div>
-        <div class="form-actions">
-          <button type="submit" class="btn btn-primary btn-sm">Save</button>
-          <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editPersonal')">Cancel</button>
+        <div class="card-body" style="padding:.75rem 1.25rem">
+          <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>Preferred Role</div><div class="pref-value">{{ profile.job_title if profile and profile.job_title else '—' }}</div></div>
+          <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Location</div><div class="pref-value">{{ profile.location if profile and profile.location else '—' }}</div></div>
+          <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Work Mode</div><div class="pref-value">—</div></div>
+          <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Notice Period</div><div class="pref-value">—</div></div>
+          <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Expected Salary</div><div class="pref-value">—</div></div>
+          <div class="pref-row" style="border-bottom:none"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Willing to Relocate</div><div class="pref-value">—</div></div>
         </div>
-      </form>
+        <div id="editPrefs" class="edit-panel">
+          <p style="font-size:.8125rem;color:var(--text-3);margin-bottom:.875rem;padding:.5rem .75rem;background:var(--accent-light);border-radius:var(--radius-xs);">Extended preferences coming soon.</p>
+          <div class="form-actions"><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editPrefs')">Close</button></div>
+        </div>
+      </div>
+
+    </div><!-- /sidebar-col -->
+
+  </div><!-- /two-col -->
+</div><!-- /page-wrap -->
+
+<!-- Hidden resume upload form -->
+<form method="post" action="{{ url_for('upload_resume') }}" enctype="multipart/form-data" id="resumeUploadForm" style="display:none">
+  <input type="file" id="resumeFileInput" name="resume" accept=".pdf,.doc,.docx" onchange="handleResume(this)">
+</form>
+
+<!-- Request Skill Test modal (recruiter) -->
+<div class="modal-overlay" id="skillTestModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title">Request Skill Assessment</div>
+      <button class="modal-close" onclick="closeModal('skillTestModal')"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
     </div>
-  </section>
-
-</main>
-</div>
-
-<!-- ══ Bottom Bar ════════════════════════════════════════════════════════════ -->
-<div class="bottom-bar">
-  <div class="bb-progress">
-    <div class="bb-progress-label">Profile Strength</div>
-    <div class="bb-track"><div class="bb-fill" style="width:{{ completion }}%"></div></div>
+    <div class="modal-body">
+      <p style="font-size:.8125rem;color:var(--text-2);margin-bottom:1rem;padding:.625rem .875rem;background:var(--accent-light);border-radius:var(--radius-xs);">Request <strong>{{ user.name }}</strong> to complete selected skill assessments. Once completed, verified results will be updated on the candidate profile.</p>
+      {% for skill in unverified_skills %}
+      <div class="skill-check-row">
+        <input type="checkbox" id="sk_{{ skill.id }}" value="{{ skill.id }}">
+        <label class="skill-check-label" for="sk_{{ skill.id }}">{{ skill.name }}</label>
+        <span class="skill-check-status">{{ skill.category }}</span>
+      </div>
+      {% else %}
+      <p style="color:var(--text-3);font-size:.875rem;text-align:center;padding:1rem 0">All skills are already verified!</p>
+      {% endfor %}
+      {% if unverified_skills %}
+      <div style="margin-top:1rem">
+        <label style="font-size:.75rem;font-weight:600;color:var(--text-2);display:block;margin-bottom:.375rem">Message to Candidate (optional)</label>
+        <textarea class="fc" rows="3" placeholder="Add a personalised message..."></textarea>
+      </div>
+      {% endif %}
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('skillTestModal')">Cancel</button>
+      <button class="btn btn-primary btn-sm">Send Request</button>
+    </div>
   </div>
-  <div class="bb-pct">{{ completion }}%</div>
-  <div class="bb-text">
-    {% if completion < 100 %}
-    Your profile is <strong>{{ completion }}% complete</strong>. Complete remaining sections to increase visibility to recruiters.
-    {% else %}
-    <strong>Profile complete!</strong> You're fully visible to recruiters.
-    {% endif %}
-  </div>
-  {% if completion < 100 %}
-  <button class="btn btn-outline-accent btn-sm" onclick="document.querySelector('.edit-panel:not(.open)')?.scrollIntoView({behavior:'smooth'})">
-    Improve Profile
-  </button>
-  {% endif %}
 </div>
 
 <script>
-/* ── Edit panel toggle ── */
 function toggleEdit(id) {
-  const panel = document.getElementById(id);
-  const isOpen = panel.classList.contains('open');
-  document.querySelectorAll('.edit-panel.open').forEach(p => p.classList.remove('open'));
-  if (!isOpen) {
-    panel.classList.add('open');
-    setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
+  const el = document.getElementById(id);
+  if (!el) return;
+  const isCard = el.tagName === 'DIV' && el.classList.contains('card');
+  if (isCard) {
+    const open = el.style.display !== 'none';
+    el.style.display = open ? 'none' : 'block';
+    if (!open) setTimeout(() => el.scrollIntoView({behavior:'smooth',block:'nearest'}), 50);
+  } else {
+    const open = el.classList.contains('open');
+    document.querySelectorAll('.edit-panel.open').forEach(p => p.classList.remove('open'));
+    if (!open) {
+      el.classList.add('open');
+      setTimeout(() => el.scrollIntoView({behavior:'smooth',block:'nearest'}), 50);
+    }
   }
 }
+function openModal(id) { document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open')); });
+document.querySelectorAll('.modal-overlay').forEach(m => m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); }));
 
-/* ── Sidebar active on scroll ── */
-const sections = document.querySelectorAll('section[id]');
-const navLinks  = document.querySelectorAll('.sb-link[data-sec]');
-const observer  = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      navLinks.forEach(l => l.classList.remove('active'));
-      const match = document.querySelector(`.sb-link[data-sec="${e.target.id}"]`);
-      if (match) match.classList.add('active');
-    }
-  });
-}, { rootMargin: `-${parseInt(getComputedStyle(document.documentElement).getPropertyValue('--topbar-h'))}px 0px -60% 0px`, threshold: 0 });
-sections.forEach(s => observer.observe(s));
-
-/* ── Smooth scroll for sidebar links ── */
-navLinks.forEach(link => {
-  link.addEventListener('click', e => {
-    const sec = document.getElementById(link.dataset.sec);
-    if (sec) { e.preventDefault(); sec.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-  });
-});
-
-/* ── Resume file validation ── */
-function handleResumeChange(input) {
+function handleResume(input) {
   const allowed = ['pdf','doc','docx'];
-  const file    = input.files[0];
-  const errEl   = document.getElementById('uploadErr');
+  const file = input.files[0];
+  const errEl = document.getElementById('resumeErr');
   if (!file) return;
   const ext = file.name.split('.').pop().toLowerCase();
-  if (!allowed.includes(ext)) {
-    if (errEl) { errEl.style.display = 'block'; errEl.textContent = `Invalid file type ".${ext}". Please upload a PDF, DOC, or DOCX file.`; }
-    input.value = '';
-    return;
-  }
-  if (file.size > 5 * 1024 * 1024) {
-    if (errEl) { errEl.style.display = 'block'; errEl.textContent = 'File size exceeds 5 MB. Please upload a smaller file.'; }
-    input.value = '';
-    return;
-  }
-  if (errEl) errEl.style.display = 'none';
+  if (!allowed.includes(ext)) { errEl.style.display='block'; errEl.textContent=`Invalid file type ".${ext}". Only PDF, DOC, and DOCX are allowed.`; input.value=''; return; }
+  if (file.size > 5*1024*1024) { errEl.style.display='block'; errEl.textContent='File exceeds 5 MB limit.'; input.value=''; return; }
+  errEl.style.display='none';
   document.getElementById('resumeUploadForm').submit();
 }
-
-/* ── Drag & drop on upload zone ── */
-const zone = document.getElementById('uploadZone');
-if (zone) {
-  ['dragenter','dragover'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.add('drag'); }));
-  ['dragleave','drop'].forEach(ev => zone.addEventListener(ev, e => { e.preventDefault(); zone.classList.remove('drag'); }));
-  zone.addEventListener('drop', e => {
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      const dt = new DataTransfer();
-      dt.items.add(file);
-      const inp = document.getElementById('resumeInput');
-      inp.files = dt.files;
-      handleResumeChange(inp);
-    }
-  });
+function saveVisibility(checkbox, type) {
+  // Visual feedback only — backend toggle can be wired when needed
+  const label = checkbox.closest('.vis-row').querySelector('.vis-label');
+  if (label) label.style.color = checkbox.checked ? '' : 'var(--text-3)';
 }
 
-/* ── Auto-dismiss flash messages ── */
-setTimeout(() => {
-  document.querySelectorAll('.flash').forEach(el => {
-    el.style.transition = 'opacity .4s, transform .4s';
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(-4px)';
-    setTimeout(() => el.remove(), 400);
-  });
-}, 4500);
+setTimeout(() => { document.querySelectorAll('.flash').forEach(el => { el.style.transition='opacity .4s'; el.style.opacity='0'; setTimeout(()=>el.remove(),400); }); }, 4500);
 </script>
 </body>
 </html>

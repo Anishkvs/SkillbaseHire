@@ -874,7 +874,7 @@ def candidate_signup():
 @app.route('/candidate/login', methods=['GET', 'POST'])
 def candidate_login():
     if session.get('role') == 'candidate':
-        return redirect(url_for('candidate_dashboard'))
+        return redirect(url_for('jobs'))
 
     email = ''
     if request.method == 'POST':
@@ -886,7 +886,7 @@ def candidate_login():
         if user and check_password_hash(user['password_hash'], password):
             session.update({'user_id': user['id'], 'role': 'candidate', 'name': user['name']})
             flash(f'Welcome back, {user["name"]}!', 'success')
-            return redirect(url_for('candidate_dashboard'))
+            return redirect(url_for('jobs'))
         flash('Invalid email or password.', 'error')
 
     return render_template('candidate_login.html', user=None, email=email)

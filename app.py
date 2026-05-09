@@ -184,6 +184,7 @@ def init_db():
             "ALTER TABLE candidate_profiles ADD COLUMN job_title TEXT DEFAULT ''",
             "ALTER TABLE candidate_profiles ADD COLUMN experience TEXT DEFAULT ''",
             "ALTER TABLE candidate_profiles ADD COLUMN resume_filename TEXT",
+            "ALTER TABLE candidate_profiles ADD COLUMN work_status TEXT DEFAULT ''",
             "ALTER TABLE recruiter_profiles ADD COLUMN phone TEXT DEFAULT ''",
             "ALTER TABLE recruiter_profiles ADD COLUMN job_title TEXT DEFAULT ''",
             "ALTER TABLE recruiter_profiles ADD COLUMN company_size TEXT DEFAULT ''",
@@ -795,7 +796,9 @@ def candidate_signup():
     if request.method == 'POST':
         name        = request.form.get('name', '').strip()
         email       = request.form.get('email', '').strip().lower()
-        phone       = request.form.get('phone', '').strip()
+        _phone_code = request.form.get('phone_code', '').strip()
+        _phone_num  = request.form.get('phone', '').strip()
+        phone       = ((_phone_code + ' ' + _phone_num).strip()) if _phone_num else ''
         job_title   = request.form.get('job_title', '').strip()
         experience  = request.form.get('experience', '').strip()
         headline    = request.form.get('headline', '').strip()
@@ -804,14 +807,16 @@ def candidate_signup():
         linkedin    = request.form.get('linkedin', '').strip()
         github      = request.form.get('github', '').strip()
         skill_ids   = request.form.getlist('skills', type=int)
+        work_status = request.form.get('work_status', '').strip()
         password    = request.form.get('password', '')
         confirm     = request.form.get('confirm_password', '')
         terms       = request.form.get('terms')
 
         errors = []
-        if not name:   errors.append('Full name is required.')
-        if not email:  errors.append('Email address is required.')
-        if not terms:  errors.append('You must accept the terms.')
+        if not name:        errors.append('Full name is required.')
+        if not email:       errors.append('Email address is required.')
+        if not work_status: errors.append('Please select your work status.')
+        if not terms:       errors.append('You must accept the terms.')
         pw_err = validate_password(password)
         if pw_err:     errors.append(pw_err)
         if not pw_err and password != confirm:
@@ -850,9 +855,9 @@ def candidate_signup():
         )
         uid = cur.lastrowid
         db.execute('''INSERT INTO candidate_profiles
-                      (user_id, headline, location, bio, linkedin, github, phone, job_title, experience, resume_filename)
-                      VALUES (?,?,?,?,?,?,?,?,?,?)''',
-                   [uid, headline, location, bio, linkedin, github, phone, job_title, experience, resume_filename])
+                      (user_id, headline, location, bio, linkedin, github, phone, job_title, experience, resume_filename, work_status)
+                      VALUES (?,?,?,?,?,?,?,?,?,?,?)''',
+                   [uid, headline, location, bio, linkedin, github, phone, job_title, experience, resume_filename, work_status])
         for sid in skill_ids:
             db.execute('INSERT OR IGNORE INTO user_skills (user_id, skill_id) VALUES (?,?)', [uid, sid])
         db.commit()
@@ -1017,7 +1022,9 @@ def recruiter_signup():
     if request.method == 'POST':
         name             = request.form.get('name', '').strip()
         email            = request.form.get('email', '').strip().lower()
-        phone            = request.form.get('phone', '').strip()
+        _phone_code      = request.form.get('phone_code', '').strip()
+        _phone_num       = request.form.get('phone', '').strip()
+        phone            = ((_phone_code + ' ' + _phone_num).strip()) if _phone_num else ''
         job_title        = request.form.get('job_title', '').strip()
         company          = request.form.get('company', '').strip()
         company_size     = request.form.get('company_size', '').strip()

@@ -699,8 +699,8 @@ function openApply(id) {
     </div>
     <div class="jb-modal-body">
       <div class="jb-modal-grid">
-        <div class="jb-mf"><label>Full Name</label><input class="form-control" value="Sandra" readonly></div>
-        <div class="jb-mf"><label>Email</label><input class="form-control" value="sandra@example.com" readonly></div>
+        <div class="jb-mf"><label>Full Name</label><input class="form-control" value="{{ user.name if user else '' }}" readonly></div>
+        <div class="jb-mf"><label>Email</label><input class="form-control" value="{{ user.email if user else '' }}" readonly></div>
       </div>
       <div class="jb-mf" style="margin-top:.875rem">
         <label>Verified Skills</label>

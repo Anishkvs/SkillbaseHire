@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="auth-page">
-  <div class="auth-card auth-card-lg">
+  <div class="auth-card signup-card">
 
     <div class="auth-logo">
       <a href="{{ url_for('home') }}" class="auth-brand-link">
@@ -18,157 +18,123 @@
     <!-- Role toggle -->
     <div class="signup-role-toggle">
       <a href="{{ url_for('candidate_signup') }}">Candidate</a>
-      <a href="{{ url_for('recruiter_signup') }}" class="active">Recruiter</a>
+      <a href="{{ url_for('recruiter_signup') }}" class="active">Recruiter / Employer</a>
     </div>
 
-    <div class="auth-role-badge">For Recruiters</div>
     <h1 class="auth-title">Start hiring smarter</h1>
-    <p class="auth-subtitle">Post jobs and find skill-verified candidates</p>
+    <p class="auth-subtitle">Post jobs and find skill-verified candidates instantly</p>
 
     <form method="post" action="{{ url_for('recruiter_signup') }}" id="recruiterSignupForm" novalidate>
 
-      <!-- Personal Details -->
-      <div class="reg-section">Your Details</div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="name">Full Name <span style="color:#ef4444">*</span></label>
-          <input class="form-control" type="text" id="name" name="name"
-                 value="{{ form.get('name','') }}" placeholder="John Smith" required autocomplete="name">
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="job_title">Your Job Title</label>
-          <input class="form-control" type="text" id="job_title" name="job_title"
-                 value="{{ form.get('job_title','') }}" placeholder="e.g. HR Manager">
-        </div>
+      <div class="form-group">
+        <label class="form-label" for="name">Full name <span class="req-star">*</span></label>
+        <input class="form-control" type="text" id="name" name="name"
+               value="{{ form.get('name','') }}" placeholder="What is your full name?" required autocomplete="name">
       </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="email">Work Email <span style="color:#ef4444">*</span></label>
-          <input class="form-control" type="email" id="email" name="email"
-                 value="{{ form.get('email','') }}" placeholder="john@company.com" required autocomplete="email"
-                 oninput="checkDomain(this.value)">
-          <div id="domainError" class="field-error" style="display:none">
-            Personal email providers are not allowed. Please use your official work email.
-          </div>
+
+      <div class="form-group">
+        <label class="form-label" for="email">Your work email <span class="req-star">*</span></label>
+        <input class="form-control" type="email" id="email" name="email"
+               value="{{ form.get('email','') }}" placeholder="name@yourcompany.com" required autocomplete="email"
+               oninput="checkDomain(this.value)">
+        <div id="domainError" class="field-error" style="display:none">
+          Please use your official company email. Personal email providers (Gmail, Yahoo, etc.) are not allowed.
         </div>
-        <div class="form-group">
-          <label class="form-label" for="phone">Phone Number</label>
-          <input class="form-control" type="tel" id="phone" name="phone"
-                 value="{{ form.get('phone','') }}" placeholder="+1 555 000 0000">
+        <div class="field-hint">We'll use this to verify your company affiliation</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="phone">Mobile number</label>
+        <div class="phone-input-wrap">
+          <select class="form-control phone-code-select" id="phone_code" name="phone_code" aria-label="Country code">
+            <option value="+91">🇮🇳 +91</option>
+            <option value="+1">🇺🇸 +1</option>
+            <option value="+44">🇬🇧 +44</option>
+            <option value="+61">🇦🇺 +61</option>
+            <option value="+971">🇦🇪 +971</option>
+            <option value="+65">🇸🇬 +65</option>
+            <option value="+49">🇩🇪 +49</option>
+            <option value="+33">🇫🇷 +33</option>
+          </select>
+          <input class="form-control phone-number-input" type="tel" id="phone" name="phone"
+                 value="{{ form.get('phone','') }}" placeholder="Enter mobile number" autocomplete="tel">
         </div>
       </div>
 
-      <!-- Company Details -->
-      <div class="reg-section">Company Details</div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="company">Company Name <span style="color:#ef4444">*</span></label>
-          <input class="form-control" type="text" id="company" name="company"
-                 value="{{ form.get('company','') }}" placeholder="Acme Corp" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="industry">Industry</label>
-          <select class="form-control" id="industry" name="industry">
-            <option value="">Select…</option>
-            {% for opt in ['Technology','Finance','Healthcare','Education','Retail','Manufacturing','Media & Entertainment','Consulting','Other'] %}
-              <option value="{{ opt }}" {{ 'selected' if form.get('industry') == opt else '' }}>{{ opt }}</option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="company_size">Company Size</label>
-          <select class="form-control" id="company_size" name="company_size">
-            <option value="">Select…</option>
-            {% for opt in ['1–10','11–50','51–200','201–500','501–1000','1000+'] %}
-              <option value="{{ opt }}" {{ 'selected' if form.get('company_size') == opt else '' }}>{{ opt }} employees</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label" for="company_location">Company Location</label>
-          <input class="form-control" type="text" id="company_location" name="company_location"
-                 value="{{ form.get('company_location','') }}" placeholder="City, Country">
-        </div>
-      </div>
       <div class="form-group">
-        <label class="form-label" for="website">Company Website</label>
-        <input class="form-control" type="url" id="website" name="website"
-               value="{{ form.get('website','') }}" placeholder="https://company.com">
-      </div>
-      <div class="form-group">
-        <label class="form-label" for="company_bio">About the Company</label>
-        <textarea class="form-control" id="company_bio" name="company_bio" rows="3"
-                  placeholder="Tell candidates about your company culture and mission…" maxlength="800" style="resize:vertical">{{ form.get('company_bio','') }}</textarea>
+        <label class="form-label" for="company">What is your company? <span class="req-star">*</span></label>
+        <input class="form-control" type="text" id="company" name="company"
+               value="{{ form.get('company','') }}" placeholder="e.g. Infosys, TCS, Startup Inc." required>
       </div>
 
-      <!-- Password -->
-      <div class="reg-section">Password</div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label" for="password">Password <span style="color:#ef4444">*</span></label>
-          <div class="pw-wrap">
-            <input class="form-control" type="password" id="password" name="password"
-                   placeholder="Create a strong password" autocomplete="new-password"
-                   oninput="updateStrength(this.value)" required>
-            <button type="button" class="pw-toggle" onclick="togglePw('password')" aria-label="Show/hide password">
-              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-              </svg>
-            </button>
-          </div>
-          <div class="pw-strength-row" id="strengthRow" style="display:none">
-            <div class="pw-bars">
-              <div class="pw-bar" id="bar0"></div>
-              <div class="pw-bar" id="bar1"></div>
-              <div class="pw-bar" id="bar2"></div>
-            </div>
-            <span class="pw-strength-label" id="strengthLabel"></span>
-          </div>
-          <ul class="pw-rules">
-            <li class="pw-rule" id="rule-len">At least 8 characters</li>
-            <li class="pw-rule" id="rule-upper">One uppercase letter</li>
-            <li class="pw-rule" id="rule-lower">One lowercase letter</li>
-            <li class="pw-rule" id="rule-num">One number</li>
-            <li class="pw-rule" id="rule-special">One special char (@#$%&amp;*!)</li>
-            <li class="pw-rule" id="rule-space">No leading/trailing spaces</li>
-          </ul>
+      <div class="form-group">
+        <label class="form-label" for="job_title">Your designation</label>
+        <input class="form-control" type="text" id="job_title" name="job_title"
+               value="{{ form.get('job_title','') }}" placeholder="e.g. HR Manager, Talent Acquisition Lead">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Create a password <span class="req-star">*</span></label>
+        <div class="pw-wrap">
+          <input class="form-control" type="password" id="password" name="password"
+                 placeholder="Minimum 8 characters" autocomplete="new-password"
+                 oninput="updateStrength(this.value)" required>
+          <button type="button" class="pw-toggle" onclick="togglePw('password')" aria-label="Show/hide password">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
         </div>
-        <div class="form-group">
-          <label class="form-label" for="confirm_password">Confirm Password <span style="color:#ef4444">*</span></label>
-          <div class="pw-wrap">
-            <input class="form-control" type="password" id="confirm_password" name="confirm_password"
-                   placeholder="Repeat password" autocomplete="new-password"
-                   oninput="checkConfirm()" required>
-            <button type="button" class="pw-toggle" onclick="togglePw('confirm_password')" aria-label="Show/hide password">
-              <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
-              </svg>
-            </button>
+        <div class="pw-strength-row" id="strengthRow" style="display:none">
+          <div class="pw-bars">
+            <div class="pw-bar" id="bar0"></div>
+            <div class="pw-bar" id="bar1"></div>
+            <div class="pw-bar" id="bar2"></div>
           </div>
-          <div id="confirmMsg" class="field-error" style="display:none">Passwords do not match</div>
+          <span class="pw-strength-label" id="strengthLabel"></span>
         </div>
+        <ul class="pw-rules" id="pwRules" style="display:none">
+          <li class="pw-rule" id="rule-len">At least 8 characters</li>
+          <li class="pw-rule" id="rule-upper">One uppercase letter</li>
+          <li class="pw-rule" id="rule-lower">One lowercase letter</li>
+          <li class="pw-rule" id="rule-num">One number</li>
+          <li class="pw-rule" id="rule-special">One special char (@#$%&amp;*!)</li>
+          <li class="pw-rule" id="rule-space">No leading/trailing spaces</li>
+        </ul>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="confirm_password">Confirm password <span class="req-star">*</span></label>
+        <div class="pw-wrap">
+          <input class="form-control" type="password" id="confirm_password" name="confirm_password"
+                 placeholder="Re-enter your password" autocomplete="new-password"
+                 oninput="checkConfirm()" required>
+          <button type="button" class="pw-toggle" onclick="togglePw('confirm_password')" aria-label="Show/hide password">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+        <div id="confirmMsg" class="field-error" style="display:none">Passwords do not match</div>
       </div>
 
       <!-- Terms -->
-      <div style="margin:1.25rem 0 1rem;display:flex;align-items:flex-start;gap:.625rem">
-        <input type="checkbox" id="terms" name="terms" value="1" required
-               style="margin-top:.2rem;flex-shrink:0" onchange="onTermsChange()">
-        <label for="terms" style="font-size:.875rem;color:var(--text-muted);cursor:pointer">
-          I agree to the
-          <a href="#" style="color:var(--primary)" onclick="openModal('termsModal');return false;">Terms of Use</a>
+      <div class="terms-row">
+        <input type="checkbox" id="terms" name="terms" value="1" required onchange="onTermsChange()">
+        <label for="terms">
+          By registering, I agree to SkillBaseHire's
+          <a href="#" onclick="openModal('termsModal');return false;">Terms of Use</a>
           and
-          <a href="#" style="color:var(--primary)" onclick="openModal('privacyModal');return false;">Privacy Policy</a>
+          <a href="#" onclick="openModal('privacyModal');return false;">Privacy Policy</a>
         </label>
       </div>
 
-      <button type="submit" class="btn btn-primary btn-full" id="submitBtn" disabled>
-        Create Recruiter Account &amp; Verify Email
+      <button type="submit" class="btn btn-primary btn-full signup-submit-btn" id="submitBtn" disabled>
+        Register Now
       </button>
     </form>
 
-    <p class="auth-footer">Already have an account? <a href="{{ url_for('recruiter_login') }}">Log in</a></p>
+    <p class="auth-footer">Already registered? <a href="{{ url_for('recruiter_login') }}">Log in here</a></p>
 
   </div>
 </div>
@@ -293,9 +259,11 @@ function togglePw(id) {
   inp.type = inp.type === 'password' ? 'text' : 'password';
 }
 function updateStrength(val) {
-  const row = document.getElementById('strengthRow');
-  if (!val) { row.style.display = 'none'; return; }
-  row.style.display = 'flex';
+  const row   = document.getElementById('strengthRow');
+  const rules = document.getElementById('pwRules');
+  if (!val) { row.style.display = 'none'; rules.style.display = 'none'; return; }
+  row.style.display   = 'flex';
+  rules.style.display = '';
   const checks = [val.length >= 8, /[A-Z]/.test(val), /[a-z]/.test(val), /\d/.test(val), /[@#$%&*!]/.test(val), val === val.trim()];
   const ids = ['rule-len','rule-upper','rule-lower','rule-num','rule-special','rule-space'];
   const passed = checks.filter(Boolean).length;
@@ -321,7 +289,6 @@ function checkConfirm() {
   else           { msg.style.display = 'block'; inp.classList.add('input-error'); inp.classList.remove('input-ok'); }
 }
 
-// Move modals to <body> so position:fixed works from the viewport root
 document.addEventListener('DOMContentLoaded', () => {
   ['termsModal', 'privacyModal'].forEach(id => {
     const el = document.getElementById(id);

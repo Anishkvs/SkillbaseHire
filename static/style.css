@@ -4175,3 +4175,164 @@ body.dark-exam ::-webkit-scrollbar-thumb { background: #30363D; border-radius: 3
   flex-direction: column;
   gap: .625rem;
 }
+
+/* ============================================================
+   Redesigned single-column signup card
+   ============================================================ */
+.signup-card {
+  max-width: 520px !important;
+  padding: 2.25rem 2rem !important;
+}
+
+/* Required field asterisk */
+.req-star {
+  color: #ef4444;
+  margin-left: .1rem;
+}
+
+/* Hint text below inputs */
+.field-hint {
+  font-size: .75rem;
+  color: var(--text-muted);
+  margin-top: .3rem;
+  line-height: 1.4;
+}
+
+/* Phone input with country-code selector */
+.phone-input-wrap {
+  display: flex;
+  gap: .5rem;
+}
+.phone-code-select {
+  flex-shrink: 0;
+  width: 110px !important;
+  padding-right: .5rem !important;
+  font-size: .875rem !important;
+}
+.phone-number-input {
+  flex: 1 !important;
+}
+
+/* Terms checkbox row */
+.terms-row {
+  display: flex;
+  align-items: flex-start;
+  gap: .625rem;
+  margin: 1.375rem 0 1.125rem;
+}
+.terms-row input[type=checkbox] {
+  margin-top: .2rem;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+.terms-row label {
+  font-size: .875rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  line-height: 1.5;
+}
+.terms-row label a {
+  color: var(--primary);
+  font-weight: 500;
+}
+.terms-row label a:hover { text-decoration: underline; }
+
+/* Submit button */
+.signup-submit-btn {
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  padding: .875rem 1rem !important;
+  border-radius: 8px !important;
+  letter-spacing: .01em;
+}
+
+/* Divider line between form sections on signup */
+.signup-divider {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.5rem 0;
+}
+
+@media (max-width: 560px) {
+  .signup-card { padding: 1.75rem 1.25rem !important; }
+  .phone-code-select { width: 90px !important; }
+}
+
+/* ============================================================
+   Signup form field style (matches Naukri-style reference)
+   ============================================================ */
+.signup-label {
+  font-size: .9375rem !important;
+  font-weight: 700 !important;
+  color: var(--text) !important;
+  margin-bottom: .5rem !important;
+  letter-spacing: -.01em;
+}
+.signup-input {
+  border-radius: 10px !important;
+  padding: .8rem 1rem !important;
+  font-size: .9375rem !important;
+  border: 1.5px solid #D1D5DB !important;
+  background: #FAFAFA !important;
+  color: var(--text) !important;
+}
+.signup-input::placeholder {
+  color: #B0B8C5 !important;
+  font-weight: 400;
+}
+.signup-input:focus {
+  border-color: var(--primary) !important;
+  background: #fff !important;
+  box-shadow: 0 0 0 3px rgba(79,70,229,.1) !important;
+}
+
+/* ============================================================
+   Work Status card selector (candidate signup)
+   ============================================================ */
+.work-status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .625rem;
+  margin-top: .375rem;
+}
+.work-status-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: .875rem 1rem;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+  background: #fff;
+  user-select: none;
+  text-align: center;
+}
+.work-status-card input[type=radio] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.work-status-card:hover {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+.work-status-card.selected {
+  border-color: var(--primary);
+  background: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+}
+.work-status-title {
+  font-size: .9375rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.work-status-card.selected .work-status-title {
+  color: var(--primary);
+}
+@media (max-width: 480px) {
+  .work-status-grid { grid-template-columns: 1fr; }
+}

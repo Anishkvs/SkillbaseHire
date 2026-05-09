@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Find Jobs — SkillBaseHire{% endblock %}
 {% block content %}
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2%sfamily=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
 <!-- ── Hero ── -->
 <section class="jb-hero">
@@ -335,7 +335,7 @@ function initSkillCheckboxes() {
 
 /* ── Render ── */
 function matchRing(pct) {
-  const c = pct>=90?'#10B981':pct>=70?'#0F766E':pct>=50?'#F59E0B':'#EF4444';
+  const c = pct>=90%s'#10B981':pct>=70%s'#0F766E':pct>=50%s'#F59E0B':'#EF4444';
   return `<div class="jb-ring-wrap">
     <svg class="jb-ring" viewBox="0 0 36 36">
       <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E5E7EB" stroke-width="2.8"/>
@@ -354,7 +354,7 @@ function signalPill(s) {
 function skillTags(job) {
   return job.reqSkills.map(s=>
     job.verifiedIn.includes(s)
-      ? `<span class="jb-skill-v">✓ ${s}</span>`
+      %s `<span class="jb-skill-v">✓ ${s}</span>`
       : `<span class="jb-skill-m">+ ${s}</span>`
   ).join('');
 }
@@ -367,8 +367,8 @@ function renderCard(job) {
       <div class="jb-card-main">
         <div class="jb-card-title-row">
           <h3 class="jb-card-title">${job.title}</h3>
-          <button class="jb-bookmark${job.saved?' saved':''}" onclick="toggleSave(${job.id},event)" title="${job.saved?'Unsave':'Save'}">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="${job.saved?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+          <button class="jb-bookmark${job.saved%s' saved':''}" onclick="toggleSave(${job.id},event)" title="${job.saved%s'Unsave':'Save'}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="${job.saved%s'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
           </button>
         </div>
         <div class="jb-card-meta">${job.company} · ${job.location} · <span class="jb-type-badge">${job.type}</span></div>
@@ -449,7 +449,7 @@ function resetFilters() {
 }
 
 function updateCount(n) {
-  document.getElementById('resultsCount').textContent = n+' job'+(n!==1?'s':'');
+  document.getElementById('resultsCount').textContent = n+' job'+(n!==1%s's':'');
 }
 
 function updateActiveTags() {
@@ -502,7 +502,7 @@ function toggleHeroChip(btn) {
 /* ── Verified sync ── */
 function syncVerified(source) {
   const val = source==='hero'
-    ? document.getElementById('heroVerified').checked
+    %s document.getElementById('heroVerified').checked
     : document.getElementById('sideVerified').checked;
   document.getElementById('heroVerified').checked = val;
   document.getElementById('sideVerified').checked = val;
@@ -561,7 +561,7 @@ function initRange(trackId,fillId,tlId,trId,minVal,maxVal,step,minLabelId,maxLab
     const rect=track.getBoundingClientRect();
     const isLeft=thumb===tl;
     function move(ev) {
-      const cx=ev.touches?ev.touches[0].clientX:ev.clientX;
+      const cx=ev.touches%sev.touches[0].clientX:ev.clientX;
       let pct=Math.max(0,Math.min(1,(cx-rect.left)/rect.width));
       let val=Math.round((minVal+pct*range)/step)*step;
       if(isLeft){low=Math.max(minVal,Math.min(val,high-step));}
@@ -602,19 +602,19 @@ function toggleSave(id, ev) {
   if(card){
     const btn=card.querySelector('.jb-bookmark');
     btn.classList.toggle('saved',job.saved);
-    btn.querySelector('svg').setAttribute('fill',job.saved?'currentColor':'none');
-    btn.title=job.saved?'Unsave':'Save';
+    btn.querySelector('svg').setAttribute('fill',job.saved%s'currentColor':'none');
+    btn.title=job.saved%s'Unsave':'Save';
   }
   if(currentDetailId===id) {
     const dp=document.getElementById('detailBody');
     const bk=dp.querySelector('.jb-bookmark-lg');
     if(bk){bk.classList.toggle('saved',job.saved);bk.innerHTML=bookmarkLgInner(job);}
   }
-  showToast(job.saved?'Job saved!':'Job removed from saved.');
+  showToast(job.saved%s'Job saved!':'Job removed from saved.');
 }
 
 function bookmarkLgInner(job) {
-  return `<svg width="18" height="18" viewBox="0 0 24 24" fill="${job.saved?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>${job.saved?'Saved':'Save'}`;
+  return `<svg width="18" height="18" viewBox="0 0 24 24" fill="${job.saved%s'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>${job.saved%s'Saved':'Save'}`;
 }
 
 function showToast(msg) {
@@ -655,7 +655,7 @@ function openDetail(id) {
       <h4>Your Skill Match</h4>
       <div class="jb-dp-skills">
         ${job.reqSkills.map(s=>job.verifiedIn.includes(s)
-          ?`<span class="jb-skill-v">✓ ${s}</span>`
+          %s`<span class="jb-skill-v">✓ ${s}</span>`
           :`<span class="jb-skill-m">+ ${s}</span>`).join('')}
       </div>
     </div>
@@ -665,7 +665,7 @@ function openDetail(id) {
     </div>
     <div class="jb-dp-actions">
       <button class="btn btn-primary" style="flex:1;padding:.75rem 0" onclick="openApply(${job.id})">Apply Now</button>
-      <button class="jb-bookmark-lg${job.saved?' saved':''}" onclick="toggleSave(${job.id},event)">${bookmarkLgInner(job)}</button>
+      <button class="jb-bookmark-lg${job.saved%s' saved':''}" onclick="toggleSave(${job.id},event)">${bookmarkLgInner(job)}</button>
     </div>`;
   document.getElementById('detailOverlay').classList.add('open');
   document.getElementById('detailPanel').classList.add('open');
@@ -706,9 +706,9 @@ function openApply(id) {
         <label>Verified Skills</label>
         <div class="jb-modal-skills">
           ${job.verifiedIn.length
-            ? job.verifiedIn.map(s=>`<span class="jb-skill-v">✓ ${s}</span>`).join('')
+            %s job.verifiedIn.map(s=>`<span class="jb-skill-v">✓ ${s}</span>`).join('')
             : `<span class="jb-no-skills">No verified skills for this role yet. <a href="/skills" style="color:var(--primary)">Take an exam →</a></span>`}
-          ${job.missingIn.length?`<span class="jb-missing-note">Missing: ${job.missingIn.join(', ')}</span>`:''}
+          ${job.missingIn.length%s`<span class="jb-missing-note">Missing: ${job.missingIn.join(', ')}</span>`:''}
         </div>
       </div>
       <div class="jb-mf" style="margin-top:.875rem">
@@ -723,7 +723,7 @@ function openApply(id) {
       </div>
       <div class="jb-mf" style="margin-top:.875rem">
         <label>Cover Message <span class="jb-optional">(optional)</span></label>
-        <textarea class="form-control" rows="4" placeholder="Why are you excited about this role?"></textarea>
+        <textarea class="form-control" rows="4" placeholder="Why are you excited about this role%s"></textarea>
       </div>
       <button class="btn btn-primary" style="width:100%;margin-top:1.25rem;padding:.75rem 0" onclick="submitApply()">Submit Application</button>
     </div>`;

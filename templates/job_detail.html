@@ -73,7 +73,7 @@
         {% elif not session.get('user_id') %}
           <a href="{{ url_for('candidate_login') }}" class="btn btn-primary btn-full btn-lg">Login to Apply</a>
           <p style="text-align:center;font-size:.8125rem;color:var(--text-muted);margin:.75rem 0 0">
-            New? <a href="{{ url_for('candidate_signup') }}">Create free account</a>
+            New%s <a href="{{ url_for('candidate_signup') }}">Create free account</a>
           </p>
         {% endif %}
 

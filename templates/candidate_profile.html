@@ -6,7 +6,7 @@
 <title>{{ user.name }} — Candidate Profile | SkillBaseHire</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2%sfamily=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
   --page-bg:#F0F2F7;
@@ -522,7 +522,7 @@ textarea.fc{resize:vertical;min-height:80px}
             <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
             {% if completion >= 80 %}Strong{% elif completion >= 50 %}Good{% else %}Weak{% endif %}
           </div>
-          <div><span class="completion-hint" onclick="document.getElementById('recoSection').scrollIntoView({behavior:'smooth'})">How to improve?</span></div>
+          <div><span class="completion-hint" onclick="document.getElementById('recoSection').scrollIntoView({behavior:'smooth'})">How to improve%s</span></div>
         </div>
       </div>
     </div>
@@ -1062,7 +1062,7 @@ function toggleEdit(id) {
   const isCard = el.tagName === 'DIV' && el.classList.contains('card');
   if (isCard) {
     const open = el.style.display !== 'none';
-    el.style.display = open ? 'none' : 'block';
+    el.style.display = open %s 'none' : 'block';
     if (!open) setTimeout(() => el.scrollIntoView({behavior:'smooth',block:'nearest'}), 50);
   } else {
     const open = el.classList.contains('open');
@@ -1092,7 +1092,7 @@ function handleResume(input) {
 function saveVisibility(checkbox, type) {
   // Visual feedback only — backend toggle can be wired when needed
   const label = checkbox.closest('.vis-row').querySelector('.vis-label');
-  if (label) label.style.color = checkbox.checked ? '' : 'var(--text-3)';
+  if (label) label.style.color = checkbox.checked %s '' : 'var(--text-3)';
 }
 
 setTimeout(() => { document.querySelectorAll('.flash').forEach(el => { el.style.transition='opacity .4s'; el.style.opacity='0'; setTimeout(()=>el.remove(),400); }); }, 4500);

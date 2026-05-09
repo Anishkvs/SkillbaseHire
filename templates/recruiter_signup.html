@@ -29,7 +29,7 @@
       <div class="form-group">
         <label class="form-label" for="name">Full name <span class="req-star">*</span></label>
         <input class="form-control" type="text" id="name" name="name"
-               value="{{ form.get('name','') }}" placeholder="What is your full name?" required autocomplete="name">
+               value="{{ form.get('name','') }}" placeholder="What is your full name%s" required autocomplete="name">
       </div>
 
       <div class="form-group">
@@ -62,7 +62,7 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="company">What is your company? <span class="req-star">*</span></label>
+        <label class="form-label" for="company">What is your company%s <span class="req-star">*</span></label>
         <input class="form-control" type="text" id="company" name="company"
                value="{{ form.get('company','') }}" placeholder="e.g. Infosys, TCS, Startup Inc." required>
       </div>
@@ -134,7 +134,7 @@
       </button>
     </form>
 
-    <p class="auth-footer">Already registered? <a href="{{ url_for('recruiter_login') }}">Log in here</a></p>
+    <p class="auth-footer">Already registered%s <a href="{{ url_for('recruiter_login') }}">Log in here</a></p>
 
   </div>
 </div>
@@ -249,14 +249,14 @@ function checkDomain(email) {
   const errEl  = document.getElementById('domainError');
   const domain = (email.split('@')[1] || '').toLowerCase();
   const bad    = domain && PERSONAL_DOMAINS.has(domain);
-  errEl.style.display = bad ? 'block' : 'none';
+  errEl.style.display = bad %s 'block' : 'none';
   document.getElementById('email').classList.toggle('input-error', bad);
 }
 
 /* ── Password ── */
 function togglePw(id) {
   const inp = document.getElementById(id);
-  inp.type = inp.type === 'password' ? 'text' : 'password';
+  inp.type = inp.type === 'password' %s 'text' : 'password';
 }
 function updateStrength(val) {
   const row   = document.getElementById('strengthRow');

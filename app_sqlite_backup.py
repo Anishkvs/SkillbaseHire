@@ -172,7 +172,7 @@ def init_db():
             ('TestNG', 'Testing', 'Java testing framework inspired by JUnit'),
         ]
         db.executemany(
-            'INSERT OR IGNORE INTO skills (name, category, description) VALUES (?, ?, ?)',
+            'INSERT OR IGNORE INTO skills (name, category, description) VALUES (%s, %s, %s)',
             skills_data
         )
 
@@ -278,7 +278,7 @@ def recruiter_required(f):
 def get_current_user():
     if 'user_id' not in session:
         return None
-    return get_db().execute('SELECT * FROM users WHERE id = ?', [session['user_id']]).fetchone()
+    return get_db().execute('SELECT * FROM users WHERE id = %s', [session['user_id']]).fetchone()
 
 
 _PW_SPECIAL = r'[@#$%&*!]'
@@ -381,14 +381,14 @@ def home():
                 WHERE js.job_id = j.id) AS skills_list
         FROM jobs j
         JOIN recruiter_profiles rp ON j.recruiter_id = rp.user_id
-        WHERE j.active = '1'
+        WHERE j.active = 1
         ORDER BY j.created_at DESC LIMIT 6
     ''').fetchall()
 
     stats = {
-        'jobs': db.execute('SELECT COUNT(*) FROM jobs WHERE active="1"').fetchone()[0],
+        'jobs': db.execute('SELECT COUNT(*) FROM jobs WHERE active=1').fetchone()[0],
         'candidates': db.execute("SELECT COUNT(*) FROM users WHERE role='candidate'").fetchone()[0],
-        'companies': db.execute("SELECT COUNT(DISTINCT company) FROM jobs WHERE active='1'").fetchone()[0],
+        'companies': db.execute("SELECT COUNT(DISTINCT company) FROM jobs WHERE active=1").fetchone()[0],
     }
     return render_template('index.html', jobs=recent_jobs, stats=stats, user=get_current_user())
 
@@ -409,17 +409,17 @@ def jobs():
                 WHERE js.job_id = j.id) AS skills_list
         FROM jobs j
         JOIN recruiter_profiles rp ON j.recruiter_id = rp.user_id
-        WHERE j.active = '1'
+        WHERE j.active = 1
     '''
     params = []
     if search:
-        query += ' AND (j.title LIKE ? OR j.description LIKE ? OR j.company LIKE ?)'
+        query += ' AND (j.title LIKE %s OR j.description LIKE %s OR j.company LIKE %s)'
         params += [f'%{search}%', f'%{search}%', f'%{search}%']
     if location:
-        query += ' AND j.location LIKE ?'
+        query += ' AND j.location LIKE %s'
         params.append(f'%{location}%')
     if job_type:
-        query += ' AND j.job_type = ?'
+        query += ' AND j.job_type = %s'
         params.append(job_type)
     query += ' ORDER BY j.created_at DESC'
 
@@ -438,7 +438,7 @@ def job_detail(job_id):
         FROM jobs j
         JOIN recruiter_profiles rp ON j.recruiter_id = rp.user_id
         JOIN users u ON j.recruiter_id = u.id
-        WHERE j.id = ? AND j.active = 1
+        WHERE j.id = %s AND j.active = 1
     ''', [job_id]).fetchone()
 
     if not job:
@@ -447,7 +447,7 @@ def job_detail(job_id):
 
     job_skills = db.execute('''
         SELECT s.* FROM job_skills js JOIN skills s ON js.skill_id = s.id
-        WHERE js.job_id = ?
+        WHERE js.job_id = %s
     ''', [job_id]).fetchall()
 
     already_applied = False
@@ -455,12 +455,12 @@ def job_detail(job_id):
     my_verified_names = set()
     if session.get('role') == 'candidate':
         already_applied = db.execute(
-            'SELECT id FROM applications WHERE job_id=? AND candidate_id=?',
+            'SELECT id FROM applications WHERE job_id=%s AND candidate_id=%s',
             [job_id, session['user_id']]
         ).fetchone() is not None
         for row in db.execute('''
             SELECT s.name, us.verified FROM user_skills us
-            JOIN skills s ON us.skill_id = s.id WHERE us.user_id = ?
+            JOIN skills s ON us.skill_id = s.id WHERE us.user_id = %s
         ''', [session['user_id']]).fetchall():
             my_skill_names.add(row['name'])
             if row['verified']:
@@ -484,7 +484,7 @@ def skills_page():
     user_verified = set()
     if session.get('role') == 'candidate':
         for row in db.execute(
-            'SELECT skill_id, verified FROM user_skills WHERE user_id=?',
+            'SELECT skill_id, verified FROM user_skills WHERE user_id=%s',
             [session['user_id']]
         ).fetchall():
             user_added.add(row['skill_id'])
@@ -509,7 +509,7 @@ def skills_page():
 @candidate_required
 def add_skill(skill_id):
     db = get_db()
-    db.execute('INSERT OR IGNORE INTO user_skills (user_id, skill_id) VALUES (?, ?)',
+    db.execute('INSERT OR IGNORE INTO user_skills (user_id, skill_id) VALUES (%s, %s)',
                [session['user_id'], skill_id])
     db.commit()
     flash('Skill added to your profile!', 'success')
@@ -518,104 +518,104 @@ def add_skill(skill_id):
 
 QUIZ_BANK = {
     'Python': [
-        {'q': 'What is the output of type([])?', 'options': ["<class 'list'>", "<class 'array'>", "<class 'tuple'>", "list"], 'answer': 0},
-        {'q': 'Which keyword defines a function in Python?', 'options': ['func', 'def', 'function', 'lambda'], 'answer': 1},
-        {'q': 'What does PEP stand for?', 'options': ['Python Enhancement Proposal', 'Python Execution Protocol', 'Program Enhancement Package', 'Python Error Package'], 'answer': 0},
-        {'q': 'How do you create a list comprehension?', 'options': ['[x for x in range(5)]', '{x for x in range(5)}', '(x for x in range(5))', 'list(x for x in 5)'], 'answer': 0},
-        {'q': 'Which method removes and returns the last element of a list?', 'options': ['remove()', 'pop()', 'delete()', 'discard()'], 'answer': 1},
-        {'q': 'What is a Python decorator?', 'options': ['A class inheritance pattern', 'A function that modifies another function', 'A type of loop', 'A module import style'], 'answer': 1},
+        {'q': 'What is the output of type([])%s', 'options': ["<class 'list'>", "<class 'array'>", "<class 'tuple'>", "list"], 'answer': 0},
+        {'q': 'Which keyword defines a function in Python%s', 'options': ['func', 'def', 'function', 'lambda'], 'answer': 1},
+        {'q': 'What does PEP stand for%s', 'options': ['Python Enhancement Proposal', 'Python Execution Protocol', 'Program Enhancement Package', 'Python Error Package'], 'answer': 0},
+        {'q': 'How do you create a list comprehension%s', 'options': ['[x for x in range(5)]', '{x for x in range(5)}', '(x for x in range(5))', 'list(x for x in 5)'], 'answer': 0},
+        {'q': 'Which method removes and returns the last element of a list%s', 'options': ['remove()', 'pop()', 'delete()', 'discard()'], 'answer': 1},
+        {'q': 'What is a Python decorator%s', 'options': ['A class inheritance pattern', 'A function that modifies another function', 'A type of loop', 'A module import style'], 'answer': 1},
     ],
     'JavaScript': [
-        {'q': 'Which operator checks strict equality?', 'options': ['==', '===', '=', '!='], 'answer': 1},
-        {'q': 'What does typeof null return?', 'options': ['null', 'undefined', 'object', 'boolean'], 'answer': 2},
-        {'q': 'Which method adds an element to the end of an array?', 'options': ['push()', 'pop()', 'shift()', 'append()'], 'answer': 0},
-        {'q': 'What is a closure in JavaScript?', 'options': ['A function with access to its outer scope', 'A class constructor', 'A type of loop', 'An import statement'], 'answer': 0},
-        {'q': 'What does the spread operator (...) do?', 'options': ['Deletes array elements', 'Expands iterable elements', 'Creates a new loop', 'Declares a variable'], 'answer': 1},
-        {'q': 'Which keyword creates a block-scoped variable?', 'options': ['var', 'let', 'const', 'Both let and const'], 'answer': 3},
+        {'q': 'Which operator checks strict equality%s', 'options': ['==', '===', '=', '!='], 'answer': 1},
+        {'q': 'What does typeof null return%s', 'options': ['null', 'undefined', 'object', 'boolean'], 'answer': 2},
+        {'q': 'Which method adds an element to the end of an array%s', 'options': ['push()', 'pop()', 'shift()', 'append()'], 'answer': 0},
+        {'q': 'What is a closure in JavaScript%s', 'options': ['A function with access to its outer scope', 'A class constructor', 'A type of loop', 'An import statement'], 'answer': 0},
+        {'q': 'What does the spread operator (...) do%s', 'options': ['Deletes array elements', 'Expands iterable elements', 'Creates a new loop', 'Declares a variable'], 'answer': 1},
+        {'q': 'Which keyword creates a block-scoped variable%s', 'options': ['var', 'let', 'const', 'Both let and const'], 'answer': 3},
     ],
     'React': [
-        {'q': 'Which hook handles side effects?', 'options': ['useState', 'useEffect', 'useContext', 'useReducer'], 'answer': 1},
-        {'q': 'What is JSX?', 'options': ['A database query language', 'A syntax extension for JavaScript', 'A CSS preprocessor', 'A testing framework'], 'answer': 1},
-        {'q': 'What does useState return?', 'options': ['A value only', 'A setter only', 'A value and a setter function', 'An event handler'], 'answer': 2},
-        {'q': 'Which lifecycle runs after component mounts?', 'options': ['componentWillMount', 'componentDidMount', 'componentDidUpdate', 'render'], 'answer': 1},
-        {'q': 'What is the purpose of the key prop in lists?', 'options': ['Encrypts data', 'Helps React identify changed elements', 'Declares a CSS class', 'Triggers re-renders'], 'answer': 1},
-        {'q': 'Which hook provides access to context?', 'options': ['useRef', 'useMemo', 'useContext', 'useCallback'], 'answer': 2},
+        {'q': 'Which hook handles side effects%s', 'options': ['useState', 'useEffect', 'useContext', 'useReducer'], 'answer': 1},
+        {'q': 'What is JSX%s', 'options': ['A database query language', 'A syntax extension for JavaScript', 'A CSS preprocessor', 'A testing framework'], 'answer': 1},
+        {'q': 'What does useState return%s', 'options': ['A value only', 'A setter only', 'A value and a setter function', 'An event handler'], 'answer': 2},
+        {'q': 'Which lifecycle runs after component mounts%s', 'options': ['componentWillMount', 'componentDidMount', 'componentDidUpdate', 'render'], 'answer': 1},
+        {'q': 'What is the purpose of the key prop in lists%s', 'options': ['Encrypts data', 'Helps React identify changed elements', 'Declares a CSS class', 'Triggers re-renders'], 'answer': 1},
+        {'q': 'Which hook provides access to context%s', 'options': ['useRef', 'useMemo', 'useContext', 'useCallback'], 'answer': 2},
     ],
     'SQL': [
-        {'q': 'Which clause filters rows?', 'options': ['ORDER BY', 'GROUP BY', 'WHERE', 'HAVING'], 'answer': 2},
-        {'q': 'What does JOIN do?', 'options': ['Combines rows from two tables', 'Deletes rows', 'Adds a column', 'Sorts results'], 'answer': 0},
-        {'q': 'Which aggregate function counts rows?', 'options': ['SUM()', 'COUNT()', 'MAX()', 'AVG()'], 'answer': 1},
-        {'q': 'What is a PRIMARY KEY?', 'options': ['A unique identifier for each row', 'The first column', 'An index', 'A foreign reference'], 'answer': 0},
-        {'q': 'Which statement removes all rows from a table without deleting the table?', 'options': ['DELETE', 'DROP', 'TRUNCATE', 'REMOVE'], 'answer': 2},
-        {'q': 'What does DISTINCT do in a SELECT statement?', 'options': ['Sorts results', 'Removes duplicate rows', 'Filters by condition', 'Joins tables'], 'answer': 1},
+        {'q': 'Which clause filters rows%s', 'options': ['ORDER BY', 'GROUP BY', 'WHERE', 'HAVING'], 'answer': 2},
+        {'q': 'What does JOIN do%s', 'options': ['Combines rows from two tables', 'Deletes rows', 'Adds a column', 'Sorts results'], 'answer': 0},
+        {'q': 'Which aggregate function counts rows%s', 'options': ['SUM()', 'COUNT()', 'MAX()', 'AVG()'], 'answer': 1},
+        {'q': 'What is a PRIMARY KEY%s', 'options': ['A unique identifier for each row', 'The first column', 'An index', 'A foreign reference'], 'answer': 0},
+        {'q': 'Which statement removes all rows from a table without deleting the table%s', 'options': ['DELETE', 'DROP', 'TRUNCATE', 'REMOVE'], 'answer': 2},
+        {'q': 'What does DISTINCT do in a SELECT statement%s', 'options': ['Sorts results', 'Removes duplicate rows', 'Filters by condition', 'Joins tables'], 'answer': 1},
     ],
     'Java': [
-        {'q': 'Which keyword is used to define a class in Java?', 'options': ['class', 'Class', 'define', 'object'], 'answer': 0},
-        {'q': 'What is the default value of an int variable in Java?', 'options': ['null', '0', '1', 'undefined'], 'answer': 1},
-        {'q': 'Which collection interface allows duplicate elements?', 'options': ['Set', 'Map', 'List', 'SortedSet'], 'answer': 2},
-        {'q': 'What does JVM stand for?', 'options': ['Java Variable Machine', 'Java Virtual Machine', 'Java Verified Method', 'Java Visual Manager'], 'answer': 1},
-        {'q': 'Which access modifier makes a member accessible only within its own class?', 'options': ['public', 'protected', 'private', 'package-private'], 'answer': 2},
-        {'q': 'What is method overloading in Java?', 'options': ['Same method name, different parameters', 'Same method name, different class', 'Using abstract classes', 'Extending a parent class method'], 'answer': 0},
-        {'q': 'Which keyword prevents a method from being overridden?', 'options': ['static', 'abstract', 'final', 'private'], 'answer': 2},
-        {'q': 'What is the parent class of all Java classes?', 'options': ['Base', 'Object', 'Class', 'Super'], 'answer': 1},
+        {'q': 'Which keyword is used to define a class in Java%s', 'options': ['class', 'Class', 'define', 'object'], 'answer': 0},
+        {'q': 'What is the default value of an int variable in Java%s', 'options': ['null', '0', '1', 'undefined'], 'answer': 1},
+        {'q': 'Which collection interface allows duplicate elements%s', 'options': ['Set', 'Map', 'List', 'SortedSet'], 'answer': 2},
+        {'q': 'What does JVM stand for%s', 'options': ['Java Variable Machine', 'Java Virtual Machine', 'Java Verified Method', 'Java Visual Manager'], 'answer': 1},
+        {'q': 'Which access modifier makes a member accessible only within its own class%s', 'options': ['public', 'protected', 'private', 'package-private'], 'answer': 2},
+        {'q': 'What is method overloading in Java%s', 'options': ['Same method name, different parameters', 'Same method name, different class', 'Using abstract classes', 'Extending a parent class method'], 'answer': 0},
+        {'q': 'Which keyword prevents a method from being overridden%s', 'options': ['static', 'abstract', 'final', 'private'], 'answer': 2},
+        {'q': 'What is the parent class of all Java classes%s', 'options': ['Base', 'Object', 'Class', 'Super'], 'answer': 1},
     ],
     'Selenium': [
-        {'q': 'Which method locates a web element by its ID?', 'options': ['driver.findElement(By.name())', 'driver.findElement(By.id())', 'driver.getElement()', 'driver.locateById()'], 'answer': 1},
-        {'q': 'What does WebDriver.get() do?', 'options': ['Gets the page title', 'Opens a URL in the browser', 'Returns the current URL', 'Gets the page source'], 'answer': 1},
-        {'q': 'Which wait polls until a condition is met with configurable polling interval?', 'options': ['ImplicitWait', 'ExplicitWait', 'FluentWait', 'StaticWait'], 'answer': 2},
-        {'q': 'What is the correct way to click a button in Selenium?', 'options': ['element.press()', 'element.click()', 'element.trigger()', 'driver.click(element)'], 'answer': 1},
-        {'q': 'Which method retrieves visible text of an element?', 'options': ['element.getText()', 'element.getValue()', 'element.getContent()', 'element.innerHTML()'], 'answer': 0},
-        {'q': 'How do you switch to an iframe in Selenium?', 'options': ['driver.switchTo().frame()', 'driver.selectFrame()', 'driver.openFrame()', 'driver.navigateFrame()'], 'answer': 0},
-        {'q': 'Which XPath selects all input elements?', 'options': ['/input', '//input', './input', 'input[]'], 'answer': 1},
-        {'q': 'What does driver.quit() do differently from driver.close()?', 'options': ['Same behavior', 'Quits all windows and ends session', 'Closes only the active tab', 'Refreshes the browser'], 'answer': 1},
+        {'q': 'Which method locates a web element by its ID%s', 'options': ['driver.findElement(By.name())', 'driver.findElement(By.id())', 'driver.getElement()', 'driver.locateById()'], 'answer': 1},
+        {'q': 'What does WebDriver.get() do%s', 'options': ['Gets the page title', 'Opens a URL in the browser', 'Returns the current URL', 'Gets the page source'], 'answer': 1},
+        {'q': 'Which wait polls until a condition is met with configurable polling interval%s', 'options': ['ImplicitWait', 'ExplicitWait', 'FluentWait', 'StaticWait'], 'answer': 2},
+        {'q': 'What is the correct way to click a button in Selenium%s', 'options': ['element.press()', 'element.click()', 'element.trigger()', 'driver.click(element)'], 'answer': 1},
+        {'q': 'Which method retrieves visible text of an element%s', 'options': ['element.getText()', 'element.getValue()', 'element.getContent()', 'element.innerHTML()'], 'answer': 0},
+        {'q': 'How do you switch to an iframe in Selenium%s', 'options': ['driver.switchTo().frame()', 'driver.selectFrame()', 'driver.openFrame()', 'driver.navigateFrame()'], 'answer': 0},
+        {'q': 'Which XPath selects all input elements%s', 'options': ['/input', '//input', './input', 'input[]'], 'answer': 1},
+        {'q': 'What does driver.quit() do differently from driver.close()%s', 'options': ['Same behavior', 'Quits all windows and ends session', 'Closes only the active tab', 'Refreshes the browser'], 'answer': 1},
     ],
     'Playwright': [
-        {'q': 'Which Playwright method navigates to a URL?', 'options': ['page.visit()', 'page.goto()', 'page.open()', 'page.navigate()'], 'answer': 1},
-        {'q': 'How do you click an element in Playwright?', 'options': ['page.press()', 'page.tap()', 'page.click()', 'page.select()'], 'answer': 2},
-        {'q': 'Which method waits for a selector to appear?', 'options': ['page.awaitSelector()', 'page.waitForSelector()', 'page.findElement()', 'page.expectElement()'], 'answer': 1},
-        {'q': 'What does page.fill() do in Playwright?', 'options': ['Clears a form', 'Types text into an input field', 'Submits a form', 'Validates form data'], 'answer': 1},
-        {'q': 'Which Playwright method takes a screenshot?', 'options': ['page.capture()', 'page.screen()', 'page.screenshot()', 'page.snap()'], 'answer': 2},
-        {'q': 'How do you handle a dialog/alert in Playwright?', 'options': ['page.dismissDialog()', 'page.on("dialog", handler)', 'page.acceptAlert()', 'page.dismissAlert()'], 'answer': 1},
-        {'q': 'Which command runs Playwright tests in headed mode?', 'options': ['npx playwright test --visible', 'npx playwright test --headed', 'npx playwright test --gui', 'npx playwright test --open'], 'answer': 1},
-        {'q': 'What is a Playwright fixture?', 'options': ['A test helper for common setup/teardown', 'A CSS selector strategy', 'A browser configuration file', 'A type of assertion'], 'answer': 0},
+        {'q': 'Which Playwright method navigates to a URL%s', 'options': ['page.visit()', 'page.goto()', 'page.open()', 'page.navigate()'], 'answer': 1},
+        {'q': 'How do you click an element in Playwright%s', 'options': ['page.press()', 'page.tap()', 'page.click()', 'page.select()'], 'answer': 2},
+        {'q': 'Which method waits for a selector to appear%s', 'options': ['page.awaitSelector()', 'page.waitForSelector()', 'page.findElement()', 'page.expectElement()'], 'answer': 1},
+        {'q': 'What does page.fill() do in Playwright%s', 'options': ['Clears a form', 'Types text into an input field', 'Submits a form', 'Validates form data'], 'answer': 1},
+        {'q': 'Which Playwright method takes a screenshot%s', 'options': ['page.capture()', 'page.screen()', 'page.screenshot()', 'page.snap()'], 'answer': 2},
+        {'q': 'How do you handle a dialog/alert in Playwright%s', 'options': ['page.dismissDialog()', 'page.on("dialog", handler)', 'page.acceptAlert()', 'page.dismissAlert()'], 'answer': 1},
+        {'q': 'Which command runs Playwright tests in headed mode%s', 'options': ['npx playwright test --visible', 'npx playwright test --headed', 'npx playwright test --gui', 'npx playwright test --open'], 'answer': 1},
+        {'q': 'What is a Playwright fixture%s', 'options': ['A test helper for common setup/teardown', 'A CSS selector strategy', 'A browser configuration file', 'A type of assertion'], 'answer': 0},
     ],
     'Appium': [
-        {'q': 'What type of applications can Appium test?', 'options': ['Only Android', 'Only iOS', 'Both mobile and desktop native apps', 'Only web apps'], 'answer': 2},
-        {'q': 'Which capability sets the application package in Android Appium tests?', 'options': ['app', 'appPackage', 'appBundle', 'appActivity'], 'answer': 1},
-        {'q': 'What is the Appium server used for?', 'options': ['Running tests on the browser', 'Bridging test scripts and mobile devices', 'Compiling test code', 'Managing test data'], 'answer': 1},
-        {'q': 'Which locator strategy finds elements by accessibility ID?', 'options': ['By.id()', 'MobileBy.AccessibilityId()', 'By.accessibilityId()', 'MobileBy.id()'], 'answer': 1},
-        {'q': 'What does the desired capability "platformName" specify?', 'options': ['The device model', 'The OS (Android/iOS)', 'The app version', 'The automation engine'], 'answer': 1},
-        {'q': 'Which Appium driver is used for iOS automation?', 'options': ['UIAutomator2', 'XCUITest', 'Espresso', 'Instrumentation'], 'answer': 1},
-        {'q': 'How do you perform a swipe gesture in Appium?', 'options': ['driver.swipe()', 'new TouchAction(driver).press().moveTo().release().perform()', 'driver.gesture("swipe")', 'driver.scroll()'], 'answer': 1},
-        {'q': 'What is Appium Inspector used for?', 'options': ['Running test scripts', 'Inspecting UI elements and their properties', 'Generating test reports', 'Managing device connections'], 'answer': 1},
+        {'q': 'What type of applications can Appium test%s', 'options': ['Only Android', 'Only iOS', 'Both mobile and desktop native apps', 'Only web apps'], 'answer': 2},
+        {'q': 'Which capability sets the application package in Android Appium tests%s', 'options': ['app', 'appPackage', 'appBundle', 'appActivity'], 'answer': 1},
+        {'q': 'What is the Appium server used for%s', 'options': ['Running tests on the browser', 'Bridging test scripts and mobile devices', 'Compiling test code', 'Managing test data'], 'answer': 1},
+        {'q': 'Which locator strategy finds elements by accessibility ID%s', 'options': ['By.id()', 'MobileBy.AccessibilityId()', 'By.accessibilityId()', 'MobileBy.id()'], 'answer': 1},
+        {'q': 'What does the desired capability "platformName" specify%s', 'options': ['The device model', 'The OS (Android/iOS)', 'The app version', 'The automation engine'], 'answer': 1},
+        {'q': 'Which Appium driver is used for iOS automation%s', 'options': ['UIAutomator2', 'XCUITest', 'Espresso', 'Instrumentation'], 'answer': 1},
+        {'q': 'How do you perform a swipe gesture in Appium%s', 'options': ['driver.swipe()', 'new TouchAction(driver).press().moveTo().release().perform()', 'driver.gesture("swipe")', 'driver.scroll()'], 'answer': 1},
+        {'q': 'What is Appium Inspector used for%s', 'options': ['Running test scripts', 'Inspecting UI elements and their properties', 'Generating test reports', 'Managing device connections'], 'answer': 1},
     ],
     'API Testing': [
-        {'q': 'Which HTTP method is used to retrieve data from a server?', 'options': ['POST', 'PUT', 'GET', 'DELETE'], 'answer': 2},
-        {'q': 'What HTTP status code indicates a successful resource creation?', 'options': ['200', '201', '204', '400'], 'answer': 1},
-        {'q': 'What does a 404 status code mean?', 'options': ['Internal server error', 'Unauthorized', 'Resource not found', 'Bad request'], 'answer': 2},
-        {'q': 'Which tool is commonly used for API testing?', 'options': ['Selenium', 'Postman', 'JUnit', 'Appium'], 'answer': 1},
-        {'q': 'What is the purpose of an API authentication token?', 'options': ['To compress data', 'To verify the identity of the requester', 'To format JSON responses', 'To cache API responses'], 'answer': 1},
-        {'q': 'What does REST stand for?', 'options': ['Remote Execution Service Technology', 'Representational State Transfer', 'Reliable Endpoint Service Transfer', 'Resource Execution Standard Test'], 'answer': 1},
-        {'q': 'Which HTTP method updates an existing resource completely?', 'options': ['GET', 'POST', 'PUT', 'PATCH'], 'answer': 2},
-        {'q': 'What is JSON?', 'options': ['A database type', 'A JavaScript framework', 'A lightweight data interchange format', 'A testing protocol'], 'answer': 2},
+        {'q': 'Which HTTP method is used to retrieve data from a server%s', 'options': ['POST', 'PUT', 'GET', 'DELETE'], 'answer': 2},
+        {'q': 'What HTTP status code indicates a successful resource creation%s', 'options': ['200', '201', '204', '400'], 'answer': 1},
+        {'q': 'What does a 404 status code mean%s', 'options': ['Internal server error', 'Unauthorized', 'Resource not found', 'Bad request'], 'answer': 2},
+        {'q': 'Which tool is commonly used for API testing%s', 'options': ['Selenium', 'Postman', 'JUnit', 'Appium'], 'answer': 1},
+        {'q': 'What is the purpose of an API authentication token%s', 'options': ['To compress data', 'To verify the identity of the requester', 'To format JSON responses', 'To cache API responses'], 'answer': 1},
+        {'q': 'What does REST stand for%s', 'options': ['Remote Execution Service Technology', 'Representational State Transfer', 'Reliable Endpoint Service Transfer', 'Resource Execution Standard Test'], 'answer': 1},
+        {'q': 'Which HTTP method updates an existing resource completely%s', 'options': ['GET', 'POST', 'PUT', 'PATCH'], 'answer': 2},
+        {'q': 'What is JSON%s', 'options': ['A database type', 'A JavaScript framework', 'A lightweight data interchange format', 'A testing protocol'], 'answer': 2},
     ],
     'Manual Testing': [
-        {'q': 'What is a test case?', 'options': ['A bug report', 'A set of conditions to verify a feature', 'A deployment script', 'A performance benchmark'], 'answer': 1},
-        {'q': 'What is regression testing?', 'options': ['Testing new features only', 'Re-testing after changes to ensure nothing broke', 'Testing performance under load', 'Initial feature testing'], 'answer': 1},
-        {'q': 'What is the difference between severity and priority in bug reporting?', 'options': ['They are the same thing', 'Severity is impact on system; priority is urgency of fix', 'Priority is impact on system; severity is urgency', 'Both refer to bug frequency'], 'answer': 1},
-        {'q': 'What is exploratory testing?', 'options': ['Testing from a test script', 'Simultaneous learning, test design, and execution', 'Automated regression testing', 'User acceptance testing'], 'answer': 1},
-        {'q': 'What is a test plan?', 'options': ['A single test case', 'A document describing testing strategy, scope, and resources', 'A bug tracking spreadsheet', 'An automated test script'], 'answer': 1},
-        {'q': 'What is boundary value analysis?', 'options': ['Testing random inputs', 'Testing at the edges of valid input ranges', 'Checking UI boundaries', 'Testing network limits'], 'answer': 1},
-        {'q': 'Which testing type validates the system meets business requirements?', 'options': ['Unit testing', 'Integration testing', 'User Acceptance Testing (UAT)', 'Performance testing'], 'answer': 2},
-        {'q': 'What is a defect lifecycle?', 'options': ['Time to close a defect', 'Stages a bug goes through from discovery to closure', 'Number of defects per sprint', 'Defect density metric'], 'answer': 1},
+        {'q': 'What is a test case%s', 'options': ['A bug report', 'A set of conditions to verify a feature', 'A deployment script', 'A performance benchmark'], 'answer': 1},
+        {'q': 'What is regression testing%s', 'options': ['Testing new features only', 'Re-testing after changes to ensure nothing broke', 'Testing performance under load', 'Initial feature testing'], 'answer': 1},
+        {'q': 'What is the difference between severity and priority in bug reporting%s', 'options': ['They are the same thing', 'Severity is impact on system; priority is urgency of fix', 'Priority is impact on system; severity is urgency', 'Both refer to bug frequency'], 'answer': 1},
+        {'q': 'What is exploratory testing%s', 'options': ['Testing from a test script', 'Simultaneous learning, test design, and execution', 'Automated regression testing', 'User acceptance testing'], 'answer': 1},
+        {'q': 'What is a test plan%s', 'options': ['A single test case', 'A document describing testing strategy, scope, and resources', 'A bug tracking spreadsheet', 'An automated test script'], 'answer': 1},
+        {'q': 'What is boundary value analysis%s', 'options': ['Testing random inputs', 'Testing at the edges of valid input ranges', 'Checking UI boundaries', 'Testing network limits'], 'answer': 1},
+        {'q': 'Which testing type validates the system meets business requirements%s', 'options': ['Unit testing', 'Integration testing', 'User Acceptance Testing (UAT)', 'Performance testing'], 'answer': 2},
+        {'q': 'What is a defect lifecycle%s', 'options': ['Time to close a defect', 'Stages a bug goes through from discovery to closure', 'Number of defects per sprint', 'Defect density metric'], 'answer': 1},
     ],
 }
 
 DEFAULT_QUESTIONS = lambda name: [
-    {'q': f'Have you used {name} in a real project?', 'options': ['Yes, extensively', 'Yes, moderately', 'Yes, briefly', 'No, only studied it'], 'answer': 0},
-    {'q': f'How would you rate your {name} expertise?', 'options': ['Expert (5+ years)', 'Advanced (3-5 years)', 'Intermediate (1-3 years)', 'Beginner (<1 year)'], 'answer': 0},
-    {'q': f'Can you explain core {name} concepts to others?', 'options': ['Yes, confidently', 'Yes, mostly', 'Partially', 'Not yet'], 'answer': 0},
-    {'q': f'Do you keep up with {name} updates and best practices?', 'options': ['Yes, actively', 'Mostly yes', 'Occasionally', 'Rarely'], 'answer': 0},
+    {'q': f'Have you used {name} in a real project%s', 'options': ['Yes, extensively', 'Yes, moderately', 'Yes, briefly', 'No, only studied it'], 'answer': 0},
+    {'q': f'How would you rate your {name} expertise%s', 'options': ['Expert (5+ years)', 'Advanced (3-5 years)', 'Intermediate (1-3 years)', 'Beginner (<1 year)'], 'answer': 0},
+    {'q': f'Can you explain core {name} concepts to others%s', 'options': ['Yes, confidently', 'Yes, mostly', 'Partially', 'Not yet'], 'answer': 0},
+    {'q': f'Do you keep up with {name} updates and best practices%s', 'options': ['Yes, actively', 'Mostly yes', 'Occasionally', 'Rarely'], 'answer': 0},
 ]
 
 # Exam metadata per skill
@@ -638,13 +638,13 @@ DEFAULT_META = {'duration': 25, 'questions': 4, 'passing': 66, 'attempts': 3, 'l
 @candidate_required
 def exam_instructions(skill_id):
     db = get_db()
-    skill = db.execute('SELECT * FROM skills WHERE id=?', [skill_id]).fetchone()
+    skill = db.execute('SELECT * FROM skills WHERE id=%s', [skill_id]).fetchone()
     if not skill:
         flash('Skill not found.', 'error')
         return redirect(url_for('skills_page'))
     meta = SKILL_META.get(skill['name'], DEFAULT_META)
     existing = db.execute(
-        'SELECT score, verified FROM user_skills WHERE user_id=? AND skill_id=?',
+        'SELECT score, verified FROM user_skills WHERE user_id=%s AND skill_id=%s',
         [session['user_id'], skill_id]
     ).fetchone()
     return render_template('exam_instructions.html', skill=skill, meta=meta,
@@ -655,7 +655,7 @@ def exam_instructions(skill_id):
 @candidate_required
 def verify_skill(skill_id):
     db = get_db()
-    skill = db.execute('SELECT * FROM skills WHERE id=?', [skill_id]).fetchone()
+    skill = db.execute('SELECT * FROM skills WHERE id=%s', [skill_id]).fetchone()
     if not skill:
         flash('Skill not found.', 'error')
         return redirect(url_for('skills_page'))
@@ -669,14 +669,14 @@ def verify_skill(skill_id):
 
         if integrity_ended:
             existing = db.execute(
-                'SELECT id FROM user_skills WHERE user_id=? AND skill_id=?',
+                'SELECT id FROM user_skills WHERE user_id=%s AND skill_id=%s',
                 [session['user_id'], skill_id]
             ).fetchone()
             if existing:
-                db.execute('UPDATE user_skills SET verified=0, score=0 WHERE user_id=? AND skill_id=?',
+                db.execute('UPDATE user_skills SET verified=0, score=0 WHERE user_id=%s AND skill_id=%s',
                            [session['user_id'], skill_id])
             else:
-                db.execute('INSERT INTO user_skills (user_id, skill_id, verified, score) VALUES (?,?,0,0)',
+                db.execute('INSERT INTO user_skills (user_id, skill_id, verified, score) VALUES (%s,%s,0,0)',
                            [session['user_id'], skill_id])
             db.commit()
             session['exam_ended_data'] = {
@@ -695,14 +695,14 @@ def verify_skill(skill_id):
         verified = 1 if pct >= meta['passing'] else 0
 
         existing = db.execute(
-            'SELECT id FROM user_skills WHERE user_id=? AND skill_id=?',
+            'SELECT id FROM user_skills WHERE user_id=%s AND skill_id=%s',
             [session['user_id'], skill_id]
         ).fetchone()
         if existing:
-            db.execute('UPDATE user_skills SET verified=?, score=? WHERE user_id=? AND skill_id=?',
+            db.execute('UPDATE user_skills SET verified=%s, score=%s WHERE user_id=%s AND skill_id=%s',
                        [verified, pct, session['user_id'], skill_id])
         else:
-            db.execute('INSERT INTO user_skills (user_id, skill_id, verified, score) VALUES (?,?,?,?)',
+            db.execute('INSERT INTO user_skills (user_id, skill_id, verified, score) VALUES (%s,%s,%s,%s)',
                        [session['user_id'], skill_id, verified, pct])
         db.commit()
 
@@ -725,7 +725,7 @@ def verify_skill(skill_id):
         return redirect(url_for('exam_result', skill_id=skill_id))
 
     # GET — show active exam; add skill to profile if not already present
-    db.execute('INSERT OR IGNORE INTO user_skills (user_id, skill_id) VALUES (?,?)',
+    db.execute('INSERT OR IGNORE INTO user_skills (user_id, skill_id) VALUES (%s,%s)',
                [session['user_id'], skill_id])
     db.commit()
     return render_template('verify_skill.html', skill=skill, questions=questions,
@@ -738,8 +738,8 @@ def exam_result(skill_id):
     result = session.pop('exam_result', None)
     if not result or result.get('skill_id') != skill_id:
         db = get_db()
-        skill = db.execute('SELECT * FROM skills WHERE id=?', [skill_id]).fetchone()
-        us = db.execute('SELECT * FROM user_skills WHERE user_id=? AND skill_id=?',
+        skill = db.execute('SELECT * FROM skills WHERE id=%s', [skill_id]).fetchone()
+        us = db.execute('SELECT * FROM user_skills WHERE user_id=%s AND skill_id=%s',
                         [session['user_id'], skill_id]).fetchone()
         if not skill or not us:
             return redirect(url_for('skills_page'))
@@ -764,7 +764,7 @@ def exam_ended(skill_id):
     data = session.pop('exam_ended_data', None)
     if not data or data.get('skill_id') != skill_id:
         db = get_db()
-        skill = db.execute('SELECT * FROM skills WHERE id=?', [skill_id]).fetchone()
+        skill = db.execute('SELECT * FROM skills WHERE id=%s', [skill_id]).fetchone()
         if not skill:
             return redirect(url_for('skills_page'))
         data = {
@@ -821,7 +821,7 @@ def candidate_signup():
         if pw_err:     errors.append(pw_err)
         if not pw_err and password != confirm:
             errors.append('Passwords do not match.')
-        if not errors and get_db().execute('SELECT id FROM users WHERE email=?', [email]).fetchone():
+        if not errors and get_db().execute('SELECT id FROM users WHERE email=%s', [email]).fetchone():
             errors.append('An account with this email already exists.')
 
         if errors:
@@ -850,16 +850,16 @@ def candidate_signup():
         db = get_db()
         token = generate_verification_token(email)
         cur = db.execute(
-            'INSERT INTO users (name, email, password_hash, role, email_verified, verification_token) VALUES (?,?,?,?,0,?)',
+            'INSERT INTO users (name, email, password_hash, role, email_verified, verification_token) VALUES (%s,%s,%s,%s,0,%s)',
             [name, email, generate_password_hash(password), 'candidate', token]
         )
         uid = cur.lastrowid
         db.execute('''INSERT INTO candidate_profiles
                       (user_id, headline, location, bio, linkedin, github, phone, job_title, experience, resume_filename, work_status)
-                      VALUES (?,?,?,?,?,?,?,?,?,?,?)''',
+                      VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)''',
                    [uid, headline, location, bio, linkedin, github, phone, job_title, experience, resume_filename, work_status])
         for sid in skill_ids:
-            db.execute('INSERT OR IGNORE INTO user_skills (user_id, skill_id) VALUES (?,?)', [uid, sid])
+            db.execute('INSERT OR IGNORE INTO user_skills (user_id, skill_id) VALUES (%s,%s)', [uid, sid])
         db.commit()
 
         send_verification_email(email, name, token)
@@ -881,7 +881,7 @@ def candidate_login():
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
         user = get_db().execute(
-            "SELECT * FROM users WHERE email=? AND role='candidate'", [email]
+            "SELECT * FROM users WHERE email=%s AND role='candidate'", [email]
         ).fetchone()
         if user and check_password_hash(user['password_hash'], password):
             session.update({'user_id': user['id'], 'role': 'candidate', 'name': user['name']})
@@ -898,12 +898,12 @@ def candidate_login():
 @candidate_required
 def candidate_dashboard():
     db = get_db()
-    profile = db.execute('SELECT * FROM candidate_profiles WHERE user_id=?',
+    profile = db.execute('SELECT * FROM candidate_profiles WHERE user_id=%s',
                          [session['user_id']]).fetchone()
     my_skills = db.execute('''
         SELECT s.*, us.verified, us.score, us.added_at
         FROM user_skills us JOIN skills s ON us.skill_id = s.id
-        WHERE us.user_id=? ORDER BY us.verified DESC, s.name
+        WHERE us.user_id=%s ORDER BY us.verified DESC, s.name
     ''', [session['user_id']]).fetchall()
 
     applications = db.execute('''
@@ -911,17 +911,17 @@ def candidate_dashboard():
                rp.company AS company_name
         FROM applications a JOIN jobs j ON a.job_id = j.id
         JOIN recruiter_profiles rp ON j.recruiter_id = rp.user_id
-        WHERE a.candidate_id=? ORDER BY a.applied_at DESC
+        WHERE a.candidate_id=%s ORDER BY a.applied_at DESC
     ''', [session['user_id']]).fetchall()
 
     recommended = db.execute('''
         SELECT j.*, rp.company AS company_name,
                (SELECT COUNT(*) FROM job_skills js
                 JOIN user_skills us ON js.skill_id=us.skill_id
-                WHERE js.job_id=j.id AND us.user_id=?) AS skill_match
+                WHERE js.job_id=j.id AND us.user_id=%s) AS skill_match
         FROM jobs j JOIN recruiter_profiles rp ON j.recruiter_id=rp.user_id
-        WHERE j.active='1'
-          AND j.id NOT IN (SELECT job_id FROM applications WHERE candidate_id=?)
+        WHERE j.active=1
+          AND j.id NOT IN (SELECT job_id FROM applications WHERE candidate_id=%s)
         ORDER BY skill_match DESC, j.created_at DESC LIMIT 5
     ''', [session['user_id'], session['user_id']]).fetchall()
 
@@ -935,20 +935,20 @@ def candidate_dashboard():
 @candidate_required
 def candidate_profile():
     db = get_db()
-    profile = db.execute('SELECT * FROM candidate_profiles WHERE user_id=?',
+    profile = db.execute('SELECT * FROM candidate_profiles WHERE user_id=%s',
                          [session['user_id']]).fetchone()
 
     if request.method == 'POST':
         # Handle resume delete
         if request.form.get('delete_resume') == '1':
-            old = db.execute('SELECT resume_filename FROM candidate_profiles WHERE user_id=?',
+            old = db.execute('SELECT resume_filename FROM candidate_profiles WHERE user_id=%s',
                              [session['user_id']]).fetchone()
             if old and old['resume_filename']:
                 try:
                     os.remove(os.path.join(RESUME_UPLOAD_FOLDER, old['resume_filename']))
                 except OSError:
                     pass
-            db.execute('UPDATE candidate_profiles SET resume_filename=NULL WHERE user_id=?',
+            db.execute('UPDATE candidate_profiles SET resume_filename=NULL WHERE user_id=%s',
                        [session['user_id']])
             db.commit()
             flash('Resume deleted.', 'success')
@@ -967,11 +967,11 @@ def candidate_profile():
             flash('Name is required.', 'error')
             return redirect(url_for('candidate_profile'))
 
-        db.execute('UPDATE users SET name=? WHERE id=?', [name, session['user_id']])
+        db.execute('UPDATE users SET name=%s WHERE id=%s', [name, session['user_id']])
         db.execute('''UPDATE candidate_profiles
-                      SET headline=?, location=?, bio=?, linkedin=?, github=?,
-                          job_title=?, experience=?
-                      WHERE user_id=?''',
+                      SET headline=%s, location=%s, bio=%s, linkedin=%s, github=%s,
+                          job_title=%s, experience=%s
+                      WHERE user_id=%s''',
                    [headline, location, bio, linkedin, github,
                     job_title, experience, session['user_id']])
         db.commit()
@@ -982,7 +982,7 @@ def candidate_profile():
     my_skills = db.execute('''
         SELECT s.*, us.verified, us.score, us.added_at
         FROM user_skills us JOIN skills s ON us.skill_id = s.id
-        WHERE us.user_id=? ORDER BY us.verified DESC, s.name
+        WHERE us.user_id=%s ORDER BY us.verified DESC, s.name
     ''', [session['user_id']]).fetchall()
 
     return render_template('candidate_profile.html',
@@ -1013,7 +1013,7 @@ def upload_resume():
     filename = secure_filename(f"resume_{session['user_id']}_{file.filename}")
     db = get_db()
     # Delete old file if exists
-    old = db.execute('SELECT resume_filename FROM candidate_profiles WHERE user_id=?',
+    old = db.execute('SELECT resume_filename FROM candidate_profiles WHERE user_id=%s',
                      [session['user_id']]).fetchone()
     if old and old['resume_filename']:
         try:
@@ -1021,7 +1021,7 @@ def upload_resume():
         except OSError:
             pass
     file.save(os.path.join(RESUME_UPLOAD_FOLDER, filename))
-    db.execute('UPDATE candidate_profiles SET resume_filename=? WHERE user_id=?',
+    db.execute('UPDATE candidate_profiles SET resume_filename=%s WHERE user_id=%s',
                [filename, session['user_id']])
     db.commit()
     flash('Resume uploaded successfully!', 'success')
@@ -1032,7 +1032,7 @@ def upload_resume():
 @candidate_required
 def remove_skill(skill_id):
     db = get_db()
-    db.execute('DELETE FROM user_skills WHERE user_id=? AND skill_id=?',
+    db.execute('DELETE FROM user_skills WHERE user_id=%s AND skill_id=%s',
                [session['user_id'], skill_id])
     db.commit()
     flash('Skill removed.', 'success')
@@ -1048,30 +1048,30 @@ def apply_job(job_id):
     job = db.execute('''
         SELECT j.*, rp.company AS company_name
         FROM jobs j JOIN recruiter_profiles rp ON j.recruiter_id=rp.user_id
-        WHERE j.id=? AND j.active='1'
+        WHERE j.id=%s AND j.active=1
     ''', [job_id]).fetchone()
 
     if not job:
         flash('Job not found.', 'error')
         return redirect(url_for('jobs'))
 
-    if db.execute('SELECT id FROM applications WHERE job_id=? AND candidate_id=?',
+    if db.execute('SELECT id FROM applications WHERE job_id=%s AND candidate_id=%s',
                   [job_id, session['user_id']]).fetchone():
         flash('You already applied for this job.', 'warning')
         return redirect(url_for('job_detail', job_id=job_id))
 
     job_skills = db.execute('''
-        SELECT s.* FROM job_skills js JOIN skills s ON js.skill_id=s.id WHERE js.job_id=?
+        SELECT s.* FROM job_skills js JOIN skills s ON js.skill_id=s.id WHERE js.job_id=%s
     ''', [job_id]).fetchall()
 
     my_skills = {row['name']: row['verified'] for row in db.execute('''
         SELECT s.name, us.verified FROM user_skills us
-        JOIN skills s ON us.skill_id=s.id WHERE us.user_id=?
+        JOIN skills s ON us.skill_id=s.id WHERE us.user_id=%s
     ''', [session['user_id']]).fetchall()}
 
     if request.method == 'POST':
         cover_letter = request.form.get('cover_letter', '').strip()
-        db.execute('INSERT INTO applications (job_id, candidate_id, cover_letter) VALUES (?,?,?)',
+        db.execute('INSERT INTO applications (job_id, candidate_id, cover_letter) VALUES (%s,%s,%s)',
                    [job_id, session['user_id'], cover_letter])
         db.commit()
         flash(f'Application submitted for {job["title"]}!', 'success')
@@ -1120,7 +1120,7 @@ def recruiter_signup():
         if pw_err:     errors.append(pw_err)
         if not pw_err and password != confirm:
             errors.append('Passwords do not match.')
-        if not errors and get_db().execute('SELECT id FROM users WHERE email=?', [email]).fetchone():
+        if not errors and get_db().execute('SELECT id FROM users WHERE email=%s', [email]).fetchone():
             errors.append('An account with this email already exists.')
 
         if errors:
@@ -1131,13 +1131,13 @@ def recruiter_signup():
         db = get_db()
         token = generate_verification_token(email)
         cur = db.execute(
-            'INSERT INTO users (name, email, password_hash, role, email_verified, verification_token) VALUES (?,?,?,?,0,?)',
+            'INSERT INTO users (name, email, password_hash, role, email_verified, verification_token) VALUES (%s,%s,%s,%s,0,%s)',
             [name, email, generate_password_hash(password), 'recruiter', token]
         )
         uid = cur.lastrowid
         db.execute('''INSERT INTO recruiter_profiles
                       (user_id, company, company_bio, website, phone, job_title, company_size, industry, company_location)
-                      VALUES (?,?,?,?,?,?,?,?,?)''',
+                      VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)''',
                    [uid, company, company_bio, website, phone, job_title, company_size, industry, company_location])
         db.commit()
 
@@ -1159,7 +1159,7 @@ def recruiter_login():
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
         user = get_db().execute(
-            "SELECT * FROM users WHERE email=? AND role='recruiter'", [email]
+            "SELECT * FROM users WHERE email=%s AND role='recruiter'", [email]
         ).fetchone()
         if user and check_password_hash(user['password_hash'], password):
             session.update({'user_id': user['id'], 'role': 'recruiter', 'name': user['name']})
@@ -1176,25 +1176,25 @@ def recruiter_login():
 @recruiter_required
 def recruiter_dashboard():
     db = get_db()
-    profile = db.execute('SELECT * FROM recruiter_profiles WHERE user_id=?',
+    profile = db.execute('SELECT * FROM recruiter_profiles WHERE user_id=%s',
                          [session['user_id']]).fetchone()
     my_jobs = db.execute('''
         SELECT j.*,
                (SELECT COUNT(*) FROM applications WHERE job_id=j.id) AS app_count
-        FROM jobs j WHERE j.recruiter_id=? ORDER BY j.created_at DESC
+        FROM jobs j WHERE j.recruiter_id=%s ORDER BY j.created_at DESC
     ''', [session['user_id']]).fetchall()
 
     recent_apps = db.execute('''
         SELECT a.*, j.title AS job_title, u.name AS candidate_name, u.email AS candidate_email
         FROM applications a JOIN jobs j ON a.job_id=j.id
         JOIN users u ON a.candidate_id=u.id
-        WHERE j.recruiter_id=? ORDER BY a.applied_at DESC LIMIT 10
+        WHERE j.recruiter_id=%s ORDER BY a.applied_at DESC LIMIT 10
     ''', [session['user_id']]).fetchall()
 
     total_apps = sum(j['app_count'] for j in my_jobs)
     new_apps = db.execute('''
         SELECT COUNT(*) FROM applications a JOIN jobs j ON a.job_id=j.id
-        WHERE j.recruiter_id=? AND a.status='applied'
+        WHERE j.recruiter_id=%s AND a.status='applied'
     ''', [session['user_id']]).fetchone()[0]
 
     stats = {
@@ -1213,7 +1213,7 @@ def recruiter_dashboard():
 def post_job():
     db = get_db()
     all_skills = db.execute('SELECT * FROM skills ORDER BY category, name').fetchall()
-    profile = db.execute('SELECT * FROM recruiter_profiles WHERE user_id=?',
+    profile = db.execute('SELECT * FROM recruiter_profiles WHERE user_id=%s',
                          [session['user_id']]).fetchone()
 
     if request.method == 'POST':
@@ -1231,19 +1231,19 @@ def post_job():
             return render_template('post_job.html', user=get_current_user(),
                                    all_skills=all_skills, profile=profile)
 
-        if not db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()['email_verified']:
+        if not db.execute('SELECT email_verified FROM users WHERE id=%s', [session['user_id']]).fetchone()['email_verified']:
             flash('Please verify your work email before posting a live job.', 'error')
             return redirect(url_for('recruiter_dashboard'))
 
         cur = db.execute('''
             INSERT INTO jobs (recruiter_id, title, company, location, job_type,
                               description, requirements, salary_min, salary_max)
-            VALUES (?,?,?,?,?,?,?,?,?)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)
         ''', [session['user_id'], title, profile['company'], location, job_type,
               description, requirements, salary_min, salary_max])
         job_id = cur.lastrowid
         for sid in skill_ids:
-            db.execute('INSERT OR IGNORE INTO job_skills (job_id, skill_id) VALUES (?,?)',
+            db.execute('INSERT OR IGNORE INTO job_skills (job_id, skill_id) VALUES (%s,%s)',
                        [job_id, sid])
         db.commit()
         flash(f'"{title}" posted successfully!', 'success')
@@ -1257,10 +1257,10 @@ def post_job():
 @recruiter_required
 def toggle_job(job_id):
     db = get_db()
-    job = db.execute('SELECT * FROM jobs WHERE id=? AND recruiter_id=?',
+    job = db.execute('SELECT * FROM jobs WHERE id=%s AND recruiter_id=%s',
                      [job_id, session['user_id']]).fetchone()
     if job:
-        db.execute('UPDATE jobs SET active=? WHERE id=?', [0 if job['active'] else 1, job_id])
+        db.execute('UPDATE jobs SET active=%s WHERE id=%s', [0 if job['active'] else 1, job_id])
         db.commit()
         flash('Job status updated.', 'success')
     return redirect(url_for('recruiter_dashboard'))
@@ -1270,7 +1270,7 @@ def toggle_job(job_id):
 @recruiter_required
 def job_applications(job_id):
     db = get_db()
-    job = db.execute('SELECT * FROM jobs WHERE id=? AND recruiter_id=?',
+    job = db.execute('SELECT * FROM jobs WHERE id=%s AND recruiter_id=%s',
                      [job_id, session['user_id']]).fetchone()
     if not job:
         flash('Job not found.', 'error')
@@ -1284,7 +1284,7 @@ def job_applications(job_id):
                 WHERE us.user_id=a.candidate_id) AS skills_data
         FROM applications a JOIN users u ON a.candidate_id=u.id
         LEFT JOIN candidate_profiles cp ON a.candidate_id=cp.user_id
-        WHERE a.job_id=? ORDER BY a.applied_at DESC
+        WHERE a.job_id=%s ORDER BY a.applied_at DESC
     ''', [job_id]).fetchall()
 
     applications = []
@@ -1307,17 +1307,17 @@ def update_app_status(app_id):
 
     db = get_db()
     if status == 'shortlisted':
-        verified = db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()['email_verified']
+        verified = db.execute('SELECT email_verified FROM users WHERE id=%s', [session['user_id']]).fetchone()['email_verified']
         if not verified:
             flash('Please verify your work email before shortlisting candidates.', 'error')
             return redirect(url_for('recruiter_dashboard'))
     row = db.execute('''
         SELECT a.job_id FROM applications a JOIN jobs j ON a.job_id=j.id
-        WHERE a.id=? AND j.recruiter_id=?
+        WHERE a.id=%s AND j.recruiter_id=%s
     ''', [app_id, session['user_id']]).fetchone()
 
     if row:
-        db.execute('UPDATE applications SET status=? WHERE id=?', [status, app_id])
+        db.execute('UPDATE applications SET status=%s WHERE id=%s', [status, app_id])
         db.commit()
         flash('Status updated.', 'success')
         return redirect(url_for('job_applications', job_id=row['job_id']))
@@ -1330,7 +1330,7 @@ def update_app_status(app_id):
 @recruiter_required
 def search_candidates():
     db = get_db()
-    viewer = db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()
+    viewer = db.execute('SELECT email_verified FROM users WHERE id=%s', [session['user_id']]).fetchone()
     if viewer and not viewer['email_verified']:
         flash('Please verify your work email to search and view candidate profiles.', 'error')
         return redirect(url_for('recruiter_dashboard'))
@@ -1352,15 +1352,15 @@ def search_candidates():
     '''
     params = []
     if search:
-        query += ' AND (u.name LIKE ? OR cp.headline LIKE ? OR cp.bio LIKE ?)'
+        query += ' AND (u.name LIKE %s OR cp.headline LIKE %s OR cp.bio LIKE %s)'
         params += [f'%{search}%', f'%{search}%', f'%{search}%']
     if location_filter:
-        query += ' AND cp.location LIKE ?'
+        query += ' AND cp.location LIKE %s'
         params.append(f'%{location_filter}%')
     if skill_filter:
         query += ''' AND u.id IN (
             SELECT us.user_id FROM user_skills us JOIN skills s ON us.skill_id=s.id
-            WHERE s.name LIKE ?)'''
+            WHERE s.name LIKE %s)'''
         params.append(f'%{skill_filter}%')
     if verified_only:
         query += ' AND (SELECT COUNT(*) FROM user_skills WHERE user_id=u.id AND verified=1) > 0'
@@ -1388,7 +1388,7 @@ def candidate_detail(candidate_id):
 
     # Block unverified recruiters from viewing candidate profiles
     if session.get('role') == 'recruiter':
-        viewer = db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()
+        viewer = db.execute('SELECT email_verified FROM users WHERE id=%s', [session['user_id']]).fetchone()
         if viewer and not viewer['email_verified']:
             return render_template('candidate_detail.html', candidate=None, skills=[],
                                    blocked_recruiter=True, user=get_current_user())
@@ -1397,7 +1397,7 @@ def candidate_detail(candidate_id):
         SELECT u.id, u.name, u.email, u.created_at, u.email_verified,
                cp.headline, cp.location, cp.bio, cp.linkedin, cp.github
         FROM users u LEFT JOIN candidate_profiles cp ON u.id = cp.user_id
-        WHERE u.id = ? AND u.role = 'candidate'
+        WHERE u.id = %s AND u.role = 'candidate'
     ''', [candidate_id]).fetchone()
     if not candidate:
         return render_template('candidate_detail.html', candidate=None, skills=[],
@@ -1405,7 +1405,7 @@ def candidate_detail(candidate_id):
     skills = db.execute('''
         SELECT s.id, s.name, s.category, us.verified, us.score
         FROM user_skills us JOIN skills s ON us.skill_id = s.id
-        WHERE us.user_id = ?
+        WHERE us.user_id = %s
         ORDER BY us.verified DESC, s.name
     ''', [candidate_id]).fetchall()
     # Skill verification scores are hidden from recruiters until candidate verifies email
@@ -1424,7 +1424,7 @@ def recruiter_detail(recruiter_id):
         SELECT u.id, u.name, u.email, u.created_at,
                rp.company, rp.company_bio, rp.website
         FROM users u LEFT JOIN recruiter_profiles rp ON u.id = rp.user_id
-        WHERE u.id = ? AND u.role = 'recruiter'
+        WHERE u.id = %s AND u.role = 'recruiter'
     ''', [recruiter_id]).fetchone()
     if not recruiter:
         return render_template('recruiter_detail.html', recruiter=None, jobs=[],
@@ -1434,7 +1434,7 @@ def recruiter_detail(recruiter_id):
                (SELECT GROUP_CONCAT(s.name, ', ')
                 FROM job_skills js JOIN skills s ON js.skill_id = s.id
                 WHERE js.job_id = j.id) AS skills_list
-        FROM jobs j WHERE j.recruiter_id = ? AND j.active = 1
+        FROM jobs j WHERE j.recruiter_id = %s AND j.active = 1
         ORDER BY j.created_at DESC
     ''', [recruiter_id]).fetchall()
     return render_template('recruiter_detail.html', recruiter=recruiter, jobs=jobs,
@@ -1460,14 +1460,14 @@ def verify_email(token):
         flash('This verification link is invalid or has expired. Please request a new one.', 'error')
         return redirect(url_for('home'))
     db = get_db()
-    user = db.execute('SELECT * FROM users WHERE email=?', [email]).fetchone()
+    user = db.execute('SELECT * FROM users WHERE email=%s', [email]).fetchone()
     if not user:
         flash('Account not found.', 'error')
         return redirect(url_for('home'))
     if user['email_verified']:
         flash('Your email is already verified. Please log in.', 'success')
     else:
-        db.execute('UPDATE users SET email_verified=1, verification_token=NULL WHERE email=?', [email])
+        db.execute('UPDATE users SET email_verified=1, verification_token=NULL WHERE email=%s', [email])
         db.commit()
         flash('Email verified! Welcome to SkillBaseHire.', 'success')
     session.pop('pending_email', None)
@@ -1483,7 +1483,7 @@ def resend_verification():
     db = get_db()
     # Logged-in user resending from dashboard banner
     if session.get('user_id'):
-        user = db.execute('SELECT * FROM users WHERE id=?', [session['user_id']]).fetchone()
+        user = db.execute('SELECT * FROM users WHERE id=%s', [session['user_id']]).fetchone()
         if not user:
             flash('Account not found.', 'error')
             return redirect(url_for('home'))
@@ -1491,7 +1491,7 @@ def resend_verification():
             flash('Your email is already verified.', 'success')
             return redirect(url_for('candidate_dashboard' if user['role'] == 'candidate' else 'recruiter_dashboard'))
         token = generate_verification_token(user['email'])
-        db.execute('UPDATE users SET verification_token=? WHERE id=?', [token, user['id']])
+        db.execute('UPDATE users SET verification_token=%s WHERE id=%s', [token, user['id']])
         db.commit()
         send_verification_email(user['email'], user['name'], token)
         flash('Verification email sent! Please check your inbox.', 'success')
@@ -1502,7 +1502,7 @@ def resend_verification():
     if not email:
         flash('No pending verification found. Please sign up again.', 'error')
         return redirect(url_for('register'))
-    user = db.execute('SELECT * FROM users WHERE email=?', [email]).fetchone()
+    user = db.execute('SELECT * FROM users WHERE email=%s', [email]).fetchone()
     if not user:
         flash('Account not found.', 'error')
         return redirect(url_for('register'))
@@ -1510,7 +1510,7 @@ def resend_verification():
         flash('Your email is already verified. Please log in.', 'success')
         return redirect(url_for('candidate_login' if user['role'] == 'candidate' else 'recruiter_login'))
     token = generate_verification_token(email)
-    db.execute('UPDATE users SET verification_token=? WHERE email=?', [token, email])
+    db.execute('UPDATE users SET verification_token=%s WHERE email=%s', [token, email])
     db.commit()
     send_verification_email(email, user['name'], token)
     flash('Verification email resent. Please check your inbox.', 'success')

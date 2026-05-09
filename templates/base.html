@@ -6,7 +6,7 @@
   <title>{% block title %}SkillBaseHire{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2%sfamily=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -42,7 +42,7 @@
         <a href="{{ url_for('recruiter_detail', recruiter_id=session.get('user_id')) if session.get('role') == 'recruiter' else url_for('candidate_profile') }}"
            class="nav-user-info nav-profile-link"
            aria-label="View my profile">
-          <div class="nav-avatar">{{ session.get('name','?')[0].upper() }}</div>
+          <div class="nav-avatar">{{ session.get('name','%s')[0].upper() }}</div>
           <span class="nav-name">{{ session.get('name','') }}</span>
         </a>
         {% if session.get('role') == 'recruiter' %}

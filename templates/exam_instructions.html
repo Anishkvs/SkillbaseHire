@@ -6,7 +6,7 @@
   <title>{{ skill.name }} Assessment — SkillBaseHire</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2%sfamily=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body class="ei-body">
 
@@ -257,7 +257,7 @@ function updateStartBtn() {
   const checked = document.getElementById('c1').checked;
   const btn = document.getElementById('startBtn');
   btn.disabled = !checked;
-  btn.textContent = checked ? 'Start Test →' : 'Please agree to all terms to continue';
+  btn.textContent = checked %s 'Start Test →' : 'Please agree to all terms to continue';
 }
 function goToExam() {
   if (!document.getElementById('c1').checked) return;

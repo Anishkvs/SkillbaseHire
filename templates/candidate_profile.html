@@ -724,6 +724,8 @@ textarea.fc{resize:vertical;min-height:80px}
             <input type="hidden" name="location" value="{{ profile.location if profile else '' }}">
             <input type="hidden" name="linkedin" value="{{ profile.linkedin if profile else '' }}">
             <input type="hidden" name="github" value="{{ profile.github if profile else '' }}">
+            <input type="hidden" name="job_title" value="{{ profile.job_title if profile else '' }}">
+            <input type="hidden" name="experience" value="{{ profile.experience if profile else '' }}">
             <div class="fg"><label>About Me</label><textarea class="fc" name="bio" rows="5" placeholder="Describe your experience, skills, and what you're looking for...">{{ profile.bio if profile else '' }}</textarea></div>
             <div class="form-actions"><button type="submit" class="btn btn-primary btn-sm">Save</button><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAbout')">Cancel</button></div>
           </form>
@@ -734,28 +736,55 @@ textarea.fc{resize:vertical;min-height:80px}
       <div class="card">
         <div class="card-head">
           <div class="card-title">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
             Work Experience
           </div>
           <button class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddExp')">+ Add Experience</button>
         </div>
         <div class="card-body">
+          {% if experiences %}
+          <div class="tl">
+            {% for exp in experiences %}
+            <div class="tl-item">
+              <div class="tl-left">
+                <div class="tl-logo">{{ exp.company[0].upper() }}</div>
+                <div class="tl-line"></div>
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:.9375rem">{{ exp.designation }}</div>
+                <div style="font-size:.8125rem;color:var(--text-2);margin-bottom:.25rem">{{ exp.company }}</div>
+                <div class="tl-meta">
+                  {% if exp.start_date %}
+                  <span><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>{{ exp.start_date }} — {{ 'Present' if exp.is_current else (exp.end_date or 'Present') }}</span>
+                  {% endif %}
+                </div>
+                {% if exp.description %}<p style="font-size:.8125rem;color:var(--text-2);margin-top:.375rem;line-height:1.5">{{ exp.description }}</p>{% endif %}
+              </div>
+              <form method="post" action="{{ url_for('delete_experience', exp_id=exp.id) }}" style="flex-shrink:0">
+                <button type="submit" class="btn-icon" title="Remove" onclick="return confirm('Remove this experience?')"><svg width="13" height="13" fill="none" stroke="var(--red)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
           <div class="empty-state">
-            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
             <p>Add your work experience to improve your profile strength.</p>
             <button class="btn btn-outline btn-sm" onclick="toggleEdit('editAddExp')">Add Experience</button>
           </div>
+          {% endif %}
         </div>
         <div id="editAddExp" class="edit-panel">
-          <p style="font-size:.8125rem;color:var(--text-3);margin-bottom:.875rem;padding:.5rem .75rem;background:var(--accent-light);border-radius:var(--radius-xs);">Work experience section is coming soon — database support will be added.</p>
-          <div class="form-grid">
-            <div class="fg"><label>Company</label><input class="fc" type="text" placeholder="e.g. Aspire Systems" disabled></div>
-            <div class="fg"><label>Designation</label><input class="fc" type="text" placeholder="e.g. QA Automation Engineer" disabled></div>
-            <div class="fg"><label>Start Date</label><input class="fc" type="month" disabled></div>
-            <div class="fg"><label>End Date</label><input class="fc" type="month" placeholder="Present" disabled></div>
-            <div class="fg span-2"><label>Description</label><textarea class="fc" rows="3" disabled></textarea></div>
-          </div>
-          <div class="form-actions"><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddExp')">Close</button></div>
+          <form method="post" action="{{ url_for('add_experience') }}">
+            <div class="form-grid">
+              <div class="fg"><label>Company *</label><input class="fc" type="text" name="company" placeholder="e.g. Aspire Systems" required></div>
+              <div class="fg"><label>Designation *</label><input class="fc" type="text" name="designation" placeholder="e.g. QA Automation Engineer" required></div>
+              <div class="fg"><label>Start Date</label><input class="fc" type="month" name="start_date"></div>
+              <div class="fg"><label>End Date</label><input class="fc" type="month" name="end_date" placeholder="Leave blank if current"><label style="display:flex;align-items:center;gap:.375rem;margin-top:.375rem;font-size:.8125rem;cursor:pointer"><input type="checkbox" name="is_current" value="1"> Currently working here</label></div>
+              <div class="fg span-2"><label>Description</label><textarea class="fc" name="description" rows="3" placeholder="Describe your role and achievements..."></textarea></div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn btn-primary btn-sm">Save Experience</button><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddExp')">Cancel</button></div>
+          </form>
         </div>
       </div>
 
@@ -769,21 +798,45 @@ textarea.fc{resize:vertical;min-height:80px}
           <button class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddEdu')">+ Add Education</button>
         </div>
         <div class="card-body">
+          {% if educations %}
+          <div class="tl">
+            {% for edu in educations %}
+            <div class="tl-item">
+              <div class="tl-left">
+                <div class="tl-logo" style="font-size:.6875rem;font-weight:700;color:var(--blue)">EDU</div>
+                <div class="tl-line"></div>
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:.9375rem">{{ edu.degree }}</div>
+                <div style="font-size:.8125rem;color:var(--text-2);margin-bottom:.25rem">{{ edu.college }}</div>
+                {% if edu.start_year or edu.end_year %}
+                <div class="tl-meta"><span>{{ edu.start_year }}{% if edu.end_year %} — {{ edu.end_year }}{% endif %}</span></div>
+                {% endif %}
+              </div>
+              <form method="post" action="{{ url_for('delete_education', edu_id=edu.id) }}" style="flex-shrink:0">
+                <button type="submit" class="btn-icon" title="Remove" onclick="return confirm('Remove this education?')"><svg width="13" height="13" fill="none" stroke="var(--red)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
           <div class="empty-state">
             <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
             <p>Add your educational qualifications.</p>
             <button class="btn btn-outline btn-sm" onclick="toggleEdit('editAddEdu')">Add Education</button>
           </div>
+          {% endif %}
         </div>
         <div id="editAddEdu" class="edit-panel">
-          <p style="font-size:.8125rem;color:var(--text-3);margin-bottom:.875rem;padding:.5rem .75rem;background:var(--accent-light);border-radius:var(--radius-xs);">Education section is coming soon.</p>
-          <div class="form-grid">
-            <div class="fg"><label>Degree</label><input class="fc" type="text" placeholder="e.g. B.Tech / MCA" disabled></div>
-            <div class="fg"><label>College / University</label><input class="fc" type="text" placeholder="e.g. Anna University" disabled></div>
-            <div class="fg"><label>Start Year</label><input class="fc" type="number" disabled></div>
-            <div class="fg"><label>End Year</label><input class="fc" type="number" disabled></div>
-          </div>
-          <div class="form-actions"><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddEdu')">Close</button></div>
+          <form method="post" action="{{ url_for('add_education') }}">
+            <div class="form-grid">
+              <div class="fg"><label>Degree *</label><input class="fc" type="text" name="degree" placeholder="e.g. B.Tech / MCA / B.Sc" required></div>
+              <div class="fg"><label>College / University *</label><input class="fc" type="text" name="college" placeholder="e.g. Anna University" required></div>
+              <div class="fg"><label>Start Year</label><input class="fc" type="number" name="start_year" placeholder="e.g. 2018" min="1950" max="2030"></div>
+              <div class="fg"><label>End Year</label><input class="fc" type="number" name="end_year" placeholder="e.g. 2022" min="1950" max="2030"></div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn btn-primary btn-sm">Save Education</button><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddEdu')">Cancel</button></div>
+          </form>
         </div>
       </div>
 
@@ -797,21 +850,42 @@ textarea.fc{resize:vertical;min-height:80px}
           <button class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddCert')">+ Add Certification</button>
         </div>
         <div class="card-body">
+          {% if certifications %}
+          <div class="cert-list">
+            {% for cert in certifications %}
+            <div class="cert-item" style="display:flex;align-items:center;gap:.875rem">
+              <div style="width:36px;height:36px;border-radius:var(--radius-xs);background:var(--amber-light);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="16" height="16" fill="none" stroke="var(--amber)" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:.875rem">{{ cert.cert_name }}</div>
+                <div style="font-size:.75rem;color:var(--text-2)">{{ cert.issued_by }}{% if cert.year %} · {{ cert.year }}{% endif %}</div>
+                {% if cert.credential_url %}<a href="{{ cert.credential_url }}" target="_blank" style="font-size:.75rem;color:var(--accent)">View Credential →</a>{% endif %}
+              </div>
+              <form method="post" action="{{ url_for('delete_certification', cert_id=cert.id) }}" style="flex-shrink:0">
+                <button type="submit" class="btn-icon" title="Remove" onclick="return confirm('Remove this certification?')"><svg width="13" height="13" fill="none" stroke="var(--red)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
           <div class="empty-state">
             <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
             <p>Add your professional certifications to build credibility.</p>
             <button class="btn btn-outline btn-sm" onclick="toggleEdit('editAddCert')">Add Certification</button>
           </div>
+          {% endif %}
         </div>
         <div id="editAddCert" class="edit-panel">
-          <p style="font-size:.8125rem;color:var(--text-3);margin-bottom:.875rem;padding:.5rem .75rem;background:var(--accent-light);border-radius:var(--radius-xs);">Certifications section is coming soon.</p>
-          <div class="form-grid">
-            <div class="fg"><label>Certificate Name</label><input class="fc" type="text" placeholder="e.g. ISTQB Foundation Level" disabled></div>
-            <div class="fg"><label>Issued By</label><input class="fc" type="text" placeholder="e.g. ISTQB" disabled></div>
-            <div class="fg"><label>Year</label><input class="fc" type="number" disabled></div>
-            <div class="fg"><label>Credential URL</label><input class="fc" type="url" disabled></div>
-          </div>
-          <div class="form-actions"><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddCert')">Close</button></div>
+          <form method="post" action="{{ url_for('add_certification') }}">
+            <div class="form-grid">
+              <div class="fg"><label>Certificate Name *</label><input class="fc" type="text" name="cert_name" placeholder="e.g. ISTQB Foundation Level" required></div>
+              <div class="fg"><label>Issued By</label><input class="fc" type="text" name="issued_by" placeholder="e.g. ISTQB"></div>
+              <div class="fg"><label>Year</label><input class="fc" type="number" name="year" placeholder="e.g. 2023" min="1990" max="2030"></div>
+              <div class="fg"><label>Credential URL</label><input class="fc" type="url" name="credential_url" placeholder="https://..."></div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn btn-primary btn-sm">Save Certification</button><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddCert')">Cancel</button></div>
+          </form>
         </div>
       </div>
 
@@ -825,20 +899,43 @@ textarea.fc{resize:vertical;min-height:80px}
           <button class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddProj')">+ Add Project</button>
         </div>
         <div class="card-body">
+          {% if projects %}
+          <div style="display:flex;flex-direction:column;gap:.875rem">
+            {% for proj in projects %}
+            <div style="padding:.875rem 1rem;background:var(--page-bg);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;gap:.875rem;align-items:flex-start">
+              <div style="width:36px;height:36px;border-radius:var(--radius-xs);background:var(--purple-light);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="16" height="16" fill="none" stroke="var(--purple)" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg>
+              </div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:.9rem;margin-bottom:.125rem">{{ proj.project_name }}</div>
+                {% if proj.domain %}<div style="font-size:.75rem;color:var(--accent);margin-bottom:.25rem">{{ proj.domain }}</div>{% endif %}
+                {% if proj.description %}<p style="font-size:.8125rem;color:var(--text-2);line-height:1.5;margin-bottom:.25rem">{{ proj.description }}</p>{% endif %}
+                {% if proj.project_url %}<a href="{{ proj.project_url }}" target="_blank" style="font-size:.75rem;color:var(--accent)">View Project →</a>{% endif %}
+              </div>
+              <form method="post" action="{{ url_for('delete_project', proj_id=proj.id) }}" style="flex-shrink:0">
+                <button type="submit" class="btn-icon" title="Remove" onclick="return confirm('Remove this project?')"><svg width="13" height="13" fill="none" stroke="var(--red)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
           <div class="empty-state">
             <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg>
             <p>Add projects to showcase your practical experience to recruiters.</p>
             <button class="btn btn-outline btn-sm" onclick="toggleEdit('editAddProj')">Add Project</button>
           </div>
+          {% endif %}
         </div>
         <div id="editAddProj" class="edit-panel">
-          <p style="font-size:.8125rem;color:var(--text-3);margin-bottom:.875rem;padding:.5rem .75rem;background:var(--accent-light);border-radius:var(--radius-xs);">Projects section is coming soon.</p>
-          <div class="form-grid">
-            <div class="fg"><label>Project Name</label><input class="fc" type="text" disabled></div>
-            <div class="fg"><label>Domain</label><input class="fc" type="text" disabled></div>
-            <div class="fg span-2"><label>Description</label><textarea class="fc" rows="3" disabled></textarea></div>
-          </div>
-          <div class="form-actions"><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddProj')">Close</button></div>
+          <form method="post" action="{{ url_for('add_project') }}">
+            <div class="form-grid">
+              <div class="fg"><label>Project Name *</label><input class="fc" type="text" name="project_name" placeholder="e.g. E-Commerce Test Suite" required></div>
+              <div class="fg"><label>Domain / Tech Stack</label><input class="fc" type="text" name="domain" placeholder="e.g. Selenium, Python, Jenkins"></div>
+              <div class="fg span-2"><label>Description</label><textarea class="fc" name="description" rows="3" placeholder="What did you build and what was your contribution?"></textarea></div>
+              <div class="fg span-2"><label>Project URL (optional)</label><input class="fc" type="url" name="project_url" placeholder="https://github.com/..."></div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn btn-primary btn-sm">Save Project</button><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddProj')">Cancel</button></div>
+          </form>
         </div>
       </div>
 
@@ -865,7 +962,10 @@ textarea.fc{resize:vertical;min-height:80px}
             <input type="hidden" name="headline" value="{{ profile.headline if profile else '' }}">
             <input type="hidden" name="location" value="{{ profile.location if profile else '' }}">
             <input type="hidden" name="bio" value="{{ profile.bio if profile else '' }}">
+            <input type="hidden" name="job_title" value="{{ profile.job_title if profile else '' }}">
+            <input type="hidden" name="experience" value="{{ profile.experience if profile else '' }}">
             <div class="form-grid">
+              <div class="fg"><label>Phone Number</label><input class="fc" type="text" name="phone" value="{{ profile.phone if profile else '' }}" placeholder="+91 9876543210"></div>
               <div class="fg"><label>LinkedIn URL</label><input class="fc" type="url" name="linkedin" value="{{ profile.linkedin if profile else '' }}" placeholder="https://linkedin.com/in/..."></div>
               <div class="fg"><label>GitHub URL</label><input class="fc" type="url" name="github" value="{{ profile.github if profile else '' }}" placeholder="https://github.com/..."></div>
             </div>
@@ -1002,14 +1102,40 @@ textarea.fc{resize:vertical;min-height:80px}
         <div class="card-body" style="padding:.75rem 1.25rem">
           <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>Preferred Role</div><div class="pref-value">{{ profile.job_title if profile and profile.job_title else '—' }}</div></div>
           <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Location</div><div class="pref-value">{{ profile.location if profile and profile.location else '—' }}</div></div>
-          <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Work Mode</div><div class="pref-value">—</div></div>
-          <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Notice Period</div><div class="pref-value">—</div></div>
-          <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Expected Salary</div><div class="pref-value">—</div></div>
-          <div class="pref-row" style="border-bottom:none"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Willing to Relocate</div><div class="pref-value">—</div></div>
+          <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Work Mode</div><div class="pref-value">{{ profile.work_mode if profile and profile.work_mode else '—' }}</div></div>
+          <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Notice Period</div><div class="pref-value">{{ profile.notice_period if profile and profile.notice_period else '—' }}</div></div>
+          <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Expected Salary</div><div class="pref-value">{{ profile.expected_salary if profile and profile.expected_salary else '—' }}</div></div>
+          <div class="pref-row" style="border-bottom:none"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Willing to Relocate</div><div class="pref-value">{{ 'Yes' if profile and profile.willing_to_relocate else 'No' }}</div></div>
         </div>
         <div id="editPrefs" class="edit-panel">
-          <p style="font-size:.8125rem;color:var(--text-3);margin-bottom:.875rem;padding:.5rem .75rem;background:var(--accent-light);border-radius:var(--radius-xs);">Extended preferences coming soon.</p>
-          <div class="form-actions"><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editPrefs')">Close</button></div>
+          <form method="post" action="{{ url_for('update_preferences') }}">
+            <input type="hidden" name="job_title" value="{{ profile.job_title if profile else '' }}">
+            <div class="form-grid">
+              <div class="fg"><label>Preferred Role</label><input class="fc" type="text" name="job_title" value="{{ profile.job_title if profile else '' }}" placeholder="e.g. QA Automation Engineer"></div>
+              <div class="fg"><label>Preferred Location</label><input class="fc" type="text" name="location" value="{{ profile.location if profile else '' }}" placeholder="e.g. Bangalore, Remote"></div>
+              <div class="fg"><label>Work Mode</label>
+                <select class="fc" name="work_mode">
+                  <option value="">Select...</option>
+                  <option value="Remote" {{ 'selected' if profile and profile.work_mode == 'Remote' else '' }}>Remote</option>
+                  <option value="On-site" {{ 'selected' if profile and profile.work_mode == 'On-site' else '' }}>On-site</option>
+                  <option value="Hybrid" {{ 'selected' if profile and profile.work_mode == 'Hybrid' else '' }}>Hybrid</option>
+                </select>
+              </div>
+              <div class="fg"><label>Notice Period</label>
+                <select class="fc" name="notice_period">
+                  <option value="">Select...</option>
+                  <option value="Immediate" {{ 'selected' if profile and profile.notice_period == 'Immediate' else '' }}>Immediate</option>
+                  <option value="15 Days" {{ 'selected' if profile and profile.notice_period == '15 Days' else '' }}>15 Days</option>
+                  <option value="30 Days" {{ 'selected' if profile and profile.notice_period == '30 Days' else '' }}>30 Days</option>
+                  <option value="60 Days" {{ 'selected' if profile and profile.notice_period == '60 Days' else '' }}>60 Days</option>
+                  <option value="90 Days" {{ 'selected' if profile and profile.notice_period == '90 Days' else '' }}>90 Days</option>
+                </select>
+              </div>
+              <div class="fg"><label>Expected Salary (per annum)</label><input class="fc" type="text" name="expected_salary" value="{{ profile.expected_salary if profile else '' }}" placeholder="e.g. ₹8-12 LPA"></div>
+              <div class="fg" style="display:flex;align-items:center;gap:.5rem;padding-top:1.5rem"><label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-weight:500"><input type="checkbox" name="willing_to_relocate" value="1" {{ 'checked' if profile and profile.willing_to_relocate else '' }}> Willing to Relocate</label></div>
+            </div>
+            <div class="form-actions"><button type="submit" class="btn btn-primary btn-sm">Save Preferences</button><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editPrefs')">Cancel</button></div>
+          </form>
         </div>
       </div>
 

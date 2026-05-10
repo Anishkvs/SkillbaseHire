@@ -121,44 +121,6 @@ def init_db():
                 FOREIGN KEY (job_id) REFERENCES jobs(id),
                 FOREIGN KEY (candidate_id) REFERENCES users(id)
             );
-            CREATE TABLE IF NOT EXISTS candidate_work_experience (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                company TEXT NOT NULL,
-                designation TEXT NOT NULL,
-                start_date TEXT DEFAULT '',
-                end_date TEXT DEFAULT '',
-                is_current INTEGER DEFAULT 0,
-                description TEXT DEFAULT '',
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            );
-            CREATE TABLE IF NOT EXISTS candidate_education (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                degree TEXT NOT NULL,
-                college TEXT NOT NULL,
-                start_year TEXT DEFAULT '',
-                end_year TEXT DEFAULT '',
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            );
-            CREATE TABLE IF NOT EXISTS candidate_certifications (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                cert_name TEXT NOT NULL,
-                issued_by TEXT DEFAULT '',
-                year TEXT DEFAULT '',
-                credential_url TEXT DEFAULT '',
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            );
-            CREATE TABLE IF NOT EXISTS candidate_projects (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                project_name TEXT NOT NULL,
-                domain TEXT DEFAULT '',
-                description TEXT DEFAULT '',
-                project_url TEXT DEFAULT '',
-                FOREIGN KEY (user_id) REFERENCES users(id)
-            );
         ''')
 
         skills_data = [
@@ -223,10 +185,6 @@ def init_db():
             "ALTER TABLE candidate_profiles ADD COLUMN experience TEXT DEFAULT ''",
             "ALTER TABLE candidate_profiles ADD COLUMN resume_filename TEXT",
             "ALTER TABLE candidate_profiles ADD COLUMN work_status TEXT DEFAULT ''",
-            "ALTER TABLE candidate_profiles ADD COLUMN work_mode TEXT DEFAULT ''",
-            "ALTER TABLE candidate_profiles ADD COLUMN notice_period TEXT DEFAULT ''",
-            "ALTER TABLE candidate_profiles ADD COLUMN expected_salary TEXT DEFAULT ''",
-            "ALTER TABLE candidate_profiles ADD COLUMN willing_to_relocate INTEGER DEFAULT 0",
             "ALTER TABLE recruiter_profiles ADD COLUMN phone TEXT DEFAULT ''",
             "ALTER TABLE recruiter_profiles ADD COLUMN job_title TEXT DEFAULT ''",
             "ALTER TABLE recruiter_profiles ADD COLUMN company_size TEXT DEFAULT ''",
@@ -892,7 +850,7 @@ def candidate_signup():
         db = get_db()
         token = generate_verification_token(email)
         cur = db.execute(
-            'INSERT INTO users (name, email, password_hash, role, email_verified, verification_token) VALUES (?,?,?,?,1,?)',
+            'INSERT INTO users (name, email, password_hash, role, email_verified, verification_token) VALUES (?,?,?,?,0,?)',
             [name, email, generate_password_hash(password), 'candidate', token]
         )
         uid = cur.lastrowid
@@ -904,8 +862,9 @@ def candidate_signup():
             db.execute('INSERT OR IGNORE INTO user_skills (user_id, skill_id) VALUES (?,?)', [uid, sid])
         db.commit()
 
+        send_verification_email(email, name, token)
         session.update({'user_id': uid, 'role': 'candidate', 'name': name})
-        flash('Account created! Welcome to SkillBaseHire.', 'success')
+        flash('Account created! A verification email is on its way — check your inbox to unlock full access.', 'success')
         return redirect(url_for('candidate_dashboard'))
 
     return render_template('candidate_signup.html', user=None, all_skills=all_skills,
@@ -1001,7 +960,6 @@ def candidate_profile():
         bio        = request.form.get('bio', '').strip()
         linkedin   = request.form.get('linkedin', '').strip()
         github     = request.form.get('github', '').strip()
-        phone      = request.form.get('phone', '').strip()
         job_title  = request.form.get('job_title', '').strip()
         experience = request.form.get('experience', '').strip()
 
@@ -1011,10 +969,10 @@ def candidate_profile():
 
         db.execute('UPDATE users SET name=? WHERE id=?', [name, session['user_id']])
         db.execute('''UPDATE candidate_profiles
-                      SET headline=?, location=?, bio=?, linkedin=?, github=?, phone=?,
+                      SET headline=?, location=?, bio=?, linkedin=?, github=?,
                           job_title=?, experience=?
                       WHERE user_id=?''',
-                   [headline, location, bio, linkedin, github, phone,
+                   [headline, location, bio, linkedin, github,
                     job_title, experience, session['user_id']])
         db.commit()
         session['name'] = name
@@ -1027,23 +985,8 @@ def candidate_profile():
         WHERE us.user_id=? ORDER BY us.verified DESC, s.name
     ''', [session['user_id']]).fetchall()
 
-    experiences = db.execute(
-        'SELECT * FROM candidate_work_experience WHERE user_id=? ORDER BY id DESC',
-        [session['user_id']]).fetchall()
-    educations = db.execute(
-        'SELECT * FROM candidate_education WHERE user_id=? ORDER BY id DESC',
-        [session['user_id']]).fetchall()
-    certifications = db.execute(
-        'SELECT * FROM candidate_certifications WHERE user_id=? ORDER BY id DESC',
-        [session['user_id']]).fetchall()
-    projects = db.execute(
-        'SELECT * FROM candidate_projects WHERE user_id=? ORDER BY id DESC',
-        [session['user_id']]).fetchall()
-
     return render_template('candidate_profile.html',
-                           user=get_current_user(), profile=profile, my_skills=my_skills,
-                           experiences=experiences, educations=educations,
-                           certifications=certifications, projects=projects)
+                           user=get_current_user(), profile=profile, my_skills=my_skills)
 
 
 @app.route('/candidate/profile/upload-resume', methods=['POST'])
@@ -1082,150 +1025,6 @@ def upload_resume():
                [filename, session['user_id']])
     db.commit()
     flash('Resume uploaded successfully!', 'success')
-    return redirect(url_for('candidate_profile'))
-
-
-@app.route('/candidate/profile/experience/add', methods=['POST'])
-@candidate_required
-def add_experience():
-    company     = request.form.get('company', '').strip()
-    designation = request.form.get('designation', '').strip()
-    start_date  = request.form.get('start_date', '').strip()
-    end_date    = request.form.get('end_date', '').strip()
-    is_current  = 1 if request.form.get('is_current') else 0
-    description = request.form.get('description', '').strip()
-    if not company or not designation:
-        flash('Company and designation are required.', 'error')
-        return redirect(url_for('candidate_profile'))
-    db = get_db()
-    db.execute('''INSERT INTO candidate_work_experience
-                  (user_id, company, designation, start_date, end_date, is_current, description)
-                  VALUES (?,?,?,?,?,?,?)''',
-               [session['user_id'], company, designation, start_date, end_date, is_current, description])
-    db.commit()
-    flash('Work experience added.', 'success')
-    return redirect(url_for('candidate_profile'))
-
-
-@app.route('/candidate/profile/experience/<int:exp_id>/delete', methods=['POST'])
-@candidate_required
-def delete_experience(exp_id):
-    db = get_db()
-    db.execute('DELETE FROM candidate_work_experience WHERE id=? AND user_id=?',
-               [exp_id, session['user_id']])
-    db.commit()
-    flash('Experience removed.', 'success')
-    return redirect(url_for('candidate_profile'))
-
-
-@app.route('/candidate/profile/education/add', methods=['POST'])
-@candidate_required
-def add_education():
-    degree     = request.form.get('degree', '').strip()
-    college    = request.form.get('college', '').strip()
-    start_year = request.form.get('start_year', '').strip()
-    end_year   = request.form.get('end_year', '').strip()
-    if not degree or not college:
-        flash('Degree and college are required.', 'error')
-        return redirect(url_for('candidate_profile'))
-    db = get_db()
-    db.execute('''INSERT INTO candidate_education (user_id, degree, college, start_year, end_year)
-                  VALUES (?,?,?,?,?)''',
-               [session['user_id'], degree, college, start_year, end_year])
-    db.commit()
-    flash('Education added.', 'success')
-    return redirect(url_for('candidate_profile'))
-
-
-@app.route('/candidate/profile/education/<int:edu_id>/delete', methods=['POST'])
-@candidate_required
-def delete_education(edu_id):
-    db = get_db()
-    db.execute('DELETE FROM candidate_education WHERE id=? AND user_id=?',
-               [edu_id, session['user_id']])
-    db.commit()
-    flash('Education removed.', 'success')
-    return redirect(url_for('candidate_profile'))
-
-
-@app.route('/candidate/profile/certification/add', methods=['POST'])
-@candidate_required
-def add_certification():
-    cert_name      = request.form.get('cert_name', '').strip()
-    issued_by      = request.form.get('issued_by', '').strip()
-    year           = request.form.get('year', '').strip()
-    credential_url = request.form.get('credential_url', '').strip()
-    if not cert_name:
-        flash('Certificate name is required.', 'error')
-        return redirect(url_for('candidate_profile'))
-    db = get_db()
-    db.execute('''INSERT INTO candidate_certifications (user_id, cert_name, issued_by, year, credential_url)
-                  VALUES (?,?,?,?,?)''',
-               [session['user_id'], cert_name, issued_by, year, credential_url])
-    db.commit()
-    flash('Certification added.', 'success')
-    return redirect(url_for('candidate_profile'))
-
-
-@app.route('/candidate/profile/certification/<int:cert_id>/delete', methods=['POST'])
-@candidate_required
-def delete_certification(cert_id):
-    db = get_db()
-    db.execute('DELETE FROM candidate_certifications WHERE id=? AND user_id=?',
-               [cert_id, session['user_id']])
-    db.commit()
-    flash('Certification removed.', 'success')
-    return redirect(url_for('candidate_profile'))
-
-
-@app.route('/candidate/profile/project/add', methods=['POST'])
-@candidate_required
-def add_project():
-    project_name = request.form.get('project_name', '').strip()
-    domain       = request.form.get('domain', '').strip()
-    description  = request.form.get('description', '').strip()
-    project_url  = request.form.get('project_url', '').strip()
-    if not project_name:
-        flash('Project name is required.', 'error')
-        return redirect(url_for('candidate_profile'))
-    db = get_db()
-    db.execute('''INSERT INTO candidate_projects (user_id, project_name, domain, description, project_url)
-                  VALUES (?,?,?,?,?)''',
-               [session['user_id'], project_name, domain, description, project_url])
-    db.commit()
-    flash('Project added.', 'success')
-    return redirect(url_for('candidate_profile'))
-
-
-@app.route('/candidate/profile/project/<int:proj_id>/delete', methods=['POST'])
-@candidate_required
-def delete_project(proj_id):
-    db = get_db()
-    db.execute('DELETE FROM candidate_projects WHERE id=? AND user_id=?',
-               [proj_id, session['user_id']])
-    db.commit()
-    flash('Project removed.', 'success')
-    return redirect(url_for('candidate_profile'))
-
-
-@app.route('/candidate/profile/preferences', methods=['POST'])
-@candidate_required
-def update_preferences():
-    work_mode          = request.form.get('work_mode', '').strip()
-    notice_period      = request.form.get('notice_period', '').strip()
-    expected_salary    = request.form.get('expected_salary', '').strip()
-    willing_to_relocate = 1 if request.form.get('willing_to_relocate') else 0
-    job_title          = request.form.get('job_title', '').strip()
-    location           = request.form.get('location', '').strip()
-    db = get_db()
-    db.execute('''UPDATE candidate_profiles
-                  SET work_mode=?, notice_period=?, expected_salary=?, willing_to_relocate=?,
-                      job_title=?, location=?
-                  WHERE user_id=?''',
-               [work_mode, notice_period, expected_salary, willing_to_relocate,
-                job_title, location, session['user_id']])
-    db.commit()
-    flash('Job preferences updated.', 'success')
     return redirect(url_for('candidate_profile'))
 
 
@@ -1312,6 +1111,11 @@ def recruiter_signup():
         if not company: errors.append('Company name is required.')
         if not terms:   errors.append('You must accept the terms.')
 
+        # Block personal email domains
+        domain = email.split('@')[-1] if '@' in email else ''
+        if domain in PERSONAL_EMAIL_DOMAINS:
+            errors.append(f'Please use a work email. Personal email providers ({domain}) are not allowed for recruiter accounts.')
+
         pw_err = validate_password(password)
         if pw_err:     errors.append(pw_err)
         if not pw_err and password != confirm:
@@ -1327,7 +1131,7 @@ def recruiter_signup():
         db = get_db()
         token = generate_verification_token(email)
         cur = db.execute(
-            'INSERT INTO users (name, email, password_hash, role, email_verified, verification_token) VALUES (?,?,?,?,1,?)',
+            'INSERT INTO users (name, email, password_hash, role, email_verified, verification_token) VALUES (?,?,?,?,0,?)',
             [name, email, generate_password_hash(password), 'recruiter', token]
         )
         uid = cur.lastrowid
@@ -1337,8 +1141,9 @@ def recruiter_signup():
                    [uid, company, company_bio, website, phone, job_title, company_size, industry, company_location])
         db.commit()
 
+        send_verification_email(email, name, token)
         session.update({'user_id': uid, 'role': 'recruiter', 'name': name})
-        flash('Account created! Welcome to SkillBaseHire.', 'success')
+        flash('Account created! A verification email is on its way — verify your work email to access all recruiter tools.', 'success')
         return redirect(url_for('recruiter_dashboard'))
 
     return render_template('recruiter_signup.html', user=None, form={})

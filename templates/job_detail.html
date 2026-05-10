@@ -7,7 +7,11 @@
 
     <!-- Left: Main content -->
     <div class="job-detail-main">
+      {% if session.get('role') == 'recruiter' %}
+      <a href="{{ url_for('recruiter_dashboard') }}" class="back-link">← Back to Dashboard</a>
+      {% else %}
       <a href="{{ url_for('jobs') }}" class="back-link">← Back to Jobs</a>
+      {% endif %}
 
       <div class="card" style="margin-top:1rem">
         <div class="job-detail-header">
@@ -28,8 +32,21 @@
 
         {% if job_skills %}
           <div style="margin:1.5rem 0">
-            <div class="section-mini-title">Required Skills</div>
-            <div class="job-skills" style="margin-top:.5rem">
+            <div style="display:flex;align-items:center;gap:.625rem;flex-wrap:wrap;margin-bottom:.5rem">
+              <div class="section-mini-title" style="margin:0">Required Skills</div>
+              {% if job.skill_test_mandatory %}
+                <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .625rem;border-radius:20px;font-size:.75rem;font-weight:600;background:#FEE2E2;color:#DC2626">
+                  <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  Skill test required to apply
+                </span>
+              {% else %}
+                <span style="display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .625rem;border-radius:20px;font-size:.75rem;font-weight:600;background:#D1FAE5;color:#059669">
+                  <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                  Skill test optional
+                </span>
+              {% endif %}
+            </div>
+            <div class="job-skills">
               {% for skill in job_skills %}
                 {% set is_verified = skill.name in my_verified_names %}
                 {% set is_added = skill.name in my_skill_names %}
@@ -42,6 +59,18 @@
               <p style="font-size:.8125rem;color:var(--text-muted);margin-top:.5rem">
                 ✓ = verified in your profile &nbsp;·&nbsp; + = in your profile (unverified)
               </p>
+            {% endif %}
+            {% if session.get('role') == 'candidate' %}
+              <div style="margin-top:.75rem;padding:.625rem .875rem;border-radius:8px;font-size:.8125rem;font-weight:500;
+                          {% if job.skill_test_mandatory %}background:#FEF2F2;color:#991B1B;border:1px solid #FECACA{% else %}background:#F0FDF4;color:#166534;border:1px solid #BBF7D0{% endif %}">
+                {% if job.skill_test_mandatory %}
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:.25rem"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  Complete and pass the skill test to apply for this role.
+                {% else %}
+                  <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;margin-right:.25rem"><polyline points="20 6 9 17 4 12"/></svg>
+                  Skill test optional — verified skills improve your profile visibility.
+                {% endif %}
+              </div>
             {% endif %}
           </div>
         {% endif %}

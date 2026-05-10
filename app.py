@@ -233,6 +233,7 @@ def init_db():
             "ALTER TABLE recruiter_profiles ADD COLUMN industry TEXT DEFAULT ''",
             "ALTER TABLE recruiter_profiles ADD COLUMN company_location TEXT DEFAULT ''",
             "ALTER TABLE candidate_projects ADD COLUMN year TEXT DEFAULT ''",
+            "ALTER TABLE jobs ADD COLUMN skill_test_mandatory INTEGER DEFAULT 0",
         ]:
             try:
                 db.execute(stmt)
@@ -274,10 +275,10 @@ def salary_filter(job):
     if not mn and not mx:
         return 'Negotiable'
     if mn and mx:
-        return f'${mn // 1000}K – ${mx // 1000}K'
+        return f'₹{mn // 1000}K – ₹{mx // 1000}K'
     if mn:
-        return f'${mn // 1000}K+'
-    return f'Up to ${mx // 1000}K'
+        return f'₹{mn // 1000}K+'
+    return f'Up to ₹{mx // 1000}K'
 
 
 # ── Auth helpers ─────────────────────────────────────────────────────────────
@@ -1566,29 +1567,49 @@ def post_job():
         salary_min = request.form.get('salary_min', 0, type=int)
         salary_max = request.form.get('salary_max', 0, type=int)
         skill_ids = request.form.getlist('skills', type=int)
+        custom_skill_names = [n.strip() for n in request.form.getlist('custom_skill_names') if n.strip()]
+        skill_test_mandatory = 1 if request.form.get('skill_test_requirement') == 'mandatory' else 0
 
         if not all([title, location, description]):
             flash('Title, location, and description are required.', 'error')
             return render_template('post_job.html', user=get_current_user(),
                                    all_skills=all_skills, profile=profile)
 
-        if not db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()['email_verified']:
-            flash('Please verify your work email before posting a live job.', 'error')
-            return redirect(url_for('recruiter_dashboard'))
+        if not skill_ids and not custom_skill_names:
+            flash('Please add at least one required skill.', 'error')
+            return render_template('post_job.html', user=get_current_user(),
+                                   all_skills=all_skills, profile=profile)
+
+        # EMAIL VERIFICATION CHECK DISABLED — re-enable when ready
+        # if not db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()['email_verified']:
+        #     flash('Please verify your work email before posting a live job.', 'error')
+        #     return redirect(url_for('recruiter_dashboard'))
 
         cur = db.execute('''
             INSERT INTO jobs (recruiter_id, title, company, location, job_type,
-                              description, requirements, salary_min, salary_max)
-            VALUES (?,?,?,?,?,?,?,?,?)
+                              description, requirements, salary_min, salary_max, skill_test_mandatory)
+            VALUES (?,?,?,?,?,?,?,?,?,?)
         ''', [session['user_id'], title, profile['company'], location, job_type,
-              description, requirements, salary_min, salary_max])
+              description, requirements, salary_min, salary_max, skill_test_mandatory])
         job_id = cur.lastrowid
+
         for sid in skill_ids:
             db.execute('INSERT OR IGNORE INTO job_skills (job_id, skill_id) VALUES (?,?)',
                        [job_id, sid])
+
+        # Resolve custom skill names — insert if new, then link to job
+        for name in custom_skill_names:
+            existing = db.execute('SELECT id FROM skills WHERE LOWER(name)=LOWER(?)', [name]).fetchone()
+            if existing:
+                sid = existing['id']
+            else:
+                cur2 = db.execute('INSERT INTO skills (name, category) VALUES (?,?)', [name, 'Other'])
+                sid = cur2.lastrowid
+            db.execute('INSERT OR IGNORE INTO job_skills (job_id, skill_id) VALUES (?,?)', [job_id, sid])
+
         db.commit()
         flash(f'"{title}" posted successfully!', 'success')
-        return redirect(url_for('recruiter_dashboard'))
+        return redirect(url_for('job_detail', job_id=job_id))
 
     return render_template('post_job.html', user=get_current_user(),
                            all_skills=all_skills, profile=profile)
@@ -1648,10 +1669,12 @@ def update_app_status(app_id):
 
     db = get_db()
     if status == 'shortlisted':
-        verified = db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()['email_verified']
-        if not verified:
-            flash('Please verify your work email before shortlisting candidates.', 'error')
-            return redirect(url_for('recruiter_dashboard'))
+        # EMAIL VERIFICATION CHECK DISABLED — re-enable when ready
+        pass
+        # verified = db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()['email_verified']
+        # if not verified:
+        #     flash('Please verify your work email before shortlisting candidates.', 'error')
+        #     return redirect(url_for('recruiter_dashboard'))
     row = db.execute('''
         SELECT a.job_id FROM applications a JOIN jobs j ON a.job_id=j.id
         WHERE a.id=? AND j.recruiter_id=?
@@ -1671,10 +1694,11 @@ def update_app_status(app_id):
 @recruiter_required
 def search_candidates():
     db = get_db()
-    viewer = db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()
-    if viewer and not viewer['email_verified']:
-        flash('Please verify your work email to search and view candidate profiles.', 'error')
-        return redirect(url_for('recruiter_dashboard'))
+    # EMAIL VERIFICATION CHECK DISABLED — re-enable when ready
+    # viewer = db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()
+    # if viewer and not viewer['email_verified']:
+    #     flash('Please verify your work email to search and view candidate profiles.', 'error')
+    #     return redirect(url_for('recruiter_dashboard'))
     search = request.args.get('q', '').strip()
     skill_filter = request.args.get('skill', '').strip()
     location_filter = request.args.get('location', '').strip()
@@ -1727,12 +1751,12 @@ def search_candidates():
 def candidate_detail(candidate_id):
     db = get_db()
 
-    # Block unverified recruiters from viewing candidate profiles
-    if session.get('role') == 'recruiter':
-        viewer = db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()
-        if viewer and not viewer['email_verified']:
-            return render_template('candidate_detail.html', candidate=None, skills=[],
-                                   blocked_recruiter=True, user=get_current_user())
+    # EMAIL VERIFICATION CHECK DISABLED — re-enable when ready
+    # if session.get('role') == 'recruiter':
+    #     viewer = db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()
+    #     if viewer and not viewer['email_verified']:
+    #         return render_template('candidate_detail.html', candidate=None, skills=[],
+    #                                blocked_recruiter=True, user=get_current_user())
 
     candidate = db.execute('''
         SELECT u.id, u.name, u.email, u.created_at, u.email_verified,

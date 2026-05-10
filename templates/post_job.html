@@ -2,6 +2,59 @@
 {% block title %}Post a Job — SkillBaseHire{% endblock %}
 
 {% block content %}
+<style>
+/* ── Skill Multi-Select ── */
+.skill-ms-outer{position:relative}
+.skill-ms-wrap{display:flex;flex-wrap:wrap;align-items:center;gap:.375rem;padding:.5rem .75rem;border:1.5px solid #D1D5DB;border-radius:8px;min-height:48px;cursor:text;background:#fff;transition:border-color .15s,box-shadow .15s}
+.skill-ms-wrap:hover{border-color:#9CA3AF}
+.skill-ms-wrap.focused{border-color:#4F46E5;box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.skill-ms-wrap.error{border-color:#DC2626;box-shadow:0 0 0 3px rgba(220,38,38,.08)}
+.skill-ms-input{flex:1;min-width:160px;border:none;outline:none;font-size:.9rem;background:transparent;padding:.25rem 0;font-family:inherit;color:#111827}
+.skill-ms-input::placeholder{color:#9CA3AF}
+.skill-chip{display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .625rem;background:#EEF2FF;color:#4F46E5;border-radius:20px;font-size:.8125rem;font-weight:600;white-space:nowrap}
+.skill-chip.custom{background:#F0FDF4;color:#16A34A}
+.skill-chip-x{background:none;border:none;cursor:pointer;color:inherit;padding:0;line-height:1;font-size:1rem;opacity:.7;transition:opacity .1s}
+.skill-chip-x:hover{opacity:1}
+.skill-ms-dropdown{position:absolute;top:calc(100% + 5px);left:0;right:0;background:#fff;border:1px solid #E5E7EB;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.12);z-index:9999;max-height:230px;overflow-y:auto;display:none}
+.skill-ms-dropdown.open{display:block;animation:ddFadeIn .12s ease-out}
+@keyframes ddFadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.skill-dd-item{padding:.625rem 1rem;cursor:pointer;font-size:.875rem;color:#374151;transition:background .1s;display:flex;align-items:center;justify-content:space-between}
+.skill-dd-item:first-child{border-radius:10px 10px 0 0}
+.skill-dd-item:last-child{border-radius:0 0 10px 10px}
+.skill-dd-item:hover,.skill-dd-item.kbd-active{background:#EEF2FF;color:#4F46E5}
+.skill-dd-item.custom-add{color:#16A34A}
+.skill-dd-item.custom-add:hover,.skill-dd-item.custom-add.kbd-active{background:#F0FDF4;color:#15803D}
+.skill-dd-item strong{color:inherit}
+.skill-dd-badge{font-size:.7rem;padding:.1rem .4rem;border-radius:4px;background:#E5E7EB;color:#6B7280;font-weight:500}
+.skill-ms-msg{font-size:.8125rem;margin-top:.375rem;padding:.3rem .625rem;border-radius:6px;display:none}
+.skill-ms-msg.error{color:#DC2626;background:#FEF2F2}
+.skill-ms-msg.warn{color:#D97706;background:#FFFBEB}
+.skill-ms-msg.info{color:#6B7280}
+.skill-count-hint{font-size:.75rem;color:#9CA3AF;margin-top:.375rem}
+
+/* ── Skill Test Requirement ── */
+.str-options{display:grid;grid-template-columns:1fr 1fr;gap:.875rem;margin-bottom:1rem}
+@media(max-width:560px){.str-options{grid-template-columns:1fr}}
+.str-option{position:relative;border:2px solid #E5E7EB;border-radius:12px;padding:1rem 1rem 1rem 3.25rem;cursor:pointer;transition:border-color .18s,background .18s,box-shadow .18s;background:#fff}
+.str-option:hover{border-color:#A5B4FC;background:#F5F3FF}
+.str-option input[type=radio]{position:absolute;left:1rem;top:1.125rem;accent-color:#4F46E5;width:18px;height:18px;cursor:pointer}
+.str-option.selected{border-color:#4F46E5;background:#EEF2FF;box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.str-option.selected-green{border-color:#16A34A;background:#F0FDF4;box-shadow:0 0 0 3px rgba(22,163,74,.1)}
+.str-opt-title{font-size:.9375rem;font-weight:700;color:#111827;margin-bottom:.25rem}
+.str-opt-desc{font-size:.8125rem;color:#6B7280;line-height:1.5}
+.str-opt-badge{display:inline-flex;align-items:center;gap:.3rem;margin-top:.625rem;padding:.2rem .625rem;border-radius:20px;font-size:.75rem;font-weight:600}
+.str-opt-badge.mandatory{background:#FEE2E2;color:#DC2626}
+.str-opt-badge.optional{background:#D1FAE5;color:#059669}
+.str-skill-preview{margin-top:.875rem;padding:.75rem 1rem;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;display:none}
+.str-skill-preview.visible{display:block}
+.str-skill-preview-title{font-size:.75rem;font-weight:600;color:#6B7280;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem}
+.str-skill-badges{display:flex;flex-wrap:wrap;gap:.375rem}
+.str-skill-badge{display:inline-flex;align-items:center;gap:.25rem;padding:.2rem .625rem;border-radius:20px;font-size:.8125rem;font-weight:600}
+.str-skill-badge.mandatory-badge{background:#FEE2E2;color:#991B1B}
+.str-skill-badge.optional-badge{background:#D1FAE5;color:#065F46}
+.str-lock-msg{display:none;padding:.75rem 1rem;background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;font-size:.8125rem;color:#92400E;margin-bottom:.5rem}
+.str-lock-msg.visible{display:flex;align-items:center;gap:.5rem}
+</style>
 <div class="page-header">
   <div class="container page-header-inner">
     <div>
@@ -67,22 +120,72 @@
     </div>
 
     <div class="card" style="margin-bottom:1.5rem">
-      <div class="form-section-title">Required Skills</div>
-      <p class="form-hint" style="margin-bottom:1.25rem">Select skills required for this role. Candidates with matching verified skills will be highlighted.</p>
-      {% set categories = all_skills | groupby('category') %}
-      {% for category, cat_skills in categories %}
-        <div class="skill-select-group">
-          <div class="skill-select-category">{{ category }}</div>
-          <div class="skill-checkboxes">
-            {% for skill in cat_skills %}
-              <label class="skill-checkbox-label">
-                <input type="checkbox" name="skills" value="{{ skill.id }}">
-                <span>{{ skill.name }}</span>
-              </label>
-            {% endfor %}
+      <div class="form-section-title">Required Skills <span class="required">*</span></div>
+      <p class="form-hint" style="margin-bottom:1.25rem">Search and select skills for this role. Candidates with matching verified skills will be highlighted.</p>
+
+      <div class="form-group">
+        <div class="skill-ms-outer">
+          <!-- Chip + input wrapper -->
+          <div class="skill-ms-wrap" id="skillMsWrap" onclick="document.getElementById('skillMsInput').focus()">
+            <div id="skillChips" style="display:contents"></div>
+            <input type="text" id="skillMsInput" class="skill-ms-input"
+                   placeholder="Type a skill name…" autocomplete="off"
+                   oninput="skillSearch(this.value)"
+                   onkeydown="skillKeydown(event)"
+                   onfocus="onSkillFocus()"
+                   onblur="onSkillBlur()">
           </div>
+          <!-- Dropdown -->
+          <div class="skill-ms-dropdown" id="skillDropdown"></div>
         </div>
-      {% endfor %}
+        <!-- Validation / status messages -->
+        <div class="skill-ms-msg" id="skillMsg"></div>
+        <div class="skill-count-hint" id="skillCountHint">0 skills selected</div>
+        <!-- Hidden form fields injected by JS -->
+        <div id="skillHiddenInputs"></div>
+      </div>
+    </div>
+
+    <!-- Skill Test Requirement -->
+    <div class="card" style="margin-bottom:1.5rem" id="strCard">
+      <div class="form-section-title">Skill Test Requirement</div>
+      <p class="form-hint" style="margin-bottom:1.125rem">Choose whether candidates must pass the skill test before applying or if it's optional.</p>
+
+      <!-- Lock message shown when no skills selected yet -->
+      <div class="str-lock-msg" id="strLockMsg">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Please add required skills above before setting the skill test requirement.
+      </div>
+
+      <div class="str-options" id="strOptions">
+        <!-- Option 1: Mandatory -->
+        <label class="str-option" id="strOptMandatory">
+          <input type="radio" name="skill_test_requirement" value="mandatory" onchange="onStrChange(this)">
+          <div class="str-opt-title">Mandatory Skill Test</div>
+          <div class="str-opt-desc">Candidates must complete and pass the selected skill assessments before applying.</div>
+          <span class="str-opt-badge mandatory">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            Skill test required to apply
+          </span>
+        </label>
+
+        <!-- Option 2: Non-Mandatory -->
+        <label class="str-option" id="strOptOptional">
+          <input type="radio" name="skill_test_requirement" value="optional" onchange="onStrChange(this)">
+          <div class="str-opt-title">Non-Mandatory Skill Test</div>
+          <div class="str-opt-desc">Candidates can apply without a skill test. Verified candidates are ranked higher.</div>
+          <span class="str-opt-badge optional">
+            <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            Skill test optional
+          </span>
+        </label>
+      </div>
+
+      <!-- Selected skills preview with assessment badges -->
+      <div class="str-skill-preview" id="strSkillPreview">
+        <div class="str-skill-preview-title">Required Skills — Assessment Preview</div>
+        <div class="str-skill-badges" id="strSkillBadges"></div>
+      </div>
     </div>
 
     <div style="display:flex;gap:.75rem">
@@ -91,4 +194,256 @@
     </div>
   </form>
 </div>
+
+<script>
+/* ── Skill data from server ── */
+const ALL_SKILLS = [
+  {% for skill in all_skills %}
+  { id: {{ skill.id }}, name: {{ skill.name | tojson }} },
+  {% endfor %}
+];
+
+let selectedSkills = [];
+let kbdIndex = -1;
+
+/* ── Search ── */
+function skillSearch(query) {
+  const dd = document.getElementById('skillDropdown');
+  hideMsg();
+  kbdIndex = -1;
+
+  if (!query.trim()) { closeDd(); return; }
+
+  const q = query.toLowerCase().trim();
+  const filtered = ALL_SKILLS
+    .filter(s => s.name.toLowerCase().includes(q) && !selectedSkills.find(sel => sel.id === s.id))
+    .slice(0, 12);
+
+  const exactMatch = filtered.find(s => s.name.toLowerCase() === q);
+
+  dd.innerHTML = '';
+
+  filtered.forEach(skill => {
+    const div = document.createElement('div');
+    div.className = 'skill-dd-item';
+    const idx = skill.name.toLowerCase().indexOf(q);
+    div.innerHTML =
+      escHtml(skill.name.slice(0, idx)) +
+      '<strong>' + escHtml(skill.name.slice(idx, idx + q.length)) + '</strong>' +
+      escHtml(skill.name.slice(idx + q.length)) +
+      '<span class="skill-dd-badge">Skill</span>';
+    div.addEventListener('mousedown', e => { e.preventDefault(); selectSkill(skill); });
+    dd.appendChild(div);
+  });
+
+  if (!exactMatch) {
+    const trimmed = query.trim();
+    const div = document.createElement('div');
+    div.className = 'skill-dd-item custom-add';
+    div.innerHTML = '<span>+ Add <strong>"' + escHtml(trimmed) + '"</strong></span>' +
+      '<span class="skill-dd-badge" style="background:#D1FAE5;color:#059669">Custom</span>';
+    div.addEventListener('mousedown', e => { e.preventDefault(); addCustomSkill(trimmed); });
+    dd.appendChild(div);
+  }
+
+  openDd();
+}
+
+/* ── Select existing skill ── */
+function selectSkill(skill) {
+  if (selectedSkills.find(s => s.id === skill.id)) {
+    showMsg('This skill is already added.', 'warn'); return;
+  }
+  selectedSkills.push({ id: skill.id, name: skill.name, custom: false });
+  commit();
+}
+
+/* ── Add custom skill ── */
+function addCustomSkill(name) {
+  const trimmed = name.trim();
+  if (!trimmed) return;
+  if (selectedSkills.find(s => s.name.toLowerCase() === trimmed.toLowerCase())) {
+    showMsg('This skill is already added.', 'warn'); return;
+  }
+  selectedSkills.push({ id: 'c_' + Date.now(), name: trimmed, custom: true });
+  commit();
+}
+
+/* ── Remove skill ── */
+function removeSkill(id) {
+  selectedSkills = selectedSkills.filter(s => s.id !== id);
+  commit();
+  document.getElementById('skillMsInput').focus();
+}
+
+/* ── Render chips + hidden inputs ── */
+function commit() {
+  const chipsEl  = document.getElementById('skillChips');
+  const hiddenEl = document.getElementById('skillHiddenInputs');
+  const countEl  = document.getElementById('skillCountHint');
+
+  chipsEl.innerHTML = selectedSkills.map(s => `
+    <span class="skill-chip${s.custom ? ' custom' : ''}">
+      ${escHtml(s.name)}
+      <button type="button" class="skill-chip-x"
+              onmousedown="event.preventDefault();removeSkill('${s.id}')"
+              title="Remove ${escAttr(s.name)}">×</button>
+    </span>`).join('');
+
+  hiddenEl.innerHTML = selectedSkills.map(s =>
+    s.custom
+      ? `<input type="hidden" name="custom_skill_names" value="${escAttr(s.name)}">`
+      : `<input type="hidden" name="skills" value="${s.id}">`
+  ).join('');
+
+  const n = selectedSkills.length;
+  countEl.textContent = n === 0
+    ? '0 skills selected'
+    : n + ' skill' + (n > 1 ? 's' : '') + ' selected';
+
+  document.getElementById('skillMsWrap').classList.remove('error');
+  document.getElementById('skillMsInput').value = '';
+  closeDd();
+  updateStrSection();
+}
+
+/* ── Keyboard navigation ── */
+function skillKeydown(e) {
+  const dd    = document.getElementById('skillDropdown');
+  const items = [...dd.querySelectorAll('.skill-dd-item')];
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    kbdIndex = Math.min(kbdIndex + 1, items.length - 1);
+    items.forEach((el, i) => el.classList.toggle('kbd-active', i === kbdIndex));
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    kbdIndex = Math.max(kbdIndex - 1, 0);
+    items.forEach((el, i) => el.classList.toggle('kbd-active', i === kbdIndex));
+  } else if (e.key === 'Enter') {
+    e.preventDefault();
+    if (kbdIndex >= 0 && items[kbdIndex]) {
+      items[kbdIndex].dispatchEvent(new MouseEvent('mousedown'));
+    } else {
+      const val = document.getElementById('skillMsInput').value.trim();
+      if (val) addCustomSkill(val);
+    }
+  } else if (e.key === 'Escape') {
+    closeDd();
+  } else if (e.key === 'Backspace' &&
+             !document.getElementById('skillMsInput').value &&
+             selectedSkills.length) {
+    removeSkill(selectedSkills[selectedSkills.length - 1].id);
+  }
+}
+
+/* ── Focus / blur ── */
+function onSkillFocus() {
+  document.getElementById('skillMsWrap').classList.add('focused');
+}
+function onSkillBlur() {
+  document.getElementById('skillMsWrap').classList.remove('focused');
+  setTimeout(closeDd, 180);
+}
+
+/* ── Dropdown helpers ── */
+function openDd() { document.getElementById('skillDropdown').classList.add('open'); }
+function closeDd() {
+  document.getElementById('skillDropdown').classList.remove('open');
+  kbdIndex = -1;
+}
+
+/* ── Message helpers ── */
+function showMsg(text, type) {
+  const el = document.getElementById('skillMsg');
+  el.textContent = text;
+  el.className = 'skill-ms-msg ' + type;
+  el.style.display = 'block';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.style.display = 'none'; }, 2800);
+}
+function hideMsg() { document.getElementById('skillMsg').style.display = 'none'; }
+
+/* ── XSS helpers ── */
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) { return String(s).replace(/"/g,'&quot;'); }
+
+/* ── Skill Test Requirement section ── */
+function getSelectedStr() {
+  const r = document.querySelector('input[name="skill_test_requirement"]:checked');
+  return r ? r.value : null;
+}
+
+function onStrChange(radio) {
+  document.getElementById('strOptMandatory').classList.remove('selected', 'selected-green');
+  document.getElementById('strOptOptional').classList.remove('selected', 'selected-green');
+  if (radio.value === 'mandatory') {
+    document.getElementById('strOptMandatory').classList.add('selected');
+  } else {
+    document.getElementById('strOptOptional').classList.add('selected-green');
+  }
+  updateStrSection();
+}
+
+function updateStrSection() {
+  const hasSkills  = selectedSkills.length > 0;
+  const lockMsg    = document.getElementById('strLockMsg');
+  const strOptions = document.getElementById('strOptions');
+  const preview    = document.getElementById('strSkillPreview');
+  const badges     = document.getElementById('strSkillBadges');
+  const strType    = getSelectedStr();
+
+  // Lock/unlock options based on whether skills are selected
+  lockMsg.classList.toggle('visible', !hasSkills);
+  strOptions.style.opacity = hasSkills ? '1' : '0.45';
+  strOptions.style.pointerEvents = hasSkills ? '' : 'none';
+
+  // Skills preview badges
+  if (hasSkills && strType) {
+    const isMandatory = strType === 'mandatory';
+    const cls  = isMandatory ? 'mandatory-badge' : 'optional-badge';
+    const icon = isMandatory
+      ? '<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
+      : '<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+    badges.innerHTML = selectedSkills.map(s =>
+      `<span class="str-skill-badge ${cls}">${icon} ${escHtml(s.name)}</span>`
+    ).join('');
+    preview.classList.add('visible');
+  } else {
+    preview.classList.remove('visible');
+  }
+}
+
+// Init: show lock state on load
+updateStrSection();
+
+/* ── Form validation on submit ── */
+document.querySelector('form').addEventListener('submit', function(e) {
+  if (selectedSkills.length === 0) {
+    e.preventDefault();
+    const wrap = document.getElementById('skillMsWrap');
+    wrap.classList.add('error');
+    showMsg('Please add at least one required skill before posting.', 'error');
+    wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => document.getElementById('skillMsInput').focus(), 400);
+    return;
+  }
+  if (!getSelectedStr()) {
+    e.preventDefault();
+    const card = document.getElementById('strCard');
+    card.style.transition = 'box-shadow .25s';
+    card.style.boxShadow = '0 0 0 3px rgba(220,38,38,.3)';
+    setTimeout(() => { card.style.boxShadow = ''; }, 2000);
+    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const msg = document.createElement('p');
+    msg.style.cssText = 'font-size:.8125rem;color:#DC2626;margin-top:.5rem;font-weight:500';
+    msg.textContent = 'Please select a skill test requirement before publishing.';
+    msg.id = 'strValMsg';
+    document.getElementById('strOptions').after(document.getElementById('strValMsg') || msg);
+    setTimeout(() => document.getElementById('strValMsg')?.remove(), 3000);
+  }
+});
+</script>
 {% endblock %}

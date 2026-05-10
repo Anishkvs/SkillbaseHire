@@ -306,8 +306,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
       {% endfor %}
     {% endwith %}
 
-    <!-- Verification banner -->
-    {% if not user.email_verified %}
+    <!-- Verification banner DISABLED — re-enable when ready -->
+    {% if false and not user.email_verified %}
     <div class="verify-bar">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01" stroke-linecap="round"/></svg>
       <div><strong>Verify your work email</strong> — You need to verify your company email address to access candidate profiles, post jobs, and shortlist candidates.</div>

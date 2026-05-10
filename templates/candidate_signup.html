@@ -39,21 +39,51 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="phone">Mobile number</label>
-        <div class="phone-input-wrap">
-          <select class="form-control phone-code-select" id="phone_code" name="phone_code" aria-label="Country code">
-            <option value="+91">🇮🇳 +91</option>
-            <option value="+1">🇺🇸 +1</option>
-            <option value="+44">🇬🇧 +44</option>
-            <option value="+61">🇦🇺 +61</option>
-            <option value="+971">🇦🇪 +971</option>
-            <option value="+65">🇸🇬 +65</option>
-            <option value="+49">🇩🇪 +49</option>
-            <option value="+33">🇫🇷 +33</option>
-          </select>
-          <input class="form-control phone-number-input" type="tel" id="phone" name="phone"
-                 value="{{ form.get('phone','') }}" placeholder="Enter mobile number" autocomplete="tel">
+        <label class="form-label signup-label" for="spfInput">Mobile number</label>
+        <div class="spf-wrap" id="spfWrap">
+          <!-- Country selector -->
+          <button type="button" class="spf-cc-btn" id="spfCcBtn"
+                  onclick="spfToggle(event)" aria-haspopup="listbox" aria-expanded="false">
+            <span class="spf-flag" id="spfFlag">🇮🇳</span>
+            <span class="spf-cname" id="spfCname">India</span>
+            <span class="spf-dial" id="spfDial">+91</span>
+            <svg class="spf-arr" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <!-- Phone icon + input -->
+          <svg class="spf-ph-icon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81 19.79 19.79 0 012 1h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/>
+          </svg>
+          <input type="text" class="spf-input" id="spfInput" inputmode="numeric"
+                 placeholder="Enter phone number" autocomplete="tel" aria-label="Phone number"
+                 oninput="spfOnInput(this)" onkeypress="return spfKeyPress(event)" onpaste="spfOnPaste(event)">
+          <div class="spf-status" id="spfStatus"></div>
+          <!-- Country dropdown -->
+          <div class="spf-dd" id="spfDd" role="listbox" aria-label="Select country">
+            <div class="spf-dd-hd">
+              <svg width="14" height="14" fill="none" stroke="#94A3B8" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+              </svg>
+              <input type="text" class="spf-dd-search" id="spfDdSearch"
+                     placeholder="Search country…" oninput="spfSearch(this.value)" autocomplete="off">
+            </div>
+            <div class="spf-dd-list" id="spfDdList"></div>
+          </div>
         </div>
+        <!-- Validation messages -->
+        <div class="spf-msgs">
+          <div class="spf-err" id="spfErr">
+            <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+            Please enter a valid phone number.
+          </div>
+          <div class="spf-hint" id="spfHint"></div>
+        </div>
+        <!-- Hidden form fields (keep original field names for Flask) -->
+        <input type="hidden" name="phone_code" id="spfCodeHidden" value="{{ form.get('phone_code', '+91') }}">
+        <input type="hidden" name="phone" id="spfPhoneHidden" value="{{ form.get('phone', '') }}">
       </div>
 
       <div class="form-group">
@@ -236,6 +266,199 @@
 </div>
 
 <script>
+/* ── Signup Phone Field (spf) ──────────────────────────────── */
+var SPF_COUNTRIES = [
+  {code:'IN',flag:'🇮🇳',name:'India',           dial:'+91', min:10,max:10},
+  {code:'US',flag:'🇺🇸',name:'United States',    dial:'+1',  min:10,max:10},
+  {code:'GB',flag:'🇬🇧',name:'United Kingdom',   dial:'+44', min:10,max:11},
+  {code:'AU',flag:'🇦🇺',name:'Australia',        dial:'+61', min:9, max:9 },
+  {code:'AE',flag:'🇦🇪',name:'UAE',              dial:'+971',min:9, max:9 },
+  {code:'SG',flag:'🇸🇬',name:'Singapore',        dial:'+65', min:8, max:8 },
+  {code:'DE',flag:'🇩🇪',name:'Germany',          dial:'+49', min:10,max:11},
+  {code:'FR',flag:'🇫🇷',name:'France',           dial:'+33', min:9, max:9 },
+  {code:'JP',flag:'🇯🇵',name:'Japan',            dial:'+81', min:10,max:11},
+  {code:'CN',flag:'🇨🇳',name:'China',            dial:'+86', min:11,max:11},
+  {code:'BR',flag:'🇧🇷',name:'Brazil',           dial:'+55', min:10,max:11},
+  {code:'CA',flag:'🇨🇦',name:'Canada',           dial:'+1',  min:10,max:10},
+  {code:'NL',flag:'🇳🇱',name:'Netherlands',      dial:'+31', min:9, max:9 },
+  {code:'IT',flag:'🇮🇹',name:'Italy',            dial:'+39', min:9, max:10},
+  {code:'ES',flag:'🇪🇸',name:'Spain',            dial:'+34', min:9, max:9 },
+  {code:'PK',flag:'🇵🇰',name:'Pakistan',         dial:'+92', min:10,max:10},
+  {code:'BD',flag:'🇧🇩',name:'Bangladesh',       dial:'+880',min:10,max:10},
+  {code:'LK',flag:'🇱🇰',name:'Sri Lanka',        dial:'+94', min:9, max:9 },
+  {code:'NP',flag:'🇳🇵',name:'Nepal',            dial:'+977',min:9, max:10},
+  {code:'MY',flag:'🇲🇾',name:'Malaysia',         dial:'+60', min:9, max:10},
+  {code:'PH',flag:'🇵🇭',name:'Philippines',      dial:'+63', min:10,max:10},
+  {code:'ID',flag:'🇮🇩',name:'Indonesia',        dial:'+62', min:9, max:12},
+  {code:'TH',flag:'🇹🇭',name:'Thailand',         dial:'+66', min:9, max:9 },
+  {code:'VN',flag:'🇻🇳',name:'Vietnam',          dial:'+84', min:9, max:10},
+  {code:'KR',flag:'🇰🇷',name:'South Korea',      dial:'+82', min:9, max:10},
+  {code:'ZA',flag:'🇿🇦',name:'South Africa',     dial:'+27', min:9, max:9 },
+  {code:'NG',flag:'🇳🇬',name:'Nigeria',          dial:'+234',min:10,max:10},
+  {code:'KE',flag:'🇰🇪',name:'Kenya',            dial:'+254',min:9, max:9 },
+  {code:'EG',flag:'🇪🇬',name:'Egypt',            dial:'+20', min:10,max:10},
+  {code:'SA',flag:'🇸🇦',name:'Saudi Arabia',     dial:'+966',min:9, max:9 },
+  {code:'QA',flag:'🇶🇦',name:'Qatar',            dial:'+974',min:8, max:8 },
+  {code:'KW',flag:'🇰🇼',name:'Kuwait',           dial:'+965',min:8, max:8 },
+  {code:'MX',flag:'🇲🇽',name:'Mexico',           dial:'+52', min:10,max:10},
+  {code:'AR',flag:'🇦🇷',name:'Argentina',        dial:'+54', min:10,max:11}
+];
+
+var _spfC = SPF_COUNTRIES[0];
+
+var SPF_TZ = {
+  'Asia/Calcutta':'IN','Asia/Kolkata':'IN',
+  'America/New_York':'US','America/Los_Angeles':'US','America/Chicago':'US','America/Denver':'US',
+  'Europe/London':'GB','Australia/Sydney':'AU','Australia/Melbourne':'AU',
+  'Asia/Dubai':'AE','Asia/Singapore':'SG','Europe/Berlin':'DE','Europe/Paris':'FR',
+  'Asia/Tokyo':'JP','Asia/Shanghai':'CN','America/Sao_Paulo':'BR','America/Toronto':'CA',
+  'America/Vancouver':'CA','Asia/Karachi':'PK','Asia/Dhaka':'BD','Asia/Colombo':'LK',
+  'Asia/Kathmandu':'NP','Asia/Kuala_Lumpur':'MY','Asia/Manila':'PH','Asia/Jakarta':'ID',
+  'Asia/Bangkok':'TH','Asia/Ho_Chi_Minh':'VN','Asia/Seoul':'KR',
+  'Africa/Johannesburg':'ZA','Africa/Lagos':'NG','Africa/Nairobi':'KE','Africa/Cairo':'EG',
+  'Asia/Riyadh':'SA','Asia/Qatar':'QA','Asia/Kuwait':'KW',
+  'America/Mexico_City':'MX','America/Argentina/Buenos_Aires':'AR'
+};
+
+function spfInit() {
+  /* Detect country by timezone (unless form has pre-filled code) */
+  var preCode = document.getElementById('spfCodeHidden').value.trim();
+  var preNum  = document.getElementById('spfPhoneHidden').value.trim();
+  var found   = SPF_COUNTRIES.find(function(c){ return c.dial === preCode; });
+
+  if (!found || (!preNum && preCode === '+91')) {
+    try {
+      var tz   = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      var code = SPF_TZ[tz];
+      if (code) found = SPF_COUNTRIES.find(function(c){ return c.code === code; });
+    } catch(e) {}
+  }
+  _spfC = found || SPF_COUNTRIES[0];
+  spfApply(_spfC);
+  spfRenderList(SPF_COUNTRIES);
+
+  if (preNum) {
+    document.getElementById('spfInput').value = preNum;
+    spfValidate(preNum);
+  }
+  document.addEventListener('click', function(e) {
+    if (!document.getElementById('spfWrap').contains(e.target)) spfClose();
+  });
+}
+
+function spfApply(c) {
+  document.getElementById('spfFlag').textContent  = c.flag;
+  document.getElementById('spfCname').textContent = c.name;
+  document.getElementById('spfDial').textContent  = c.dial;
+  document.getElementById('spfCodeHidden').value  = c.dial;
+}
+
+function spfToggle(e) {
+  e.stopPropagation();
+  document.getElementById('spfDd').classList.contains('spf-dd-open') ? spfClose() : spfOpen();
+}
+function spfOpen() {
+  var dd = document.getElementById('spfDd');
+  dd.classList.add('spf-dd-open');
+  document.getElementById('spfWrap').classList.add('spf-dd-open');
+  document.getElementById('spfCcBtn').setAttribute('aria-expanded','true');
+  var s = document.getElementById('spfDdSearch');
+  s.value = ''; spfSearch('');
+  setTimeout(function(){ s.focus(); }, 60);
+}
+function spfClose() {
+  document.getElementById('spfDd').classList.remove('spf-dd-open');
+  document.getElementById('spfWrap').classList.remove('spf-dd-open');
+  document.getElementById('spfCcBtn').setAttribute('aria-expanded','false');
+}
+function spfSelect(code) {
+  var c = SPF_COUNTRIES.find(function(x){ return x.code === code; });
+  if (!c) return;
+  _spfC = c;
+  spfApply(c);
+  spfClose();
+  document.querySelectorAll('.spf-dd-item').forEach(function(el){
+    el.classList.toggle('spf-sel', el.dataset.code === code);
+  });
+  var val = document.getElementById('spfInput').value;
+  if (val) spfValidate(val);
+  spfUpdateHidden(val);
+  document.getElementById('spfInput').focus();
+}
+function spfSearch(q) {
+  var lq = q.toLowerCase().trim();
+  var list = lq ? SPF_COUNTRIES.filter(function(c){
+    return c.name.toLowerCase().includes(lq) || c.dial.includes(lq) || c.code.toLowerCase().includes(lq);
+  }) : SPF_COUNTRIES;
+  spfRenderList(list);
+}
+function spfRenderList(list) {
+  var ul = document.getElementById('spfDdList');
+  if (!list.length) {
+    ul.innerHTML = '<div class="spf-dd-empty">No countries found</div>';
+    return;
+  }
+  ul.innerHTML = list.map(function(c) {
+    return '<div class="spf-dd-item' + (c.code === _spfC.code ? ' spf-sel' : '') + '" '
+      + 'data-code="' + c.code + '" onclick="spfSelect(\'' + c.code + '\')">'
+      + '<span class="spf-dd-item-flag">' + c.flag + '</span>'
+      + '<span class="spf-dd-item-name">' + c.name + '</span>'
+      + '<span class="spf-dd-item-dial">' + c.dial + '</span>'
+      + '</div>';
+  }).join('');
+}
+function spfKeyPress(e) {
+  return /[0-9]/.test(String.fromCharCode(e.which || e.keyCode));
+}
+function spfOnPaste(e) {
+  e.preventDefault();
+  var pasted = (e.clipboardData || window.clipboardData).getData('text');
+  var nums   = pasted.replace(/[^0-9]/g, '');
+  var prefix = _spfC.dial.replace('+', '');
+  if (nums.startsWith(prefix) && nums.length > _spfC.max) nums = nums.slice(prefix.length);
+  var inp = document.getElementById('spfInput');
+  inp.value = nums.slice(0, _spfC.max);
+  spfValidate(inp.value);
+  spfUpdateHidden(inp.value);
+}
+function spfOnInput(inp) {
+  var v = inp.value.replace(/[^0-9]/g, '').slice(0, _spfC.max);
+  inp.value = v;
+  spfValidate(v);
+  spfUpdateHidden(v);
+}
+function spfValidate(val) {
+  var wrap   = document.getElementById('spfWrap');
+  var status = document.getElementById('spfStatus');
+  var err    = document.getElementById('spfErr');
+  var hint   = document.getElementById('spfHint');
+  wrap.classList.remove('spf-valid', 'spf-invalid');
+  status.innerHTML = '';
+  err.classList.remove('show');
+  hint.classList.remove('show');
+  if (!val) {
+    var range = _spfC.min === _spfC.max ? _spfC.min + ' digits' : _spfC.min + '–' + _spfC.max + ' digits';
+    hint.textContent = 'Expected: ' + range;
+    hint.classList.add('show');
+    return;
+  }
+  var ok = val.length >= _spfC.min && val.length <= _spfC.max;
+  if (ok) {
+    wrap.classList.add('spf-valid');
+    status.innerHTML = '<svg width="16" height="16" fill="none" stroke="#059669" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>';
+  } else {
+    wrap.classList.add('spf-invalid');
+    status.innerHTML = '<svg width="16" height="16" fill="none" stroke="#DC2626" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+    err.classList.add('show');
+    var range = _spfC.min === _spfC.max ? _spfC.min + ' digits' : _spfC.min + '–' + _spfC.max + ' digits';
+    hint.textContent = 'Expected: ' + range;
+    hint.classList.add('show');
+  }
+}
+function spfUpdateHidden(val) {
+  document.getElementById('spfPhoneHidden').value = val;
+}
+
 /* ── Work status card selection ── */
 function selectWorkStatus(activeId, inactiveId) {
   document.getElementById(activeId).classList.add('selected');
@@ -278,7 +501,7 @@ function onTermsChange() {
 /* ── Password ── */
 function togglePw(id) {
   const inp = document.getElementById(id);
-  inp.type = inp.type === 'password' %s 'text' : 'password';
+  inp.type = inp.type === 'password' ? 'text' : 'password';
 }
 function updateStrength(val) {
   const row   = document.getElementById('strengthRow');
@@ -323,15 +546,16 @@ function filterSkills(q) {
     const isChecked = span.querySelector('input').checked;
     const matches   = name.includes(lq);
     const show      = isChecked || (lq.length > 0 && matches);
-    span.style.display = show %s '' : 'none';
+    span.style.display = show ? '' : 'none';
     if (show) visible++;
   });
-  hint.style.display     = (lq.length === 0 && visible === 0) %s 'block' : 'none';
-  noResult.style.display = (lq.length > 0  && visible === 0) %s 'block' : 'none';
+  hint.style.display     = (lq.length === 0 && visible === 0) ? 'block' : 'none';
+  noResult.style.display = (lq.length > 0  && visible === 0) ? 'block' : 'none';
 }
 
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', () => {
+  spfInit();
   filterSkills('');
   ['termsModal', 'privacyModal'].forEach(id => {
     const el = document.getElementById(id);

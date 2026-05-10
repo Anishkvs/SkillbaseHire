@@ -315,6 +315,112 @@ img{max-width:100%}
 textarea.fc{resize:vertical;min-height:80px}
 .form-actions{display:flex;gap:.5rem;margin-top:.875rem}
 
+/* ── Phone number validator ─────────────────────────────────────── */
+.ph-field{display:flex;flex-direction:column;gap:.375rem}
+.ph-input-wrap{
+  display:flex;align-items:center;
+  background:var(--white);border:1.5px solid var(--border);
+  border-radius:var(--radius-xs);overflow:visible;
+  transition:border-color .2s,box-shadow .2s;position:relative;
+}
+.ph-input-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.ph-input-wrap.ph-valid{border-color:#16A34A;box-shadow:0 0 0 3px rgba(22,163,74,.1)}
+.ph-input-wrap.ph-invalid{border-color:var(--red);box-shadow:0 0 0 3px rgba(220,38,38,.1)}
+.ph-cc-btn{
+  display:flex;align-items:center;gap:5px;padding:0 10px;height:40px;
+  background:var(--page-bg);border:none;border-right:1.5px solid var(--border);
+  cursor:pointer;flex-shrink:0;font-size:.8125rem;font-weight:600;
+  color:var(--text);white-space:nowrap;border-radius:var(--radius-xs) 0 0 var(--radius-xs);
+  transition:background .15s;
+}
+.ph-cc-btn:hover{background:var(--border)}
+.ph-flag{font-size:1.1rem;line-height:1}
+.ph-dial{color:var(--text-2);font-size:.8125rem}
+.ph-cc-arr{opacity:.5;flex-shrink:0}
+.ph-num-inp{
+  flex:1;border:none;outline:none;background:transparent;
+  padding:0 10px;height:40px;font-size:.875rem;color:var(--text);
+  font-family:'Inter',sans-serif;min-width:0;
+}
+.ph-num-inp::placeholder{color:var(--text-3)}
+.ph-status{width:36px;height:40px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ph-error-msg{
+  font-size:.75rem;font-weight:500;color:var(--red);
+  display:none;align-items:center;gap:4px;
+}
+.ph-error-msg.show{display:flex}
+.ph-hint{font-size:.72rem;color:var(--text-3)}
+
+/* Country dropdown */
+.ph-dd{
+  position:absolute;top:calc(100% + 6px);left:0;z-index:999;
+  width:280px;background:var(--white);border:1px solid var(--border);
+  border-radius:var(--radius-sm);box-shadow:0 8px 24px rgba(0,0,0,.12);
+  display:none;flex-direction:column;overflow:hidden;
+  animation:fadeSlideDown .15s ease-out both;
+}
+.ph-dd.open{display:flex}
+.ph-dd-search{
+  border:none;border-bottom:1px solid var(--border);outline:none;
+  padding:.625rem .875rem;font-size:.8125rem;color:var(--text);
+  font-family:'Inter',sans-serif;background:var(--white);
+}
+.ph-dd-search::placeholder{color:var(--text-3)}
+.ph-dd-list{max-height:220px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+.ph-dd-item{
+  display:flex;align-items:center;gap:.625rem;padding:.5rem .875rem;
+  cursor:pointer;font-size:.8125rem;color:var(--text);transition:background .1s;border:none;background:none;width:100%;text-align:left;
+}
+.ph-dd-item:hover{background:var(--page-bg)}
+.ph-dd-item.selected{background:var(--accent-light);color:var(--accent);font-weight:600}
+.ph-dd-item-flag{font-size:1rem;flex-shrink:0}
+.ph-dd-item-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ph-dd-item-dial{color:var(--text-3);font-size:.75rem;flex-shrink:0}
+
+/* OTP section */
+.ph-otp-section{
+  margin-top:.875rem;padding:.875rem 1rem;
+  background:var(--white);border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);display:none;flex-direction:column;gap:.75rem;
+}
+.ph-otp-section.show{display:flex}
+.ph-verify-btn{
+  display:inline-flex;align-items:center;gap:.375rem;
+  padding:.375rem .875rem;border-radius:var(--radius-xs);
+  font-size:.8rem;font-weight:600;border:1.5px solid var(--accent);
+  color:var(--accent);background:var(--accent-light);cursor:pointer;
+  transition:all .15s;font-family:'Inter',sans-serif;
+}
+.ph-verify-btn:hover{background:var(--accent);color:#fff}
+.ph-otp-label{font-size:.8125rem;font-weight:600;color:var(--text)}
+.ph-otp-sub{font-size:.75rem;color:var(--text-3)}
+.ph-otp-inputs{display:flex;gap:.5rem}
+.ph-otp-box{
+  width:40px;height:44px;border:1.5px solid var(--border);
+  border-radius:var(--radius-xs);text-align:center;font-size:1.125rem;
+  font-weight:700;color:var(--text);outline:none;background:var(--white);
+  font-family:'Inter',sans-serif;transition:border-color .15s,box-shadow .15s;
+}
+.ph-otp-box:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.ph-otp-box.filled{border-color:var(--accent)}
+.ph-otp-actions{display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap}
+.ph-resend-btn{
+  font-size:.75rem;font-weight:600;color:var(--accent);
+  background:none;border:none;cursor:pointer;padding:0;font-family:'Inter',sans-serif;
+}
+.ph-resend-btn:disabled{color:var(--text-3);cursor:default}
+.ph-timer{font-size:.75rem;color:var(--text-3)}
+.ph-otp-success{
+  display:flex;align-items:center;gap:.5rem;
+  font-size:.8125rem;font-weight:600;color:var(--green);
+}
+.ph-verified-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:.7rem;font-weight:600;color:var(--green);
+  background:var(--green-light);border:1px solid rgba(22,163,74,.25);
+  border-radius:20px;padding:2px 8px;
+}
+
 /* ── Modal ── */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center;padding:1rem}
 .modal-overlay.open{display:flex}
@@ -1079,7 +1185,7 @@ textarea.fc{resize:vertical;min-height:80px}
       </div>
 
       <!-- Education -->
-      <div class="card">
+      <div class="card" id="section-education">
         <div class="card-head">
           <div class="card-title">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
@@ -1103,9 +1209,21 @@ textarea.fc{resize:vertical;min-height:80px}
                 <div class="tl-meta"><span>{{ edu.start_year }}{% if edu.end_year %} — {{ edu.end_year }}{% endif %}</span></div>
                 {% endif %}
               </div>
-              <form method="post" action="{{ url_for('delete_education', edu_id=edu.id) }}" style="flex-shrink:0">
-                <button type="submit" class="btn-icon" title="Remove" onclick="return confirm('Remove this education?')"><svg width="13" height="13" fill="none" stroke="var(--red)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
-              </form>
+              <button
+                type="button"
+                class="btn-icon exp-menu-btn"
+                title="More options"
+                onclick="toggleEduMenu(this)"
+                data-id="{{ edu.id }}"
+                data-degree="{{ edu.degree | e }}"
+                data-college="{{ edu.college | e }}"
+                data-start="{{ edu.start_year or '' }}"
+                data-end="{{ edu.end_year or '' }}"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="5"  r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+                </svg>
+              </button>
             </div>
             {% endfor %}
           </div>
@@ -1131,13 +1249,13 @@ textarea.fc{resize:vertical;min-height:80px}
       </div>
 
       <!-- Certifications -->
-      <div class="card">
+      <div class="card" id="section-certifications">
         <div class="card-head">
           <div class="card-title">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
             Certifications
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddCert')">+ Add Certification</button>
+          <button class="btn btn-ghost btn-sm" onclick="openAddCertModal()">+ Add Certification</button>
         </div>
         <div class="card-body">
           {% if certifications %}
@@ -1152,9 +1270,21 @@ textarea.fc{resize:vertical;min-height:80px}
                 <div style="font-size:.75rem;color:var(--text-2)">{{ cert.issued_by }}{% if cert.year %} · {{ cert.year }}{% endif %}</div>
                 {% if cert.credential_url %}<a href="{{ cert.credential_url }}" target="_blank" style="font-size:.75rem;color:var(--accent)">View Credential →</a>{% endif %}
               </div>
-              <form method="post" action="{{ url_for('delete_certification', cert_id=cert.id) }}" style="flex-shrink:0">
-                <button type="submit" class="btn-icon" title="Remove" onclick="return confirm('Remove this certification?')"><svg width="13" height="13" fill="none" stroke="var(--red)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
-              </form>
+              <button
+                type="button"
+                class="btn-icon exp-menu-btn"
+                title="More options"
+                onclick="toggleCertMenu(this)"
+                data-id="{{ cert.id }}"
+                data-name="{{ cert.cert_name | e }}"
+                data-by="{{ cert.issued_by | e }}"
+                data-year="{{ cert.year or '' }}"
+                data-url="{{ cert.credential_url or '' }}"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+                </svg>
+              </button>
             </div>
             {% endfor %}
           </div>
@@ -1162,31 +1292,20 @@ textarea.fc{resize:vertical;min-height:80px}
           <div class="empty-state">
             <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
             <p>Add your professional certifications to build credibility.</p>
-            <button class="btn btn-outline btn-sm" onclick="toggleEdit('editAddCert')">Add Certification</button>
+            <button class="btn btn-outline btn-sm" onclick="openAddCertModal()">Add Certification</button>
           </div>
           {% endif %}
-        </div>
-        <div id="editAddCert" class="edit-panel">
-          <form method="post" action="{{ url_for('add_certification') }}">
-            <div class="form-grid">
-              <div class="fg"><label>Certificate Name *</label><input class="fc" type="text" name="cert_name" placeholder="e.g. ISTQB Foundation Level" required></div>
-              <div class="fg"><label>Issued By</label><input class="fc" type="text" name="issued_by" placeholder="e.g. ISTQB"></div>
-              <div class="fg"><label>Year</label><input class="fc" type="number" name="year" placeholder="e.g. 2023" min="1990" max="2030"></div>
-              <div class="fg"><label>Credential URL</label><input class="fc" type="url" name="credential_url" placeholder="https://..."></div>
-            </div>
-            <div class="form-actions"><button type="submit" class="btn btn-primary btn-sm">Save Certification</button><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddCert')">Cancel</button></div>
-          </form>
         </div>
       </div>
 
       <!-- Projects -->
-      <div class="card">
+      <div class="card" id="section-projects">
         <div class="card-head">
           <div class="card-title">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg>
             Projects
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddProj')">+ Add Project</button>
+          <button class="btn btn-ghost btn-sm" onclick="openAddProjModal()">+ Add Project</button>
         </div>
         <div class="card-body">
           {% if projects %}
@@ -1197,14 +1316,30 @@ textarea.fc{resize:vertical;min-height:80px}
                 <svg width="16" height="16" fill="none" stroke="var(--purple)" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg>
               </div>
               <div style="flex:1;min-width:0">
-                <div style="font-weight:600;font-size:.9rem;margin-bottom:.125rem">{{ proj.project_name }}</div>
+                <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:.125rem">
+                  <span style="font-weight:600;font-size:.9rem">{{ proj.project_name }}</span>
+                  {% if proj.year %}<span style="font-size:.72rem;color:var(--text-3);font-weight:500">· {{ proj.year }}</span>{% endif %}
+                </div>
                 {% if proj.domain %}<div style="font-size:.75rem;color:var(--accent);margin-bottom:.25rem">{{ proj.domain }}</div>{% endif %}
                 {% if proj.description %}<p style="font-size:.8125rem;color:var(--text-2);line-height:1.5;margin-bottom:.25rem">{{ proj.description }}</p>{% endif %}
                 {% if proj.project_url %}<a href="{{ proj.project_url }}" target="_blank" style="font-size:.75rem;color:var(--accent)">View Project →</a>{% endif %}
               </div>
-              <form method="post" action="{{ url_for('delete_project', proj_id=proj.id) }}" style="flex-shrink:0">
-                <button type="submit" class="btn-icon" title="Remove" onclick="return confirm('Remove this project?')"><svg width="13" height="13" fill="none" stroke="var(--red)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
-              </form>
+              <button
+                type="button"
+                class="btn-icon exp-menu-btn"
+                title="More options"
+                onclick="toggleProjMenu(this)"
+                data-id="{{ proj.id }}"
+                data-name="{{ proj.project_name | e }}"
+                data-domain="{{ proj.domain | e }}"
+                data-desc="{{ (proj.description or '') | e }}"
+                data-url="{{ proj.project_url or '' }}"
+                data-year="{{ proj.year or '' }}"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
+                </svg>
+              </button>
             </div>
             {% endfor %}
           </div>
@@ -1212,20 +1347,9 @@ textarea.fc{resize:vertical;min-height:80px}
           <div class="empty-state">
             <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg>
             <p>Add projects to showcase your practical experience to recruiters.</p>
-            <button class="btn btn-outline btn-sm" onclick="toggleEdit('editAddProj')">Add Project</button>
+            <button class="btn btn-outline btn-sm" onclick="openAddProjModal()">Add Project</button>
           </div>
           {% endif %}
-        </div>
-        <div id="editAddProj" class="edit-panel">
-          <form method="post" action="{{ url_for('add_project') }}">
-            <div class="form-grid">
-              <div class="fg"><label>Project Name *</label><input class="fc" type="text" name="project_name" placeholder="e.g. E-Commerce Test Suite" required></div>
-              <div class="fg"><label>Domain / Tech Stack</label><input class="fc" type="text" name="domain" placeholder="e.g. Selenium, Python, Jenkins"></div>
-              <div class="fg span-2"><label>Description</label><textarea class="fc" name="description" rows="3" placeholder="What did you build and what was your contribution?"></textarea></div>
-              <div class="fg span-2"><label>Project URL (optional)</label><input class="fc" type="url" name="project_url" placeholder="https://github.com/..."></div>
-            </div>
-            <div class="form-actions"><button type="submit" class="btn btn-primary btn-sm">Save Project</button><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddProj')">Cancel</button></div>
-          </form>
         </div>
       </div>
 
@@ -1255,11 +1379,76 @@ textarea.fc{resize:vertical;min-height:80px}
             <input type="hidden" name="job_title" value="{{ profile.job_title if profile else '' }}">
             <input type="hidden" name="experience" value="{{ profile.experience if profile else '' }}">
             <div class="form-grid">
-              <div class="fg"><label>Phone Number</label><input class="fc" type="text" name="phone" value="{{ profile.phone if profile else '' }}" placeholder="+91 9876543210"></div>
+              <!-- Phone number with country code -->
+              <div class="fg ph-field span-2">
+                <label>Phone Number</label>
+                <div class="ph-input-wrap" id="phWrap">
+                  <button type="button" class="ph-cc-btn" id="phCcBtn" onclick="phToggleDd(event)">
+                    <span class="ph-flag" id="phFlag">🇮🇳</span>
+                    <span class="ph-dial" id="phDial">+91</span>
+                    <svg class="ph-cc-arr" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                  </button>
+                  <input type="text" class="ph-num-inp" id="phNumInp" inputmode="numeric"
+                         placeholder="Enter phone number"
+                         oninput="phOnInput(this)" onkeypress="return phKeyPress(event)">
+                  <div class="ph-status" id="phStatus"></div>
+                  <!-- Country dropdown -->
+                  <div class="ph-dd" id="phDd">
+                    <input type="text" class="ph-dd-search" id="phDdSearch" placeholder="🔍  Search country…" oninput="phSearchCountry(this.value)">
+                    <div class="ph-dd-list" id="phDdList"></div>
+                  </div>
+                </div>
+                <div class="ph-error-msg" id="phError">
+                  <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  Please enter a valid phone number.
+                </div>
+                <span class="ph-hint" id="phHint"></span>
+                <!-- Hidden input carries the full number to the form -->
+                <input type="hidden" name="phone" id="phHidden" value="{{ profile.phone if profile else '' }}">
+
+                <!-- Verify button (shown when number is valid) -->
+                <div style="margin-top:.5rem;display:none" id="phVerifyRow">
+                  <button type="button" class="ph-verify-btn" onclick="phStartOtp()">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.63A2 2 0 012 .18h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.18 6.18l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/></svg>
+                    Verify phone number
+                  </button>
+                </div>
+
+                <!-- OTP section -->
+                <div class="ph-otp-section" id="phOtpSection">
+                  <div>
+                    <div class="ph-otp-label">Enter verification code</div>
+                    <div class="ph-otp-sub" id="phOtpSub">A 6-digit code was sent to your phone.</div>
+                  </div>
+                  <div class="ph-otp-inputs" id="phOtpInputs">
+                    <input class="ph-otp-box" maxlength="1" inputmode="numeric" oninput="phOtpNext(this,0)" onkeydown="phOtpBack(event,0)">
+                    <input class="ph-otp-box" maxlength="1" inputmode="numeric" oninput="phOtpNext(this,1)" onkeydown="phOtpBack(event,1)">
+                    <input class="ph-otp-box" maxlength="1" inputmode="numeric" oninput="phOtpNext(this,2)" onkeydown="phOtpBack(event,2)">
+                    <input class="ph-otp-box" maxlength="1" inputmode="numeric" oninput="phOtpNext(this,3)" onkeydown="phOtpBack(event,3)">
+                    <input class="ph-otp-box" maxlength="1" inputmode="numeric" oninput="phOtpNext(this,4)" onkeydown="phOtpBack(event,4)">
+                    <input class="ph-otp-box" maxlength="1" inputmode="numeric" oninput="phOtpNext(this,5)" onkeydown="phOtpBack(event,5)">
+                  </div>
+                  <div class="ph-otp-actions">
+                    <button type="button" class="ph-verify-btn" id="phOtpSubmit" onclick="phVerifyOtp()" style="border-color:var(--green);color:var(--green);background:var(--green-light)">Verify Code</button>
+                    <div style="display:flex;align-items:center;gap:.5rem">
+                      <button type="button" class="ph-resend-btn" id="phResendBtn" disabled onclick="phResend()">Resend OTP</button>
+                      <span class="ph-timer" id="phTimer"></span>
+                    </div>
+                  </div>
+                  <div class="ph-otp-success" id="phOtpSuccess" style="display:none">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    Phone number verified successfully!
+                  </div>
+                </div>
+              </div>
+
               <div class="fg"><label>LinkedIn URL</label><input class="fc" type="url" name="linkedin" value="{{ profile.linkedin if profile else '' }}" placeholder="https://linkedin.com/in/..."></div>
               <div class="fg"><label>GitHub URL</label><input class="fc" type="url" name="github" value="{{ profile.github if profile else '' }}" placeholder="https://github.com/..."></div>
             </div>
-            <div class="form-actions"><button type="submit" class="btn btn-primary btn-sm">Save</button><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editContact')">Cancel</button></div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary btn-sm" id="phSaveBtn">Save</button>
+              <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editContact')">Cancel</button>
+            </div>
           </form>
         </div>
       </div>
@@ -2122,12 +2311,752 @@ function closeDeleteExpModal() {
   document.body.style.overflow = '';
 }
 
+// ── Project action menu ───────────────────────────────────────────
+var _proj = {};
+
+function toggleProjMenu(btn) {
+  var menu = document.getElementById('projActionMenu');
+  var id = btn.dataset.id;
+  var alreadyOpen = menu.style.display === 'block' && _proj.id === id;
+  closeProjMenu();
+  if (alreadyOpen) return;
+
+  _proj = { id: id, name: btn.dataset.name, domain: btn.dataset.domain,
+            desc: btn.dataset.desc, url: btn.dataset.url, year: btn.dataset.year, btn: btn };
+
+  var rect = btn.getBoundingClientRect();
+  menu.style.top   = (rect.bottom + 6) + 'px';
+  menu.style.right = (window.innerWidth - rect.right) + 'px';
+  menu.style.display = 'block';
+  menu.style.animation = 'none'; menu.offsetHeight; menu.style.animation = '';
+  btn.style.background = 'var(--accent-light)';
+  btn.style.color = 'var(--accent)';
+  btn.style.borderColor = 'rgba(79,70,229,.2)';
+}
+
+function closeProjMenu() {
+  var menu = document.getElementById('projActionMenu');
+  menu.style.display = 'none';
+  if (_proj.btn) { _proj.btn.style.background=''; _proj.btn.style.color=''; _proj.btn.style.borderColor=''; }
+}
+
+function openAddProjModal() {
+  document.getElementById('addProjModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAddProjModal() {
+  document.getElementById('addProjModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function openEditProjModal() {
+  closeProjMenu();
+  document.getElementById('editProjForm').action = '/candidate/profile/project/' + _proj.id + '/edit';
+  document.getElementById('editProjName').value   = _proj.name;
+  document.getElementById('editProjDomain').value = _proj.domain;
+  document.getElementById('editProjDesc').value   = _proj.desc;
+  document.getElementById('editProjUrl').value    = _proj.url;
+  document.getElementById('editProjYear').value   = _proj.year;
+  document.getElementById('editProjModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEditProjModal() {
+  document.getElementById('editProjModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function openDeleteProjModal() {
+  closeProjMenu();
+  document.getElementById('deleteProjMsg').innerHTML =
+    'Are you sure you want to remove this project from your profile?'
+    + ' <strong style="color:var(--text)">(' + _proj.name + ')</strong>';
+  document.getElementById('deleteProjForm').action = '/candidate/profile/project/' + _proj.id + '/delete';
+  document.getElementById('deleteProjModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDeleteProjModal() {
+  document.getElementById('deleteProjModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('mousedown', function(e) {
+  var menu = document.getElementById('projActionMenu');
+  if (menu && menu.style.display === 'block') {
+    if (!menu.contains(e.target) && !e.target.closest('.exp-menu-btn')) closeProjMenu();
+  }
+});
+
+// ── Certification action menu ─────────────────────────────────────
+var _cert = {};
+
+function toggleCertMenu(btn) {
+  var menu = document.getElementById('certActionMenu');
+  var id = btn.dataset.id;
+  var alreadyOpen = menu.style.display === 'block' && _cert.id === id;
+  closeCertMenu();
+  if (alreadyOpen) return;
+
+  _cert = { id: id, name: btn.dataset.name, by: btn.dataset.by,
+            year: btn.dataset.year, url: btn.dataset.url, btn: btn };
+
+  var rect = btn.getBoundingClientRect();
+  menu.style.top   = (rect.bottom + 6) + 'px';
+  menu.style.right = (window.innerWidth - rect.right) + 'px';
+  menu.style.display = 'block';
+  menu.style.animation = 'none'; menu.offsetHeight; menu.style.animation = '';
+  btn.style.background = 'var(--accent-light)';
+  btn.style.color = 'var(--accent)';
+  btn.style.borderColor = 'rgba(79,70,229,.2)';
+}
+
+function closeCertMenu() {
+  var menu = document.getElementById('certActionMenu');
+  menu.style.display = 'none';
+  if (_cert.btn) { _cert.btn.style.background=''; _cert.btn.style.color=''; _cert.btn.style.borderColor=''; }
+}
+
+function openAddCertModal() {
+  document.getElementById('addCertModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeAddCertModal() {
+  document.getElementById('addCertModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function openEditCertModal() {
+  closeCertMenu();
+  document.getElementById('editCertForm').action = '/candidate/profile/certification/' + _cert.id + '/edit';
+  document.getElementById('editCertName').value = _cert.name;
+  document.getElementById('editCertBy').value   = _cert.by;
+  document.getElementById('editCertYear').value = _cert.year;
+  document.getElementById('editCertUrl').value  = _cert.url;
+  document.getElementById('editCertModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEditCertModal() {
+  document.getElementById('editCertModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function openDeleteCertModal() {
+  closeCertMenu();
+  document.getElementById('deleteCertMsg').innerHTML =
+    'Are you sure you want to remove this certification from your profile?'
+    + ' <strong style="color:var(--text)">(' + _cert.name + ')</strong>';
+  document.getElementById('deleteCertForm').action = '/candidate/profile/certification/' + _cert.id + '/delete';
+  document.getElementById('deleteCertModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDeleteCertModal() {
+  document.getElementById('deleteCertModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('mousedown', function(e) {
+  var menu = document.getElementById('certActionMenu');
+  if (menu && menu.style.display === 'block') {
+    if (!menu.contains(e.target) && !e.target.closest('.exp-menu-btn')) closeCertMenu();
+  }
+});
+
+// ── Education action menu ─────────────────────────────────────────
+var _edu = {};
+
+function toggleEduMenu(btn) {
+  var menu = document.getElementById('eduActionMenu');
+  var id = btn.dataset.id;
+  var alreadyOpen = menu.style.display === 'block' && _edu.id === id;
+  closeEduMenu();
+  if (alreadyOpen) return;
+
+  _edu = {
+    id:     id,
+    degree: btn.dataset.degree,
+    college:btn.dataset.college,
+    start:  btn.dataset.start,
+    end:    btn.dataset.end,
+    btn:    btn
+  };
+
+  var rect = btn.getBoundingClientRect();
+  menu.style.top   = (rect.bottom + 6) + 'px';
+  menu.style.right = (window.innerWidth - rect.right) + 'px';
+  menu.style.display = 'block';
+  menu.style.animation = 'none';
+  menu.offsetHeight;
+  menu.style.animation = '';
+
+  btn.style.background  = 'var(--accent-light)';
+  btn.style.color       = 'var(--accent)';
+  btn.style.borderColor = 'rgba(79,70,229,.2)';
+}
+
+function closeEduMenu() {
+  var menu = document.getElementById('eduActionMenu');
+  menu.style.display = 'none';
+  if (_edu.btn) {
+    _edu.btn.style.background  = '';
+    _edu.btn.style.color       = '';
+    _edu.btn.style.borderColor = '';
+  }
+}
+
+function openEditEduModal() {
+  closeEduMenu();
+  document.getElementById('editEduForm').action = '/candidate/profile/education/' + _edu.id + '/edit';
+  document.getElementById('editEduDegree').value  = _edu.degree;
+  document.getElementById('editEduCollege').value = _edu.college;
+  document.getElementById('editEduStart').value   = _edu.start;
+  document.getElementById('editEduEnd').value     = _edu.end;
+  document.getElementById('editEduModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEditEduModal() {
+  document.getElementById('editEduModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function openDeleteEduModal() {
+  closeEduMenu();
+  document.getElementById('deleteEduMsg').innerHTML =
+    'Are you sure you want to remove this education from your profile?'
+    + ' <strong style="color:var(--text)">(' + _edu.degree + ')</strong>';
+  document.getElementById('deleteEduForm').action = '/candidate/profile/education/' + _edu.id + '/delete';
+  document.getElementById('deleteEduModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDeleteEduModal() {
+  document.getElementById('deleteEduModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('mousedown', function(e) {
+  var menu = document.getElementById('eduActionMenu');
+  if (menu && menu.style.display === 'block') {
+    if (!menu.contains(e.target) && !e.target.closest('.exp-menu-btn')) closeEduMenu();
+  }
+});
+
 // ── Escape key closes everything ──────────────────────────────────
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') { closeExpMenu(); closeEditExpModal(); closeDeleteExpModal(); }
+  if (e.key === 'Escape') {
+    closeExpMenu(); closeEditExpModal(); closeDeleteExpModal();
+    closeEduMenu(); closeEditEduModal(); closeDeleteEduModal();
+    closeCertMenu(); closeAddCertModal(); closeEditCertModal(); closeDeleteCertModal();
+    closeProjMenu(); closeAddProjModal(); closeEditProjModal(); closeDeleteProjModal();
+  }
 });
 
 /* Panels are moved to <body> on demand inside dpOpen() */
+
+// ── Phone Number Validator ────────────────────────────────────────
+var PH_COUNTRIES = [
+  {code:'IN',flag:'🇮🇳',name:'India',dial:'+91',min:10,max:10},
+  {code:'US',flag:'🇺🇸',name:'United States',dial:'+1',min:10,max:10},
+  {code:'GB',flag:'🇬🇧',name:'United Kingdom',dial:'+44',min:10,max:11},
+  {code:'AU',flag:'🇦🇺',name:'Australia',dial:'+61',min:9,max:9},
+  {code:'CA',flag:'🇨🇦',name:'Canada',dial:'+1',min:10,max:10},
+  {code:'AE',flag:'🇦🇪',name:'UAE',dial:'+971',min:9,max:9},
+  {code:'SG',flag:'🇸🇬',name:'Singapore',dial:'+65',min:8,max:8},
+  {code:'MY',flag:'🇲🇾',name:'Malaysia',dial:'+60',min:9,max:10},
+  {code:'DE',flag:'🇩🇪',name:'Germany',dial:'+49',min:10,max:12},
+  {code:'FR',flag:'🇫🇷',name:'France',dial:'+33',min:9,max:9},
+  {code:'JP',flag:'🇯🇵',name:'Japan',dial:'+81',min:10,max:11},
+  {code:'CN',flag:'🇨🇳',name:'China',dial:'+86',min:11,max:11},
+  {code:'SA',flag:'🇸🇦',name:'Saudi Arabia',dial:'+966',min:9,max:9},
+  {code:'NZ',flag:'🇳🇿',name:'New Zealand',dial:'+64',min:9,max:10},
+  {code:'ZA',flag:'🇿🇦',name:'South Africa',dial:'+27',min:9,max:9},
+  {code:'BD',flag:'🇧🇩',name:'Bangladesh',dial:'+880',min:10,max:10},
+  {code:'LK',flag:'🇱🇰',name:'Sri Lanka',dial:'+94',min:9,max:9},
+  {code:'PK',flag:'🇵🇰',name:'Pakistan',dial:'+92',min:10,max:10},
+  {code:'NL',flag:'🇳🇱',name:'Netherlands',dial:'+31',min:9,max:9},
+  {code:'IT',flag:'🇮🇹',name:'Italy',dial:'+39',min:9,max:10},
+  {code:'ES',flag:'🇪🇸',name:'Spain',dial:'+34',min:9,max:9},
+  {code:'BR',flag:'🇧🇷',name:'Brazil',dial:'+55',min:10,max:11},
+  {code:'MX',flag:'🇲🇽',name:'Mexico',dial:'+52',min:10,max:10},
+  {code:'NG',flag:'🇳🇬',name:'Nigeria',dial:'+234',min:10,max:10},
+  {code:'KE',flag:'🇰🇪',name:'Kenya',dial:'+254',min:9,max:9},
+  {code:'QA',flag:'🇶🇦',name:'Qatar',dial:'+974',min:8,max:8},
+  {code:'KW',flag:'🇰🇼',name:'Kuwait',dial:'+965',min:8,max:8},
+  {code:'BH',flag:'🇧🇭',name:'Bahrain',dial:'+973',min:8,max:8},
+  {code:'OM',flag:'🇴🇲',name:'Oman',dial:'+968',min:8,max:8},
+  {code:'PH',flag:'🇵🇭',name:'Philippines',dial:'+63',min:10,max:10},
+  {code:'ID',flag:'🇮🇩',name:'Indonesia',dial:'+62',min:9,max:12},
+  {code:'TH',flag:'🇹🇭',name:'Thailand',dial:'+66',min:9,max:9},
+  {code:'VN',flag:'🇻🇳',name:'Vietnam',dial:'+84',min:9,max:10},
+];
+
+var _phCountry = PH_COUNTRIES[0]; // default India
+var _phOtpCode = '';
+var _phTimerInterval = null;
+
+function phInit() {
+  phRenderDdList(PH_COUNTRIES);
+  /* Load existing value */
+  var hidden = document.getElementById('phHidden');
+  if (hidden && hidden.value) {
+    var val = hidden.value.trim();
+    /* Try to match dial code */
+    var matched = null;
+    PH_COUNTRIES.slice().sort(function(a,b){ return b.dial.length - a.dial.length; })
+      .forEach(function(c){ if (!matched && val.startsWith(c.dial)) matched = c; });
+    if (matched) {
+      phSelectCountry(matched, false);
+      document.getElementById('phNumInp').value = val.slice(matched.dial.length).trim();
+    } else {
+      document.getElementById('phNumInp').value = val;
+    }
+    phOnInput(document.getElementById('phNumInp'));
+  }
+  /* Close dropdown on outside click */
+  document.addEventListener('mousedown', function(e) {
+    var dd = document.getElementById('phDd');
+    var btn = document.getElementById('phCcBtn');
+    if (dd && !dd.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+      dd.classList.remove('open');
+    }
+  });
+}
+
+function phRenderDdList(list) {
+  var ul = document.getElementById('phDdList');
+  ul.innerHTML = '';
+  list.forEach(function(c) {
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'ph-dd-item' + (c.code === _phCountry.code ? ' selected' : '');
+    btn.innerHTML =
+      '<span class="ph-dd-item-flag">' + c.flag + '</span>' +
+      '<span class="ph-dd-item-name">' + c.name + '</span>' +
+      '<span class="ph-dd-item-dial">' + c.dial + '</span>';
+    btn.onclick = function(){ phSelectCountry(c, true); };
+    ul.appendChild(btn);
+  });
+}
+
+function phToggleDd(e) {
+  e.stopPropagation();
+  var dd = document.getElementById('phDd');
+  dd.classList.toggle('open');
+  if (dd.classList.contains('open')) {
+    document.getElementById('phDdSearch').value = '';
+    phRenderDdList(PH_COUNTRIES);
+    setTimeout(function(){ document.getElementById('phDdSearch').focus(); }, 50);
+  }
+}
+
+function phSearchCountry(q) {
+  q = q.toLowerCase();
+  var filtered = PH_COUNTRIES.filter(function(c){
+    return c.name.toLowerCase().includes(q) || c.dial.includes(q) || c.code.toLowerCase().includes(q);
+  });
+  phRenderDdList(filtered);
+}
+
+function phSelectCountry(c, closeMenu) {
+  _phCountry = c;
+  document.getElementById('phFlag').textContent = c.flag;
+  document.getElementById('phDial').textContent = c.dial;
+  if (closeMenu) document.getElementById('phDd').classList.remove('open');
+  phRenderDdList(PH_COUNTRIES);
+  phOnInput(document.getElementById('phNumInp'));
+  document.getElementById('phNumInp').focus();
+}
+
+function phKeyPress(e) {
+  return /[0-9]/.test(e.key);
+}
+
+function phOnInput(inp) {
+  /* Strip non-numeric */
+  var clean = inp.value.replace(/\D/g,'');
+  if (inp.value !== clean) inp.value = clean;
+
+  var wrap  = document.getElementById('phWrap');
+  var err   = document.getElementById('phError');
+  var hint  = document.getElementById('phHint');
+  var status= document.getElementById('phStatus');
+  var vrRow = document.getElementById('phVerifyRow');
+  var hidden= document.getElementById('phHidden');
+  var len   = clean.length;
+  var c     = _phCountry;
+
+  hint.textContent = 'Expected: ' + (c.min === c.max ? c.min : c.min + '–' + c.max) + ' digits';
+
+  if (len === 0) {
+    wrap.classList.remove('ph-valid','ph-invalid');
+    err.classList.remove('show');
+    status.innerHTML = '';
+    vrRow.style.display = 'none';
+    hidden.value = '';
+    return;
+  }
+
+  var valid = len >= c.min && len <= c.max;
+  wrap.classList.toggle('ph-valid',   valid);
+  wrap.classList.toggle('ph-invalid', !valid);
+  err.classList.toggle('show', !valid);
+
+  if (valid) {
+    status.innerHTML = '<svg width="16" height="16" fill="none" stroke="#16A34A" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>';
+    hidden.value = c.dial + clean;
+    vrRow.style.display = 'block';
+  } else {
+    status.innerHTML = '<svg width="15" height="15" fill="none" stroke="var(--red)" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>';
+    vrRow.style.display = 'none';
+  }
+}
+
+/* ── OTP flow ─────────────────────────────────────────────────── */
+function phStartOtp() {
+  var num = _phCountry.dial + document.getElementById('phNumInp').value;
+  /* Reset OTP boxes */
+  document.querySelectorAll('.ph-otp-box').forEach(function(b){ b.value=''; b.classList.remove('filled'); });
+  document.getElementById('phOtpSuccess').style.display = 'none';
+  document.getElementById('phOtpSection').classList.add('show');
+  document.getElementById('phOtpSub').textContent = 'A 6-digit code was sent to ' + num;
+  /* Call backend to generate OTP */
+  fetch('/candidate/profile/phone/send-otp', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
+    body: JSON.stringify({phone: num})
+  }).then(function(r){ return r.json(); }).then(function(d){
+    _phOtpCode = d.code || '';  /* demo: server returns code */
+    if (d.demo) document.getElementById('phOtpSub').textContent += ' (Demo code: ' + d.code + ')';
+  }).catch(function(){});
+  phStartTimer(60);
+  document.querySelectorAll('.ph-otp-box')[0].focus();
+}
+
+function phStartTimer(sec) {
+  clearInterval(_phTimerInterval);
+  var resend = document.getElementById('phResendBtn');
+  var timer  = document.getElementById('phTimer');
+  resend.disabled = true;
+  var t = sec;
+  timer.textContent = '(' + t + 's)';
+  _phTimerInterval = setInterval(function(){
+    t--;
+    timer.textContent = t > 0 ? '(' + t + 's)' : '';
+    if (t <= 0) { clearInterval(_phTimerInterval); resend.disabled = false; timer.textContent = ''; }
+  }, 1000);
+}
+
+function phResend() {
+  document.querySelectorAll('.ph-otp-box').forEach(function(b){ b.value=''; b.classList.remove('filled'); });
+  document.getElementById('phOtpSuccess').style.display = 'none';
+  phStartOtp();
+}
+
+function phOtpNext(inp, idx) {
+  inp.value = inp.value.replace(/\D/g,'');
+  inp.classList.toggle('filled', inp.value.length > 0);
+  var boxes = document.querySelectorAll('.ph-otp-box');
+  if (inp.value && idx < 5) boxes[idx+1].focus();
+  /* Auto-verify when all filled */
+  var full = true;
+  boxes.forEach(function(b){ if (!b.value) full = false; });
+  if (full) phVerifyOtp();
+}
+
+function phOtpBack(e, idx) {
+  var boxes = document.querySelectorAll('.ph-otp-box');
+  if (e.key === 'Backspace' && !boxes[idx].value && idx > 0) boxes[idx-1].focus();
+}
+
+function phVerifyOtp() {
+  var boxes = document.querySelectorAll('.ph-otp-box');
+  var entered = Array.from(boxes).map(function(b){ return b.value; }).join('');
+  if (entered.length < 6) return;
+  var hiddenPhone = document.getElementById('phHidden').value;
+  fetch('/candidate/profile/phone/verify-otp', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-Requested-With':'XMLHttpRequest'},
+    body: JSON.stringify({otp: entered, phone: hiddenPhone})
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.ok) {
+      document.getElementById('phOtpSuccess').style.display = 'flex';
+      clearInterval(_phTimerInterval);
+    } else {
+      boxes.forEach(function(b){ b.style.borderColor='var(--red)'; });
+      setTimeout(function(){ boxes.forEach(function(b){ b.style.borderColor=''; }); }, 1200);
+    }
+  }).catch(function(){});
+}
+
+/* Initialize when editContact panel opens */
+(function(){
+  var orig = window.toggleEdit;
+  window.toggleEdit = function(id) {
+    orig(id);
+    if (id === 'editContact') setTimeout(phInit, 60);
+  };
+})();
 </script>
+
+<!-- ══ Project action dropdown ══════════════════════════════════════ -->
+<div id="projActionMenu" style="display:none;position:fixed;z-index:9999;min-width:180px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 8px 24px rgba(0,0,0,.12);padding:4px;animation:fadeSlideDown .15s ease-out both">
+  <button type="button" class="exp-menu-item exp-menu-item--edit" onclick="openEditProjModal()">
+    <span class="exp-menu-icon exp-menu-icon--edit">
+      <svg width="13" height="13" fill="none" stroke="var(--accent)" stroke-width="2.2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </span>
+    Edit project
+  </button>
+  <div class="exp-menu-divider"></div>
+  <button type="button" class="exp-menu-item exp-menu-item--delete" onclick="openDeleteProjModal()">
+    <span class="exp-menu-icon exp-menu-icon--delete">
+      <svg width="13" height="13" fill="none" stroke="var(--red)" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+    </span>
+    Delete
+  </button>
+</div>
+
+<!-- ══ Add Project Modal ═════════════════════════════════════════════ -->
+<div id="addProjModal" class="sbh-overlay" onclick="if(event.target===this)closeAddProjModal()">
+  <div class="sbh-modal" style="max-width:500px">
+    <div class="sbh-modal-hdr">
+      <div>
+        <div class="sbh-modal-title">Add Project</div>
+        <div class="sbh-modal-sub">Showcase your practical experience to recruiters</div>
+      </div>
+      <button type="button" class="sbh-modal-x" onclick="closeAddProjModal()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form method="post" action="{{ url_for('add_project') }}">
+      <div class="sbh-modal-body">
+        <div class="form-grid">
+          <div class="fg"><label>Project Name *</label><input class="fc" type="text" name="project_name" placeholder="e.g. E-Commerce Test Suite" required></div>
+          <div class="fg"><label>Year</label><input class="fc" type="number" name="year" placeholder="e.g. 2023" min="1990" max="2030"></div>
+          <div class="fg span-2"><label>Domain / Tech Stack</label><input class="fc" type="text" name="domain" placeholder="e.g. Selenium, Python, Jenkins"></div>
+          <div class="fg span-2"><label>Description</label><textarea class="fc" name="description" rows="3" placeholder="What did you build and what was your contribution?"></textarea></div>
+          <div class="fg span-2"><label>Project URL (optional)</label><input class="fc" type="url" name="project_url" placeholder="https://github.com/..."></div>
+        </div>
+      </div>
+      <div class="sbh-modal-foot">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="closeAddProjModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm">Save Project</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ Edit Project Modal ════════════════════════════════════════════ -->
+<div id="editProjModal" class="sbh-overlay" onclick="if(event.target===this)closeEditProjModal()">
+  <div class="sbh-modal" style="max-width:500px">
+    <div class="sbh-modal-hdr">
+      <div>
+        <div class="sbh-modal-title">Edit Project</div>
+        <div class="sbh-modal-sub">Update your project details</div>
+      </div>
+      <button type="button" class="sbh-modal-x" onclick="closeEditProjModal()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form id="editProjForm" method="post" action="">
+      <div class="sbh-modal-body">
+        <div class="form-grid">
+          <div class="fg"><label>Project Name *</label><input class="fc" type="text" id="editProjName" name="project_name" placeholder="e.g. E-Commerce Test Suite" required></div>
+          <div class="fg"><label>Year</label><input class="fc" type="number" id="editProjYear" name="year" placeholder="e.g. 2023" min="1990" max="2030"></div>
+          <div class="fg span-2"><label>Domain / Tech Stack</label><input class="fc" type="text" id="editProjDomain" name="domain" placeholder="e.g. Selenium, Python, Jenkins"></div>
+          <div class="fg span-2"><label>Description</label><textarea class="fc" id="editProjDesc" name="description" rows="3" placeholder="What did you build and what was your contribution?"></textarea></div>
+          <div class="fg span-2"><label>Project URL (optional)</label><input class="fc" type="url" id="editProjUrl" name="project_url" placeholder="https://github.com/..."></div>
+        </div>
+      </div>
+      <div class="sbh-modal-foot">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="closeEditProjModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ Delete Project Confirm Modal ═════════════════════════════════ -->
+<div id="deleteProjModal" class="sbh-overlay" onclick="if(event.target===this)closeDeleteProjModal()">
+  <div class="sbh-modal" style="max-width:360px;text-align:center">
+    <div class="sbh-modal-body" style="padding:1.75rem 1.5rem 1rem">
+      <div class="del-icon-wrap">
+        <svg width="22" height="22" fill="none" stroke="var(--red)" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:.625rem">Delete Project?</div>
+      <div id="deleteProjMsg" style="font-size:.8125rem;color:var(--text-2);line-height:1.65"></div>
+    </div>
+    <div style="display:flex;justify-content:center;gap:.75rem;padding:.875rem 1.5rem 1.5rem">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeDeleteProjModal()">Cancel</button>
+      <form id="deleteProjForm" method="post" action="" style="display:inline;margin:0">
+        <button type="submit" class="btn-danger-soft">Delete</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Certification action dropdown ════════════════════════════════ -->
+<div id="certActionMenu" style="display:none;position:fixed;z-index:9999;min-width:180px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 8px 24px rgba(0,0,0,.12);padding:4px;animation:fadeSlideDown .15s ease-out both">
+  <button type="button" class="exp-menu-item exp-menu-item--edit" onclick="openEditCertModal()">
+    <span class="exp-menu-icon exp-menu-icon--edit">
+      <svg width="13" height="13" fill="none" stroke="var(--accent)" stroke-width="2.2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </span>
+    Edit certification
+  </button>
+  <div class="exp-menu-divider"></div>
+  <button type="button" class="exp-menu-item exp-menu-item--delete" onclick="openDeleteCertModal()">
+    <span class="exp-menu-icon exp-menu-icon--delete">
+      <svg width="13" height="13" fill="none" stroke="var(--red)" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+    </span>
+    Delete
+  </button>
+</div>
+
+<!-- ══ Add Certification Modal ══════════════════════════════════════ -->
+<div id="addCertModal" class="sbh-overlay" onclick="if(event.target===this)closeAddCertModal()">
+  <div class="sbh-modal" style="max-width:500px">
+    <div class="sbh-modal-hdr">
+      <div>
+        <div class="sbh-modal-title">Add Certification</div>
+        <div class="sbh-modal-sub">Add your professional certification details</div>
+      </div>
+      <button type="button" class="sbh-modal-x" onclick="closeAddCertModal()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form method="post" action="{{ url_for('add_certification') }}">
+      <div class="sbh-modal-body">
+        <div class="form-grid">
+          <div class="fg"><label>Certificate Name *</label><input class="fc" type="text" name="cert_name" placeholder="e.g. ISTQB Foundation Level" required></div>
+          <div class="fg"><label>Issued By</label><input class="fc" type="text" name="issued_by" placeholder="e.g. ISTQB"></div>
+          <div class="fg"><label>Year</label><input class="fc" type="number" name="year" placeholder="e.g. 2023" min="1990" max="2030"></div>
+          <div class="fg"><label>Credential URL</label><input class="fc" type="url" name="credential_url" placeholder="https://..."></div>
+        </div>
+      </div>
+      <div class="sbh-modal-foot">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="closeAddCertModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm">Save Certification</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ Edit Certification Modal ═════════════════════════════════════ -->
+<div id="editCertModal" class="sbh-overlay" onclick="if(event.target===this)closeEditCertModal()">
+  <div class="sbh-modal" style="max-width:500px">
+    <div class="sbh-modal-hdr">
+      <div>
+        <div class="sbh-modal-title">Edit Certification</div>
+        <div class="sbh-modal-sub">Update your certification details</div>
+      </div>
+      <button type="button" class="sbh-modal-x" onclick="closeEditCertModal()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form id="editCertForm" method="post" action="">
+      <div class="sbh-modal-body">
+        <div class="form-grid">
+          <div class="fg"><label>Certificate Name *</label><input class="fc" type="text" id="editCertName" name="cert_name" placeholder="e.g. ISTQB Foundation Level" required></div>
+          <div class="fg"><label>Issued By</label><input class="fc" type="text" id="editCertBy" name="issued_by" placeholder="e.g. ISTQB"></div>
+          <div class="fg"><label>Year</label><input class="fc" type="number" id="editCertYear" name="year" placeholder="e.g. 2023" min="1990" max="2030"></div>
+          <div class="fg"><label>Credential URL</label><input class="fc" type="url" id="editCertUrl" name="credential_url" placeholder="https://..."></div>
+        </div>
+      </div>
+      <div class="sbh-modal-foot">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="closeEditCertModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ Delete Certification Confirm Modal ═══════════════════════════ -->
+<div id="deleteCertModal" class="sbh-overlay" onclick="if(event.target===this)closeDeleteCertModal()">
+  <div class="sbh-modal" style="max-width:360px;text-align:center">
+    <div class="sbh-modal-body" style="padding:1.75rem 1.5rem 1rem">
+      <div class="del-icon-wrap">
+        <svg width="22" height="22" fill="none" stroke="var(--red)" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:.625rem">Delete Certification?</div>
+      <div id="deleteCertMsg" style="font-size:.8125rem;color:var(--text-2);line-height:1.65"></div>
+    </div>
+    <div style="display:flex;justify-content:center;gap:.75rem;padding:.875rem 1.5rem 1.5rem">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeDeleteCertModal()">Cancel</button>
+      <form id="deleteCertForm" method="post" action="" style="display:inline;margin:0">
+        <button type="submit" class="btn-danger-soft">Delete</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ══ Education action dropdown ═══════════════════════════════════ -->
+<div id="eduActionMenu" style="display:none;position:fixed;z-index:9999;min-width:180px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);box-shadow:0 8px 24px rgba(0,0,0,.12);padding:4px;animation:fadeSlideDown .15s ease-out both">
+  <button type="button" class="exp-menu-item exp-menu-item--edit" onclick="openEditEduModal()">
+    <span class="exp-menu-icon exp-menu-icon--edit">
+      <svg width="13" height="13" fill="none" stroke="var(--accent)" stroke-width="2.2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </span>
+    Edit education
+  </button>
+  <div class="exp-menu-divider"></div>
+  <button type="button" class="exp-menu-item exp-menu-item--delete" onclick="openDeleteEduModal()">
+    <span class="exp-menu-icon exp-menu-icon--delete">
+      <svg width="13" height="13" fill="none" stroke="var(--red)" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+    </span>
+    Delete
+  </button>
+</div>
+
+<!-- ══ Edit Education Modal ════════════════════════════════════════ -->
+<div id="editEduModal" class="sbh-overlay" onclick="if(event.target===this)closeEditEduModal()">
+  <div class="sbh-modal" style="max-width:500px">
+    <div class="sbh-modal-hdr">
+      <div>
+        <div class="sbh-modal-title">Edit Education</div>
+        <div class="sbh-modal-sub">Update your educational qualification</div>
+      </div>
+      <button type="button" class="sbh-modal-x" onclick="closeEditEduModal()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form id="editEduForm" method="post" action="">
+      <div class="sbh-modal-body">
+        <div class="form-grid">
+          <div class="fg"><label>Degree *</label><input class="fc" type="text" id="editEduDegree" name="degree" placeholder="e.g. B.Tech / MCA / B.Sc" required></div>
+          <div class="fg"><label>College / University *</label><input class="fc" type="text" id="editEduCollege" name="college" placeholder="e.g. Anna University" required></div>
+          <div class="fg"><label>Start Year</label><input class="fc" type="number" id="editEduStart" name="start_year" placeholder="e.g. 2018" min="1950" max="2030"></div>
+          <div class="fg"><label>End Year</label><input class="fc" type="number" id="editEduEnd" name="end_year" placeholder="e.g. 2022" min="1950" max="2030"></div>
+        </div>
+      </div>
+      <div class="sbh-modal-foot">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="closeEditEduModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ Delete Education Confirm Modal ══════════════════════════════ -->
+<div id="deleteEduModal" class="sbh-overlay" onclick="if(event.target===this)closeDeleteEduModal()">
+  <div class="sbh-modal" style="max-width:360px;text-align:center">
+    <div class="sbh-modal-body" style="padding:1.75rem 1.5rem 1rem">
+      <div class="del-icon-wrap">
+        <svg width="22" height="22" fill="none" stroke="var(--red)" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:.625rem">Delete Education?</div>
+      <div id="deleteEduMsg" style="font-size:.8125rem;color:var(--text-2);line-height:1.65"></div>
+    </div>
+    <div style="display:flex;justify-content:center;gap:.75rem;padding:.875rem 1.5rem 1.5rem">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeDeleteEduModal()">Cancel</button>
+      <form id="deleteEduForm" method="post" action="" style="display:inline;margin:0">
+        <button type="submit" class="btn-danger-soft">Delete</button>
+      </form>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, g
+from flask import Flask, render_template, request, redirect, url_for, session, flash, g, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
@@ -232,6 +232,7 @@ def init_db():
             "ALTER TABLE recruiter_profiles ADD COLUMN company_size TEXT DEFAULT ''",
             "ALTER TABLE recruiter_profiles ADD COLUMN industry TEXT DEFAULT ''",
             "ALTER TABLE recruiter_profiles ADD COLUMN company_location TEXT DEFAULT ''",
+            "ALTER TABLE candidate_projects ADD COLUMN year TEXT DEFAULT ''",
         ]:
             try:
                 db.execute(stmt)
@@ -1031,13 +1032,13 @@ def candidate_profile():
         'SELECT * FROM candidate_work_experience WHERE user_id=? ORDER BY start_date DESC, id DESC',
         [session['user_id']]).fetchall()
     educations = db.execute(
-        'SELECT * FROM candidate_education WHERE user_id=? ORDER BY id DESC',
+        'SELECT * FROM candidate_education WHERE user_id=? ORDER BY COALESCE(end_year,9999) DESC, COALESCE(start_year,0) DESC',
         [session['user_id']]).fetchall()
     certifications = db.execute(
-        'SELECT * FROM candidate_certifications WHERE user_id=? ORDER BY id DESC',
+        'SELECT * FROM candidate_certifications WHERE user_id=? ORDER BY COALESCE(year,0) DESC, id DESC',
         [session['user_id']]).fetchall()
     projects = db.execute(
-        'SELECT * FROM candidate_projects WHERE user_id=? ORDER BY id DESC',
+        'SELECT * FROM candidate_projects WHERE user_id=? ORDER BY COALESCE(year,0) DESC, id DESC',
         [session['user_id']]).fetchall()
 
     # Calculate total work experience
@@ -1184,14 +1185,34 @@ def add_education():
     end_year   = request.form.get('end_year', '').strip()
     if not degree or not college:
         flash('Degree and college are required.', 'error')
-        return redirect(url_for('candidate_profile'))
+        return redirect(url_for('candidate_profile') + '#section-education')
     db = get_db()
     db.execute('''INSERT INTO candidate_education (user_id, degree, college, start_year, end_year)
                   VALUES (?,?,?,?,?)''',
                [session['user_id'], degree, college, start_year, end_year])
     db.commit()
     flash('Education added.', 'success')
-    return redirect(url_for('candidate_profile'))
+    return redirect(url_for('candidate_profile') + '#section-education')
+
+
+@app.route('/candidate/profile/education/<int:edu_id>/edit', methods=['POST'])
+@candidate_required
+def edit_education(edu_id):
+    degree     = request.form.get('degree', '').strip()
+    college    = request.form.get('college', '').strip()
+    start_year = request.form.get('start_year', '').strip()
+    end_year   = request.form.get('end_year', '').strip()
+    if not degree or not college:
+        flash('Degree and college are required.', 'error')
+        return redirect(url_for('candidate_profile') + '#section-education')
+    db = get_db()
+    db.execute('''UPDATE candidate_education
+                  SET degree=?, college=?, start_year=?, end_year=?
+                  WHERE id=? AND user_id=?''',
+               [degree, college, start_year, end_year, edu_id, session['user_id']])
+    db.commit()
+    flash('Education updated.', 'success')
+    return redirect(url_for('candidate_profile') + '#section-education')
 
 
 @app.route('/candidate/profile/education/<int:edu_id>/delete', methods=['POST'])
@@ -1202,7 +1223,7 @@ def delete_education(edu_id):
                [edu_id, session['user_id']])
     db.commit()
     flash('Education removed.', 'success')
-    return redirect(url_for('candidate_profile'))
+    return redirect(url_for('candidate_profile') + '#section-education')
 
 
 @app.route('/candidate/profile/certification/add', methods=['POST'])
@@ -1214,14 +1235,34 @@ def add_certification():
     credential_url = request.form.get('credential_url', '').strip()
     if not cert_name:
         flash('Certificate name is required.', 'error')
-        return redirect(url_for('candidate_profile'))
+        return redirect(url_for('candidate_profile') + '#section-certifications')
     db = get_db()
     db.execute('''INSERT INTO candidate_certifications (user_id, cert_name, issued_by, year, credential_url)
                   VALUES (?,?,?,?,?)''',
                [session['user_id'], cert_name, issued_by, year, credential_url])
     db.commit()
     flash('Certification added.', 'success')
-    return redirect(url_for('candidate_profile'))
+    return redirect(url_for('candidate_profile') + '#section-certifications')
+
+
+@app.route('/candidate/profile/certification/<int:cert_id>/edit', methods=['POST'])
+@candidate_required
+def edit_certification(cert_id):
+    cert_name      = request.form.get('cert_name', '').strip()
+    issued_by      = request.form.get('issued_by', '').strip()
+    year           = request.form.get('year', '').strip()
+    credential_url = request.form.get('credential_url', '').strip()
+    if not cert_name:
+        flash('Certificate name is required.', 'error')
+        return redirect(url_for('candidate_profile') + '#section-certifications')
+    db = get_db()
+    db.execute('''UPDATE candidate_certifications
+                  SET cert_name=?, issued_by=?, year=?, credential_url=?
+                  WHERE id=? AND user_id=?''',
+               [cert_name, issued_by, year, credential_url, cert_id, session['user_id']])
+    db.commit()
+    flash('Certification updated.', 'success')
+    return redirect(url_for('candidate_profile') + '#section-certifications')
 
 
 @app.route('/candidate/profile/certification/<int:cert_id>/delete', methods=['POST'])
@@ -1232,7 +1273,7 @@ def delete_certification(cert_id):
                [cert_id, session['user_id']])
     db.commit()
     flash('Certification removed.', 'success')
-    return redirect(url_for('candidate_profile'))
+    return redirect(url_for('candidate_profile') + '#section-certifications')
 
 
 @app.route('/candidate/profile/project/add', methods=['POST'])
@@ -1242,16 +1283,38 @@ def add_project():
     domain       = request.form.get('domain', '').strip()
     description  = request.form.get('description', '').strip()
     project_url  = request.form.get('project_url', '').strip()
+    year         = request.form.get('year', '').strip()
     if not project_name:
         flash('Project name is required.', 'error')
-        return redirect(url_for('candidate_profile'))
+        return redirect(url_for('candidate_profile') + '#section-projects')
     db = get_db()
-    db.execute('''INSERT INTO candidate_projects (user_id, project_name, domain, description, project_url)
-                  VALUES (?,?,?,?,?)''',
-               [session['user_id'], project_name, domain, description, project_url])
+    db.execute('''INSERT INTO candidate_projects (user_id, project_name, domain, description, project_url, year)
+                  VALUES (?,?,?,?,?,?)''',
+               [session['user_id'], project_name, domain, description, project_url, year])
     db.commit()
     flash('Project added.', 'success')
-    return redirect(url_for('candidate_profile'))
+    return redirect(url_for('candidate_profile') + '#section-projects')
+
+
+@app.route('/candidate/profile/project/<int:proj_id>/edit', methods=['POST'])
+@candidate_required
+def edit_project(proj_id):
+    project_name = request.form.get('project_name', '').strip()
+    domain       = request.form.get('domain', '').strip()
+    description  = request.form.get('description', '').strip()
+    project_url  = request.form.get('project_url', '').strip()
+    year         = request.form.get('year', '').strip()
+    if not project_name:
+        flash('Project name is required.', 'error')
+        return redirect(url_for('candidate_profile') + '#section-projects')
+    db = get_db()
+    db.execute('''UPDATE candidate_projects
+                  SET project_name=?, domain=?, description=?, project_url=?, year=?
+                  WHERE id=? AND user_id=?''',
+               [project_name, domain, description, project_url, year, proj_id, session['user_id']])
+    db.commit()
+    flash('Project updated.', 'success')
+    return redirect(url_for('candidate_profile') + '#section-projects')
 
 
 @app.route('/candidate/profile/project/<int:proj_id>/delete', methods=['POST'])
@@ -1262,7 +1325,33 @@ def delete_project(proj_id):
                [proj_id, session['user_id']])
     db.commit()
     flash('Project removed.', 'success')
-    return redirect(url_for('candidate_profile'))
+    return redirect(url_for('candidate_profile') + '#section-projects')
+
+
+@app.route('/candidate/profile/phone/send-otp', methods=['POST'])
+@candidate_required
+def phone_send_otp():
+    import random
+    code = str(random.randint(100000, 999999))
+    session['phone_otp'] = code
+    # Demo mode: return code in response (replace with real SMS in production)
+    return jsonify({'ok': True, 'code': code, 'demo': True})
+
+
+@app.route('/candidate/profile/phone/verify-otp', methods=['POST'])
+@candidate_required
+def phone_verify_otp():
+    data = request.get_json(silent=True) or {}
+    if data.get('otp') == session.get('phone_otp'):
+        session.pop('phone_otp', None)
+        phone = data.get('phone', '').strip()
+        if phone:
+            db = get_db()
+            db.execute('UPDATE candidate_profiles SET phone=? WHERE user_id=?',
+                       [phone, session['user_id']])
+            db.commit()
+        return jsonify({'ok': True})
+    return jsonify({'ok': False})
 
 
 @app.route('/candidate/profile/preferences', methods=['POST'])

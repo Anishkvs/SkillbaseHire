@@ -823,7 +823,7 @@ def exam_ended(skill_id):
 @app.route('/register')
 def register():
     if session.get('user_id'):
-        return redirect(url_for('candidate_dashboard' if session.get('role') == 'candidate' else 'recruiter_dashboard'))
+        return redirect(url_for('candidate_profile' if session.get('role') == 'candidate' else 'recruiter_dashboard'))
     return render_template('register.html', user=None)
 
 
@@ -832,7 +832,7 @@ def register():
 @app.route('/candidate/signup', methods=['GET', 'POST'])
 def candidate_signup():
     if session.get('role') == 'candidate':
-        return redirect(url_for('candidate_dashboard'))
+        return redirect(url_for('candidate_profile'))
 
     all_skills = get_db().execute('SELECT * FROM skills ORDER BY category, name').fetchall()
 
@@ -907,7 +907,7 @@ def candidate_signup():
 
         session.update({'user_id': uid, 'role': 'candidate', 'name': name})
         flash('Account created! Welcome to SkillBaseHire.', 'success')
-        return redirect(url_for('candidate_dashboard'))
+        return redirect(url_for('candidate_profile'))
 
     return render_template('candidate_signup.html', user=None, all_skills=all_skills,
                            form={}, sel_skills=[])
@@ -1383,7 +1383,7 @@ def remove_skill(skill_id):
                [session['user_id'], skill_id])
     db.commit()
     flash('Skill removed.', 'success')
-    return redirect(url_for('candidate_dashboard'))
+    return redirect(url_for('candidate_profile'))
 
 
 # ── Apply ─────────────────────────────────────────────────────────────────────
@@ -1422,7 +1422,7 @@ def apply_job(job_id):
                    [job_id, session['user_id'], cover_letter])
         db.commit()
         flash(f'Application submitted for {job["title"]}!', 'success')
-        return redirect(url_for('candidate_dashboard'))
+        return redirect(url_for('candidate_profile'))
 
     return render_template('apply.html', job=job, job_skills=job_skills,
                            my_skills=my_skills, user=get_current_user())
@@ -1816,7 +1816,7 @@ def verify_email(token):
     session.update({'user_id': user['id'], 'role': user['role'], 'name': user['name']})
     if user['role'] == 'recruiter':
         return redirect(url_for('recruiter_dashboard'))
-    return redirect(url_for('candidate_dashboard'))
+    return redirect(url_for('candidate_profile'))
 
 
 @app.route('/resend-verification', methods=['POST'])
@@ -1830,13 +1830,13 @@ def resend_verification():
             return redirect(url_for('home'))
         if user['email_verified']:
             flash('Your email is already verified.', 'success')
-            return redirect(url_for('candidate_dashboard' if user['role'] == 'candidate' else 'recruiter_dashboard'))
+            return redirect(url_for('candidate_profile' if user['role'] == 'candidate' else 'recruiter_dashboard'))
         token = generate_verification_token(user['email'])
         db.execute('UPDATE users SET verification_token=? WHERE id=?', [token, user['id']])
         db.commit()
         send_verification_email(user['email'], user['name'], token)
         flash('Verification email sent! Please check your inbox.', 'success')
-        return redirect(url_for('candidate_dashboard' if user['role'] == 'candidate' else 'recruiter_dashboard'))
+        return redirect(url_for('candidate_profile' if user['role'] == 'candidate' else 'recruiter_dashboard'))
 
     # Pre-login flow (email_sent page)
     email = session.get('pending_email', '').strip().lower()

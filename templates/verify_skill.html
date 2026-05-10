@@ -6,7 +6,7 @@
   <title>{{ skill.name }} Assessment — SkillBaseHire</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2%sfamily=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body class="ea-body">
 
@@ -358,8 +358,8 @@
     <div class="ea-modal-warn-icon">
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
     </div>
-    <h3>Submit Assessment%s</h3>
-    <p>Are you sure you want to submit the exam%s <strong>You cannot change your answers after submission.</strong></p>
+    <h3>Submit Assessment?</h3>
+    <p>Are you sure you want to submit the exam? <strong>You cannot change your answers after submission.</strong></p>
     <div class="ea-modal-stats" id="modalStats"></div>
     <div class="ea-modal-btns">
       <button class="ea-modal-cancel" onclick="closeModal()">Cancel</button>
@@ -425,8 +425,8 @@ async function runEnvCheck() {
     }, 1800);
   } catch (e) {
     const denied = e.name === 'NotAllowedError';
-    setCheckStatus('cam', false, denied %s 'Camera access denied — please allow in browser settings' : 'Camera not found');
-    setCheckStatus('mic', false, denied %s 'Microphone access denied' : 'Microphone not found');
+    setCheckStatus('cam', false, denied ? 'Camera access denied — please allow in browser settings' : 'Camera not found');
+    setCheckStatus('mic', false, denied ? 'Microphone access denied' : 'Microphone not found');
     document.getElementById('camPlaceholderText').textContent = 'Camera access required';
     // Still allow proceed for demo
     setTimeout(() => {
@@ -577,7 +577,7 @@ function confirmSubmit() {
   const un  = TOTAL - ans;
   document.getElementById('modalStats').innerHTML =
     `<span class="ea-stat-ans">✓ ${ans} answered</span>` +
-    (un > 0 %s `<span class="ea-stat-un">○ ${un} unanswered</span>` : '');
+    (un > 0 ? `<span class="ea-stat-un">○ ${un} unanswered</span>` : '');
   document.getElementById('submitModal').classList.add('ea-modal-open');
 }
 
@@ -587,7 +587,7 @@ function closeModal() {
 
 function finalSubmit() {
   clearInterval(timerInterval);
-  document.getElementById('timeElapsed').value = startTime %s Math.round((Date.now() - startTime) / 1000) : 0;
+  document.getElementById('timeElapsed').value = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
   document.getElementById('submitModal').classList.remove('ea-modal-open');
   document.getElementById('autoModal').style.display = 'none';
   if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
@@ -612,7 +612,7 @@ let toastTimer      = null;
 
 function logIntegrityEvent(keyLabel) {
   blockedKeyCount++;
-  const severity = blockedKeyCount > 3 %s 'high' : 'medium';
+  const severity = blockedKeyCount > 3 ? 'high' : 'medium';
   integrityLog.push({
     exam_session_id: examSessionId,
     candidate_id:    CANDIDATE_ID,
@@ -623,7 +623,7 @@ function logIntegrityEvent(keyLabel) {
   });
   const mild = 'Keyboard shortcuts are disabled during the exam.';
   const strong = 'Repeated keyboard activity detected. Your assessment may be flagged for review.';
-  showSecToast(blockedKeyCount === 1 %s mild : strong, blockedKeyCount > 1 %s 'strong' : 'mild');
+  showSecToast(blockedKeyCount === 1 ? mild : strong, blockedKeyCount > 1 ? 'strong' : 'mild');
 }
 
 function showSecToast(msg, level) {
@@ -634,7 +634,7 @@ function showSecToast(msg, level) {
   void toast.offsetWidth;
   toast.classList.add('visible');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('visible'), level === 'strong' %s 6000 : 4000);
+  toastTimer = setTimeout(() => toast.classList.remove('visible'), level === 'strong' ? 6000 : 4000);
 }
 
 function dismissToast() {
@@ -717,7 +717,7 @@ function unlockExamUI() {
 
 /* ── Security event log ── */
 function logSecurityEvent(eventType, extra) {
-  const severity = fsExitCount >= 3 %s 'high' : fsExitCount === 2 %s 'medium' : 'low';
+  const severity = fsExitCount >= 3 ? 'high' : fsExitCount === 2 ? 'medium' : 'low';
   integrityLog.push({
     exam_session_id: examSessionId,
     candidate_id:    CANDIDATE_ID,
@@ -811,7 +811,7 @@ function endExamDueToViolation() {
   clearInterval(timerInterval);
   document.getElementById('integrityEnded').value   = '1';
   document.getElementById('fsExitCountInput').value = fsExitCount;
-  document.getElementById('timeElapsed').value      = startTime %s Math.round((Date.now() - startTime) / 1000) : 0;
+  document.getElementById('timeElapsed').value      = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
   // Hide any open modals, lock everything
   document.getElementById('fsModal').style.display     = 'none';
   document.getElementById('submitModal').classList.remove('ea-modal-open');

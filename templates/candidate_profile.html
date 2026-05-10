@@ -156,8 +156,9 @@ img{max-width:100%}
 
 /* ── Profile strength recommendations ── */
 .reco-grid{display:grid;grid-template-columns:1fr 1fr;gap:.625rem}
-.reco-item{display:flex;align-items:center;gap:.625rem;padding:.625rem .875rem;background:var(--page-bg);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:border-color .15s}
-.reco-item:hover{border-color:var(--border-2)}
+.reco-item{display:flex;align-items:center;gap:.625rem;padding:.625rem .875rem;background:var(--page-bg);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:border-color .15s,background .15s,transform .1s}
+.reco-item:hover{border-color:var(--accent);background:var(--accent-light);transform:translateY(-1px)}
+.reco-item:active{transform:translateY(0)}
 .reco-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .reco-icon.done{background:var(--green-light);color:var(--green)}
 .reco-icon.todo{background:var(--amber-light);color:var(--amber)}
@@ -919,42 +920,42 @@ textarea.fc{resize:vertical;min-height:80px}
         <div class="card-body">
           <p style="font-size:.8125rem;color:var(--text-2);margin-bottom:.875rem">Complete these actions to improve your profile ranking in recruiter searches.</p>
           <div class="reco-grid">
-            <div class="reco-item">
-              <div class="reco-icon {{ 'done' if verified_skills|length >= 2 else 'todo' }}">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">{% if verified_skills|length >= 2 %}<path d="M20 6L9 17l-5-5"/>{% else %}<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>{% endif %}</svg>
+            <div class="reco-item" onclick="recoGo('skills')" title="Go to Verified Skills">
+              <div class="reco-icon {{ 'done' if my_skills|selectattr('verified')|list|length >= 1 else 'todo' }}">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">{% if my_skills|selectattr('verified')|list|length >= 1 %}<path d="M20 6L9 17l-5-5"/>{% else %}<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>{% endif %}</svg>
               </div>
-              <div class="reco-text">{{ 'Verified skills' if verified_skills|length >= 2 else 'Verify 2 more skills to improve recruiter visibility' }}</div>
+              <div class="reco-text">{{ 'Verified skills' if my_skills|selectattr('verified')|list|length >= 1 else 'Verify at least 1 skill' }}</div>
               <svg class="reco-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
-            <div class="reco-item" onclick="document.getElementById('resumeFileInput').click()">
+            <div class="reco-item" onclick="recoGo('resume')" title="Go to Resume section">
               <div class="reco-icon {{ 'done' if profile and profile.resume_filename else 'todo' }}">
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">{% if profile and profile.resume_filename %}<path d="M20 6L9 17l-5-5"/>{% else %}<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>{% endif %}</svg>
               </div>
               <div class="reco-text">{{ 'Resume uploaded' if profile and profile.resume_filename else 'Upload updated resume' }}</div>
               <svg class="reco-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
-            <div class="reco-item">
-              <div class="reco-icon todo">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
+            <div class="reco-item" onclick="recoGo('projects')" title="Go to Projects section">
+              <div class="reco-icon {{ 'done' if projects|length > 0 else 'todo' }}">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">{% if projects|length > 0 %}<path d="M20 6L9 17l-5-5"/>{% else %}<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>{% endif %}</svg>
               </div>
-              <div class="reco-text">Add project details</div>
+              <div class="reco-text">{{ 'Project details added' if projects|length > 0 else 'Add project details' }}</div>
               <svg class="reco-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
-            <div class="reco-item">
-              <div class="reco-icon todo">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
+            <div class="reco-item" onclick="recoGo('notice_period')" title="Go to Notice Period">
+              <div class="reco-icon {{ 'done' if profile and profile.notice_period else 'todo' }}">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">{% if profile and profile.notice_period %}<path d="M20 6L9 17l-5-5"/>{% else %}<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>{% endif %}</svg>
               </div>
-              <div class="reco-text">Update notice period</div>
+              <div class="reco-text">{{ 'Notice period set' if profile and profile.notice_period else 'Update notice period' }}</div>
               <svg class="reco-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
-            <div class="reco-item">
+            <div class="reco-item" onclick="recoGo('location')" title="Go to Location field">
               <div class="reco-icon {{ 'done' if profile and profile.location else 'todo' }}">
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">{% if profile and profile.location %}<path d="M20 6L9 17l-5-5"/>{% else %}<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>{% endif %}</svg>
               </div>
               <div class="reco-text">{{ 'Location added' if profile and profile.location else 'Add preferred job locations' }}</div>
               <svg class="reco-arrow" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
             </div>
-            <div class="reco-item">
+            <div class="reco-item" onclick="recoGo('availability')" title="Go to Job Preferences">
               <div class="reco-icon todo">
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
               </div>
@@ -966,7 +967,7 @@ textarea.fc{resize:vertical;min-height:80px}
       </div>
 
       <!-- Verified Skills -->
-      <div class="card">
+      <div class="card" id="section-skills">
         <div class="card-head">
           <div class="card-title">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
@@ -1541,7 +1542,7 @@ textarea.fc{resize:vertical;min-height:80px}
       </div>
 
       <!-- Resume -->
-      <div class="card">
+      <div class="card" id="section-resume">
         <div class="card-head">
           <div class="card-title">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
@@ -1767,6 +1768,33 @@ textarea.fc{resize:vertical;min-height:80px}
 </div>
 
 <script>
+/* ── Profile Strength Recommendation Navigation ── */
+function recoGo(target) {
+  const idMap = {
+    skills:        'section-skills',
+    resume:        'section-resume',
+    projects:      'section-projects',
+    notice_period: 'prefs',
+    availability:  'prefs',
+  };
+
+  // Location is shown in the hero card at the very top of the page
+  const el = target === 'location'
+    ? document.querySelector('.hero-card')
+    : document.getElementById(idMap[target]);
+
+  if (!el) return;
+
+  const top = Math.max(0, el.getBoundingClientRect().top + window.scrollY - 80);
+  window.scrollTo({ top, behavior: 'smooth' });
+
+  setTimeout(() => {
+    el.style.transition = 'box-shadow .25s';
+    el.style.boxShadow  = '0 0 0 3px var(--accent)';
+    setTimeout(() => { el.style.boxShadow = ''; el.style.transition = ''; }, 1800);
+  }, 350);
+}
+
 function toggleEdit(id) {
   const el = document.getElementById(id);
   if (!el) return;

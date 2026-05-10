@@ -136,7 +136,7 @@
         </div>
       </div>
       <div class="er-actions">
-        <a href="{{ url_for('candidate_dashboard') }}" class="er-btn-primary">Return to Dashboard</a>
+        <a href="{{ url_for('candidate_profile') }}" class="er-btn-primary">Return to Dashboard</a>
         <a href="{{ url_for('jobs') }}" class="er-btn-outline">Browse Jobs</a>
         <a href="{{ url_for('skills_page') }}" class="er-btn-outline">Verify More Skills</a>
       </div>
@@ -243,7 +243,7 @@
       </div>
       <div class="er-actions">
         <a href="{{ url_for('exam_instructions', skill_id=result.skill_id) }}" class="er-btn-primary">Retake Assessment</a>
-        <a href="{{ url_for('candidate_dashboard') }}" class="er-btn-outline">Return to Dashboard</a>
+        <a href="{{ url_for('candidate_profile') }}" class="er-btn-outline">Return to Dashboard</a>
       </div>
     </div>
 

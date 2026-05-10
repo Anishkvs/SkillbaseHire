@@ -140,7 +140,7 @@
             {% elif user and user.id == candidate.id %}
               <a href="{{ url_for('candidate_profile') }}" class="btn btn-primary btn-full btn-sm">Edit Profile</a>
               <a href="{{ url_for('skills_page') }}" class="btn btn-outline btn-full btn-sm">Verify More Skills</a>
-              <a href="{{ url_for('candidate_dashboard') }}" class="btn btn-ghost btn-full btn-sm">My Dashboard</a>
+              <a href="{{ url_for('candidate_profile') }}" class="btn btn-ghost btn-full btn-sm">My Profile</a>
             {% else %}
               <a href="{{ url_for('candidate_login') }}" class="btn btn-outline btn-full btn-sm">Log in to connect</a>
             {% endif %}
@@ -282,7 +282,7 @@
           <div class="cd-action-btn-row">
             <a href="{{ url_for('candidate_profile') }}" class="btn btn-primary btn-sm">Edit Profile</a>
             <a href="{{ url_for('skills_page') }}" class="btn btn-outline btn-sm">Take Skill Test</a>
-            <a href="{{ url_for('candidate_dashboard') }}" class="btn btn-outline btn-sm">View My Applications</a>
+            <a href="{{ url_for('candidate_profile') }}" class="btn btn-outline btn-sm">View My Profile</a>
           </div>
         </div>
         {% endif %}

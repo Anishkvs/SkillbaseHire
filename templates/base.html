@@ -42,7 +42,13 @@
         <a href="{{ url_for('recruiter_detail', recruiter_id=session.get('user_id')) if session.get('role') == 'recruiter' else url_for('candidate_profile') }}"
            class="nav-user-info nav-profile-link"
            aria-label="View my profile">
-          <div class="nav-avatar">{{ session.get('name','%s')[0].upper() }}</div>
+          <div class="nav-avatar">
+            {% if session.get('profile_photo') %}
+              <img src="/static/uploads/photos/{{ session.get('profile_photo') }}" class="avatar-img" alt="{{ session.get('name','') }}">
+            {% else %}
+              {{ session.get('name','?')[0].upper() }}
+            {% endif %}
+          </div>
           <span class="nav-name">{{ session.get('name','') }}</span>
         </a>
         {% if session.get('role') == 'recruiter' %}
@@ -145,5 +151,6 @@
   </div>
 </footer>
 
+<script src="{{ url_for('static', filename='photo_upload.js') }}"></script>
 </body>
 </html>

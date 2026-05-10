@@ -198,6 +198,77 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
   .flash-bar{padding:10px 18px}
   .jobs-grid{grid-template-columns:1fr}
 }
+/* ── Photo Upload Component ─────────────────────────────────── */
+.puc-root{display:flex;flex-direction:column;align-items:center}
+.puc-col{display:flex;flex-direction:column;align-items:center;gap:.625rem}
+.puc-drop{position:relative;border-radius:50%;cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent}
+.puc-drop:focus-visible{box-shadow:0 0 0 3px #fff,0 0 0 5px #4F46E5}
+.puc-circle{border-radius:50%;overflow:hidden;position:relative;background:linear-gradient(135deg,#4F46E5,#7C3AED);border:3px solid #fff;box-shadow:0 0 0 3px #4F46E5,0 8px 24px rgba(79,70,229,.22);transition:box-shadow .2s,transform .2s;flex-shrink:0}
+.puc-drop:hover .puc-circle{box-shadow:0 0 0 3px #4F46E5,0 14px 32px rgba(79,70,229,.38);transform:scale(1.04)}
+.puc-inner{border-radius:50%;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center}
+.puc-img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
+.puc-init{color:#fff;font-weight:800;letter-spacing:-.02em;user-select:none;line-height:1}
+.puc-overlay{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.52);backdrop-filter:blur(2px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.2rem;color:#fff;opacity:0;transition:opacity .2s;pointer-events:none}
+.puc-overlay svg{width:22px;height:22px}
+.puc-overlay span{font-size:.625rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.puc-drop:hover .puc-overlay{opacity:1}
+.puc-drag-ring{position:absolute;inset:-5px;border-radius:50%;border:2.5px dashed #4F46E5;opacity:0;pointer-events:none;transition:opacity .15s}
+.puc-drag-ring--on{opacity:1;animation:puc-pulse 1.1s ease-in-out infinite}
+@keyframes puc-pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.puc-file-hidden{display:none}
+.puc-btns{display:flex;gap:.5rem;flex-wrap:wrap;justify-content:center;margin-top:.25rem}
+.puc-btn{display:inline-flex;align-items:center;gap:.375rem;padding:.4375rem .9rem;border-radius:9px;font-size:.8125rem;font-weight:600;line-height:1;border:none;cursor:pointer;white-space:nowrap;user-select:none;transition:background .15s,box-shadow .15s,transform .12s,border-color .15s,color .15s}
+.puc-btn svg{width:13px;height:13px;flex-shrink:0}
+.puc-btn:disabled{opacity:.55;cursor:not-allowed;transform:none!important}
+.puc-btn--primary{background:#4F46E5;color:#fff;box-shadow:0 1px 4px rgba(79,70,229,.3)}
+.puc-btn--primary:not(:disabled):hover{background:#4338CA;box-shadow:0 4px 14px rgba(79,70,229,.4);transform:translateY(-1px)}
+.puc-btn--primary:not(:disabled):active{transform:translateY(0)}
+.puc-btn--ghost{background:transparent;color:#64748b;border:1.5px solid #E2E8F0}
+.puc-btn--ghost:not(:disabled):hover{background:#fef2f2;color:#dc2626;border-color:#fca5a5}
+.puc-btn--save{min-width:116px;justify-content:center}
+.puc-hint{font-size:.7375rem;color:#94a3b8;text-align:center;margin:0;line-height:1.45;max-width:220px}
+.puc-backdrop{position:fixed;inset:0;z-index:2000;background:rgba(15,23,42,.65);backdrop-filter:blur(5px);display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;transition:opacity .25s ease}
+.puc-backdrop--open{opacity:1}
+.puc-modal{background:#fff;border-radius:20px;width:100%;max-width:500px;box-shadow:0 32px 80px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.06);display:flex;flex-direction:column;overflow:hidden;transform:translateY(18px) scale(.97);transition:transform .32s cubic-bezier(.34,1.4,.64,1)}
+.puc-backdrop--open .puc-modal{transform:translateY(0) scale(1)}
+.puc-modal__handle{display:none}
+.puc-modal__hd{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem .875rem;border-bottom:1px solid #f1f5f9}
+.puc-modal__title{display:flex;align-items:center;gap:.5rem;font-size:.9375rem;font-weight:700;color:#0f172a}
+.puc-modal__title svg{width:17px;height:17px;color:#4F46E5}
+.puc-modal__x{width:32px;height:32px;border-radius:8px;border:none;cursor:pointer;background:#f1f5f9;color:#64748b;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s}
+.puc-modal__x svg{width:15px;height:15px}
+.puc-modal__x:hover{background:#e2e8f0;color:#0f172a}
+.puc-crop-zone{width:100%;height:340px;background:#0f172a;overflow:hidden}
+.puc-crop-zone img{display:block;max-width:100%}
+.puc-toolbar{display:flex;align-items:center;justify-content:center;gap:.2rem;padding:.5rem 1rem;background:#fafbfc;border-bottom:1px solid #f1f5f9}
+.puc-tool{width:36px;height:36px;border-radius:8px;border:none;cursor:pointer;background:transparent;color:#64748b;display:flex;align-items:center;justify-content:center;transition:background .14s,color .14s}
+.puc-tool svg{width:15px;height:15px}
+.puc-tool:hover{background:#f1f5f9;color:#4F46E5}
+.puc-tool:active{background:#e8edf5}
+.puc-tsep{width:1px;height:20px;background:#e2e8f0;margin:0 .2rem;flex-shrink:0}
+.puc-modal__ft{display:flex;align-items:center;justify-content:flex-end;gap:.625rem;padding:.875rem 1.25rem}
+.puc-spinning{width:15px;height:15px;animation:puc-spin .7s linear infinite}
+@keyframes puc-spin{to{transform:rotate(360deg)}}
+#puc-toasts{position:fixed;top:1.125rem;right:1.125rem;z-index:3000;display:flex;flex-direction:column;gap:.5rem;pointer-events:none}
+.puc-toast{display:flex;align-items:center;gap:.625rem;padding:.6875rem .9375rem;border-radius:12px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.14),0 0 0 1px rgba(0,0,0,.06);font-size:.8125rem;font-weight:500;color:#0f172a;max-width:300px;pointer-events:auto;transform:translateX(110%);opacity:0;transition:transform .3s cubic-bezier(.34,1.4,.64,1),opacity .3s}
+.puc-toast--show{transform:translateX(0);opacity:1}
+.puc-toast__ico{width:28px;height:28px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.puc-toast__ico svg{width:14px;height:14px}
+.puc-toast--success .puc-toast__ico{background:#dcfce7;color:#16a34a}
+.puc-toast--error .puc-toast__ico{background:#fee2e2;color:#dc2626}
+#puc-recruiter .puc-btns,#puc-recruiter .puc-hint{display:none}
+@media(max-width:640px){
+  .puc-backdrop{align-items:flex-end;padding:0}
+  .puc-modal{border-radius:20px 20px 0 0;max-width:100%;transform:translateY(100%);transition:transform .36s cubic-bezier(.32,.72,0,1)}
+  .puc-backdrop--open .puc-modal{transform:translateY(0)}
+  .puc-modal__handle{display:block;width:40px;height:4px;border-radius:2px;background:#e2e8f0;margin:.75rem auto .25rem}
+  .puc-crop-zone{height:56vw;min-height:220px}
+  .puc-modal__ft{flex-direction:row;padding:.875rem 1rem}
+  .puc-modal__ft .puc-btn{flex:1;justify-content:center;font-size:.875rem;padding:.625rem}
+  #puc-toasts{top:auto;bottom:1rem;left:1rem;right:1rem;align-items:stretch}
+  .puc-toast{max-width:100%;transform:translateY(110%)}
+  .puc-toast--show{transform:translateY(0)}
+}
 </style>
 </head>
 <body>
@@ -254,7 +325,13 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 
     <div class="side-footer">
       <div class="side-user">
-        <div class="side-user-avatar">{{ user.name[0].upper() }}</div>
+        <div class="side-user-avatar" style="flex-shrink:0;overflow:hidden;">
+          {% if profile and profile.profile_photo %}
+            <img src="/static/uploads/photos/{{ profile.profile_photo }}" alt="{{ user.name }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">
+          {% else %}
+            {{ user.name[0].upper() }}
+          {% endif %}
+        </div>
         <div>
           <div class="side-user-name">{{ user.name }}</div>
           <div class="side-user-role">{{ profile.job_title or 'Recruiter' }} · {{ profile.company or '' }}</div>

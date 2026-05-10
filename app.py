@@ -22,8 +22,11 @@ PERSONAL_EMAIL_DOMAINS = {
     'aol.com', 'ymail.com', 'mail.com', 'live.com',
 }
 RESUME_UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads', 'resumes')
+PHOTO_UPLOAD_FOLDER  = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads', 'photos')
 ALLOWED_RESUME_EXT = {'pdf', 'doc', 'docx'}
-MAX_RESUME_SIZE = 5 * 1024 * 1024  # 5 MB
+ALLOWED_PHOTO_EXT  = {'jpg', 'jpeg', 'png', 'webp'}
+MAX_RESUME_SIZE = 5 * 1024 * 1024   # 5 MB
+MAX_PHOTO_SIZE  = 2 * 1024 * 1024   # 2 MB
 
 
 def get_db():
@@ -234,6 +237,10 @@ def init_db():
             "ALTER TABLE recruiter_profiles ADD COLUMN company_location TEXT DEFAULT ''",
             "ALTER TABLE candidate_projects ADD COLUMN year TEXT DEFAULT ''",
             "ALTER TABLE jobs ADD COLUMN skill_test_mandatory INTEGER DEFAULT 0",
+            "ALTER TABLE candidate_profiles ADD COLUMN gender TEXT DEFAULT ''",
+            "ALTER TABLE candidate_profiles ADD COLUMN differently_abled TEXT DEFAULT 'no'",
+            "ALTER TABLE candidate_profiles ADD COLUMN profile_photo TEXT",
+            "ALTER TABLE recruiter_profiles ADD COLUMN profile_photo TEXT",
         ]:
             try:
                 db.execute(stmt)
@@ -927,7 +934,9 @@ def candidate_login():
             "SELECT * FROM users WHERE email=? AND role='candidate'", [email]
         ).fetchone()
         if user and check_password_hash(user['password_hash'], password):
-            session.update({'user_id': user['id'], 'role': 'candidate', 'name': user['name']})
+            cp = get_db().execute('SELECT profile_photo FROM candidate_profiles WHERE user_id=?', [user['id']]).fetchone()
+            session.update({'user_id': user['id'], 'role': 'candidate', 'name': user['name'],
+                            'profile_photo': cp['profile_photo'] if cp else None})
             flash(f'Welcome back, {user["name"]}!', 'success')
             return redirect(url_for('jobs'))
         flash('Invalid email or password.', 'error')
@@ -997,15 +1006,17 @@ def candidate_profile():
             flash('Resume deleted.', 'success')
             return redirect(url_for('candidate_profile'))
 
-        name       = request.form.get('name', '').strip()
-        headline   = request.form.get('headline', '').strip()
-        location   = request.form.get('location', '').strip()
-        bio        = request.form.get('bio', '').strip()
-        linkedin   = request.form.get('linkedin', '').strip()
-        github     = request.form.get('github', '').strip()
-        phone      = request.form.get('phone', '').strip()
-        job_title  = request.form.get('job_title', '').strip()
-        experience = request.form.get('experience', '').strip()
+        name              = request.form.get('name', '').strip()
+        headline          = request.form.get('headline', '').strip()
+        location          = request.form.get('location', '').strip()
+        bio               = request.form.get('bio', '').strip()
+        linkedin          = request.form.get('linkedin', '').strip()
+        github            = request.form.get('github', '').strip()
+        phone             = request.form.get('phone', '').strip()
+        job_title         = request.form.get('job_title', '').strip()
+        experience        = request.form.get('experience', '').strip()
+        gender            = request.form.get('gender', '').strip()
+        differently_abled = request.form.get('differently_abled', 'no').strip()
 
         if not name:
             flash('Name is required.', 'error')
@@ -1014,14 +1025,14 @@ def candidate_profile():
         db.execute('UPDATE users SET name=? WHERE id=?', [name, session['user_id']])
         db.execute('''UPDATE candidate_profiles
                       SET headline=?, location=?, bio=?, linkedin=?, github=?, phone=?,
-                          job_title=?, experience=?
+                          job_title=?, experience=?, gender=?, differently_abled=?
                       WHERE user_id=?''',
                    [headline, location, bio, linkedin, github, phone,
-                    job_title, experience, session['user_id']])
+                    job_title, experience, gender, differently_abled, session['user_id']])
         db.commit()
         session['name'] = name
         flash('Profile updated successfully!', 'success')
-        return redirect(url_for('candidate_profile'))
+        return redirect(url_for('candidate_profile') + '#section-contact')
 
     my_skills = db.execute('''
         SELECT s.*, us.verified, us.score, us.added_at
@@ -1111,6 +1122,102 @@ def upload_resume():
     db.commit()
     flash('Resume uploaded successfully!', 'success')
     return redirect(url_for('candidate_profile'))
+
+
+@app.route('/candidate/profile/upload-photo', methods=['POST'])
+@candidate_required
+def candidate_upload_photo():
+    db = get_db()
+    file = request.files.get('photo')
+    if not file or not file.filename:
+        return ('No file', 400)
+    ext = file.filename.rsplit('.', 1)[-1].lower()
+    if ext not in ALLOWED_PHOTO_EXT:
+        return ('Invalid file type', 400)
+    if len(file.read()) > MAX_PHOTO_SIZE:
+        return ('File too large', 400)
+    file.seek(0)
+    os.makedirs(PHOTO_UPLOAD_FOLDER, exist_ok=True)
+    filename = f"candidate_{session['user_id']}.{ext}"
+    old = db.execute('SELECT profile_photo FROM candidate_profiles WHERE user_id=?',
+                     [session['user_id']]).fetchone()
+    if old and old['profile_photo']:
+        try:
+            os.remove(os.path.join(PHOTO_UPLOAD_FOLDER, old['profile_photo']))
+        except OSError:
+            pass
+    file.save(os.path.join(PHOTO_UPLOAD_FOLDER, filename))
+    db.execute('UPDATE candidate_profiles SET profile_photo=? WHERE user_id=?',
+               [filename, session['user_id']])
+    db.commit()
+    session['profile_photo'] = filename
+    return ('OK', 200)
+
+
+@app.route('/recruiter/profile/upload-photo', methods=['POST'])
+@recruiter_required
+def recruiter_upload_photo():
+    db = get_db()
+    file = request.files.get('photo')
+    if not file or not file.filename:
+        return ('No file', 400)
+    ext = file.filename.rsplit('.', 1)[-1].lower()
+    if ext not in ALLOWED_PHOTO_EXT:
+        return ('Invalid file type', 400)
+    if len(file.read()) > MAX_PHOTO_SIZE:
+        return ('File too large', 400)
+    file.seek(0)
+    os.makedirs(PHOTO_UPLOAD_FOLDER, exist_ok=True)
+    filename = f"recruiter_{session['user_id']}.{ext}"
+    old = db.execute('SELECT profile_photo FROM recruiter_profiles WHERE user_id=?',
+                     [session['user_id']]).fetchone()
+    if old and old['profile_photo']:
+        try:
+            os.remove(os.path.join(PHOTO_UPLOAD_FOLDER, old['profile_photo']))
+        except OSError:
+            pass
+    file.save(os.path.join(PHOTO_UPLOAD_FOLDER, filename))
+    db.execute('UPDATE recruiter_profiles SET profile_photo=? WHERE user_id=?',
+               [filename, session['user_id']])
+    db.commit()
+    session['profile_photo'] = filename
+    return ('OK', 200)
+
+
+@app.route('/candidate/profile/remove-photo', methods=['POST'])
+@candidate_required
+def candidate_remove_photo():
+    db = get_db()
+    row = db.execute('SELECT profile_photo FROM candidate_profiles WHERE user_id=?',
+                     [session['user_id']]).fetchone()
+    if row and row['profile_photo']:
+        try:
+            os.remove(os.path.join(PHOTO_UPLOAD_FOLDER, row['profile_photo']))
+        except OSError:
+            pass
+    db.execute('UPDATE candidate_profiles SET profile_photo=NULL WHERE user_id=?',
+               [session['user_id']])
+    db.commit()
+    session.pop('profile_photo', None)
+    return ('OK', 200)
+
+
+@app.route('/recruiter/profile/remove-photo', methods=['POST'])
+@recruiter_required
+def recruiter_remove_photo():
+    db = get_db()
+    row = db.execute('SELECT profile_photo FROM recruiter_profiles WHERE user_id=?',
+                     [session['user_id']]).fetchone()
+    if row and row['profile_photo']:
+        try:
+            os.remove(os.path.join(PHOTO_UPLOAD_FOLDER, row['profile_photo']))
+        except OSError:
+            pass
+    db.execute('UPDATE recruiter_profiles SET profile_photo=NULL WHERE user_id=?',
+               [session['user_id']])
+    db.commit()
+    session.pop('profile_photo', None)
+    return ('OK', 200)
 
 
 @app.route('/candidate/profile/experience/add', methods=['POST'])
@@ -1504,7 +1611,9 @@ def recruiter_login():
             "SELECT * FROM users WHERE email=? AND role='recruiter'", [email]
         ).fetchone()
         if user and check_password_hash(user['password_hash'], password):
-            session.update({'user_id': user['id'], 'role': 'recruiter', 'name': user['name']})
+            rp = get_db().execute('SELECT profile_photo FROM recruiter_profiles WHERE user_id=?', [user['id']]).fetchone()
+            session.update({'user_id': user['id'], 'role': 'recruiter', 'name': user['name'],
+                            'profile_photo': rp['profile_photo'] if rp else None})
             flash(f'Welcome back, {user["name"]}!', 'success')
             return redirect(url_for('recruiter_dashboard'))
         flash('Invalid email or password.', 'error')
@@ -1706,7 +1815,7 @@ def search_candidates():
 
     query = '''
         SELECT DISTINCT u.id, u.name, u.email, u.created_at,
-               cp.headline, cp.location,
+               cp.headline, cp.location, cp.profile_photo,
                (SELECT COUNT(*) FROM user_skills WHERE user_id=u.id AND verified=1) AS verified_count,
                (SELECT COUNT(*) FROM user_skills WHERE user_id=u.id) AS total_skills,
                (SELECT GROUP_CONCAT(s.name||':'||us.verified, ',')
@@ -1760,7 +1869,8 @@ def candidate_detail(candidate_id):
 
     candidate = db.execute('''
         SELECT u.id, u.name, u.email, u.created_at, u.email_verified,
-               cp.headline, cp.location, cp.bio, cp.linkedin, cp.github
+               cp.headline, cp.location, cp.bio, cp.linkedin, cp.github,
+               cp.phone, cp.gender, cp.differently_abled
         FROM users u LEFT JOIN candidate_profiles cp ON u.id = cp.user_id
         WHERE u.id = ? AND u.role = 'candidate'
     ''', [candidate_id]).fetchone()
@@ -1773,10 +1883,56 @@ def candidate_detail(candidate_id):
         WHERE us.user_id = ?
         ORDER BY us.verified DESC, s.name
     ''', [candidate_id]).fetchall()
-    # Skill verification scores are hidden from recruiters until candidate verifies email
-    show_verified_skills = bool(candidate['email_verified']) or (session.get('user_id') == candidate_id)
+    # EMAIL VERIFICATION DISABLED — always show verified skill scores
+    show_verified_skills = True
+    # show_verified_skills = bool(candidate['email_verified']) or (session.get('user_id') == candidate_id)
+
+    experiences = db.execute(
+        'SELECT * FROM candidate_work_experience WHERE user_id=? ORDER BY start_date DESC, id DESC',
+        [candidate_id]).fetchall()
+    educations = db.execute(
+        'SELECT * FROM candidate_education WHERE user_id=? ORDER BY COALESCE(end_year,9999) DESC, COALESCE(start_year,0) DESC',
+        [candidate_id]).fetchall()
+    certifications = db.execute(
+        'SELECT * FROM candidate_certifications WHERE user_id=? ORDER BY COALESCE(year,0) DESC, id DESC',
+        [candidate_id]).fetchall()
+    projects = db.execute(
+        'SELECT * FROM candidate_projects WHERE user_id=? ORDER BY COALESCE(year,0) DESC, id DESC',
+        [candidate_id]).fetchall()
+    profile_extra = db.execute(
+        'SELECT resume_filename, profile_photo FROM candidate_profiles WHERE user_id=?',
+        [candidate_id]).fetchone()
+
+    now = datetime.now()
+    total_months = 0
+    for exp in experiences:
+        if not exp['start_date']:
+            continue
+        try:
+            sy, sm = int(exp['start_date'][:4]), int(exp['start_date'][5:7])
+        except (ValueError, IndexError):
+            continue
+        if exp['is_current']:
+            ey, em = now.year, now.month
+        elif exp['end_date']:
+            try:
+                ey, em = int(exp['end_date'][:4]), int(exp['end_date'][5:7])
+            except (ValueError, IndexError):
+                continue
+        else:
+            continue
+        diff = (ey - sy) * 12 + (em - sm)
+        if diff > 0:
+            total_months += diff
+    total_exp_years  = total_months // 12
+    total_exp_months = total_months % 12
+
     return render_template('candidate_detail.html', candidate=candidate, skills=skills,
                            blocked_recruiter=False, show_verified_skills=show_verified_skills,
+                           experiences=experiences, educations=educations,
+                           certifications=certifications, projects=projects,
+                           profile_extra=profile_extra,
+                           total_exp_years=total_exp_years, total_exp_months=total_exp_months,
                            user=get_current_user())
 
 
@@ -1787,7 +1943,7 @@ def recruiter_detail(recruiter_id):
     db = get_db()
     recruiter = db.execute('''
         SELECT u.id, u.name, u.email, u.created_at,
-               rp.company, rp.company_bio, rp.website
+               rp.company, rp.company_bio, rp.website, rp.profile_photo
         FROM users u LEFT JOIN recruiter_profiles rp ON u.id = rp.user_id
         WHERE u.id = ? AND u.role = 'recruiter'
     ''', [recruiter_id]).fetchone()

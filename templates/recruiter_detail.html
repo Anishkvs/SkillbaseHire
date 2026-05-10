@@ -31,7 +31,17 @@
       <aside>
         <div class="rd-profile-card">
           <!-- Company avatar -->
-          <div class="rd-avatar" aria-label="{{ recruiter.company }}">{{ recruiter.company[0].upper() }}</div>
+          {% if session.get('user_id') == recruiter.id and session.get('role') == 'recruiter' %}
+            <div id="puc-recruiter-detail" style="display:flex;justify-content:center;margin:0 auto 1rem;"></div>
+          {% else %}
+            <div class="rd-avatar" aria-label="{{ recruiter.company }}">
+              {% if recruiter.profile_photo %}
+                <img src="/static/uploads/photos/{{ recruiter.profile_photo }}" alt="{{ recruiter.company }}" style="width:100%;height:100%;object-fit:cover;display:block;">
+              {% else %}
+                {{ recruiter.company[0].upper() }}
+              {% endif %}
+            </div>
+          {% endif %}
 
           <!-- Company & recruiter -->
           <h1 class="rd-company-name">{{ recruiter.company }}</h1>
@@ -232,4 +242,19 @@
     {% endif %}
   </div>
 </div>
+
+{% if recruiter and session.get('user_id') == recruiter.id and session.get('role') == 'recruiter' %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    new PhotoUpload({
+      el:        'puc-recruiter-detail',
+      uploadUrl: '/recruiter/profile/upload-photo',
+      removeUrl: '/recruiter/profile/remove-photo',
+      photo:     {{ ('"' + recruiter.profile_photo + '"') | safe if recruiter.profile_photo else 'null' }},
+      name:      {{ recruiter.company | tojson }},
+      size:      80,
+    });
+  });
+</script>
+{% endif %}
 {% endblock %}

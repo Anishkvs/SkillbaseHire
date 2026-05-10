@@ -1028,7 +1028,7 @@ def candidate_profile():
     ''', [session['user_id']]).fetchall()
 
     experiences = db.execute(
-        'SELECT * FROM candidate_work_experience WHERE user_id=? ORDER BY id DESC',
+        'SELECT * FROM candidate_work_experience WHERE user_id=? ORDER BY start_date DESC, id DESC',
         [session['user_id']]).fetchall()
     educations = db.execute(
         'SELECT * FROM candidate_education WHERE user_id=? ORDER BY id DESC',
@@ -1040,10 +1040,36 @@ def candidate_profile():
         'SELECT * FROM candidate_projects WHERE user_id=? ORDER BY id DESC',
         [session['user_id']]).fetchall()
 
+    # Calculate total work experience
+    now = datetime.now()
+    total_months = 0
+    for exp in experiences:
+        if not exp['start_date']:
+            continue
+        try:
+            sy, sm = int(exp['start_date'][:4]), int(exp['start_date'][5:7])
+        except (ValueError, IndexError):
+            continue
+        if exp['is_current']:
+            ey, em = now.year, now.month
+        elif exp['end_date']:
+            try:
+                ey, em = int(exp['end_date'][:4]), int(exp['end_date'][5:7])
+            except (ValueError, IndexError):
+                continue
+        else:
+            continue
+        diff = (ey - sy) * 12 + (em - sm)
+        if diff > 0:
+            total_months += diff
+    total_exp_years  = total_months // 12
+    total_exp_months = total_months % 12
+
     return render_template('candidate_profile.html',
                            user=get_current_user(), profile=profile, my_skills=my_skills,
                            experiences=experiences, educations=educations,
-                           certifications=certifications, projects=projects)
+                           certifications=certifications, projects=projects,
+                           total_exp_years=total_exp_years, total_exp_months=total_exp_months)
 
 
 @app.route('/candidate/profile/upload-resume', methods=['POST'])
@@ -1098,13 +1124,44 @@ def add_experience():
         flash('Company and designation are required.', 'error')
         return redirect(url_for('candidate_profile'))
     db = get_db()
+    if is_current:
+        db.execute('UPDATE candidate_work_experience SET is_current=0 WHERE user_id=?',
+                   [session['user_id']])
     db.execute('''INSERT INTO candidate_work_experience
                   (user_id, company, designation, start_date, end_date, is_current, description)
                   VALUES (?,?,?,?,?,?,?)''',
                [session['user_id'], company, designation, start_date, end_date, is_current, description])
     db.commit()
     flash('Work experience added.', 'success')
-    return redirect(url_for('candidate_profile'))
+    return redirect(url_for('candidate_profile') + '#section-work-experience')
+
+
+@app.route('/candidate/profile/experience/<int:exp_id>/edit', methods=['POST'])
+@candidate_required
+def edit_experience(exp_id):
+    company     = request.form.get('company', '').strip()
+    designation = request.form.get('designation', '').strip()
+    start_date  = request.form.get('start_date', '').strip()
+    end_date    = request.form.get('end_date', '').strip()
+    is_current  = 1 if request.form.get('is_current') else 0
+    description = request.form.get('description', '').strip()
+    if not company or not designation:
+        flash('Company and designation are required.', 'error')
+        return redirect(url_for('candidate_profile') + '#section-work-experience')
+    if is_current:
+        end_date = ''
+    db = get_db()
+    if is_current:
+        db.execute('UPDATE candidate_work_experience SET is_current=0 WHERE user_id=? AND id!=?',
+                   [session['user_id'], exp_id])
+    db.execute('''UPDATE candidate_work_experience
+                  SET company=?, designation=?, start_date=?, end_date=?, is_current=?, description=?
+                  WHERE id=? AND user_id=?''',
+               [company, designation, start_date, end_date, is_current, description,
+                exp_id, session['user_id']])
+    db.commit()
+    flash('Work experience updated.', 'success')
+    return redirect(url_for('candidate_profile') + '#section-work-experience')
 
 
 @app.route('/candidate/profile/experience/<int:exp_id>/delete', methods=['POST'])
@@ -1115,7 +1172,7 @@ def delete_experience(exp_id):
                [exp_id, session['user_id']])
     db.commit()
     flash('Experience removed.', 'success')
-    return redirect(url_for('candidate_profile'))
+    return redirect(url_for('candidate_profile') + '#section-work-experience')
 
 
 @app.route('/candidate/profile/education/add', methods=['POST'])

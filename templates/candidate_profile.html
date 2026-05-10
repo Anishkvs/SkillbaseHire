@@ -6,7 +6,7 @@
 <title>{{ user.name }} — Candidate Profile | SkillBaseHire</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2%sfamily=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
   --page-bg:#F0F2F7;
@@ -356,6 +356,209 @@ textarea.fc{resize:vertical;min-height:80px}
   .skill-cards-grid{grid-template-columns:1fr 1fr}
   .hero-dates{flex-direction:column;gap:.375rem}
 }
+/* ── Experience action dropdown ────────────────────────────────── */
+#expActionMenu{
+  position:fixed;z-index:700;width:174px;
+  background:var(--white);border:1px solid var(--border);border-radius:10px;
+  box-shadow:0 12px 32px rgba(0,0,0,.13),0 2px 8px rgba(0,0,0,.07);
+  overflow:hidden;display:none;
+  transform-origin:top right;
+  animation:expMenuIn .15s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes expMenuIn{from{opacity:0;transform:scale(.9) translateY(-4px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.exp-menu-item{
+  width:100%;display:flex;align-items:center;gap:10px;
+  padding:10px 12px;font-size:.8125rem;font-weight:500;
+  background:none;border:none;cursor:pointer;text-align:left;
+  transition:background .1s;font-family:'Inter',sans-serif;
+}
+.exp-menu-item--edit{color:var(--text)}
+.exp-menu-item--edit:hover{background:var(--page-bg)}
+.exp-menu-item--delete{color:var(--red)}
+.exp-menu-item--delete:hover{background:var(--red-light)}
+.exp-menu-icon{
+  width:28px;height:28px;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.exp-menu-icon--edit{background:var(--accent-light)}
+.exp-menu-icon--delete{background:var(--red-light)}
+.exp-menu-divider{height:1px;background:var(--border);margin:2px 12px}
+/* ── Shared modal base ──────────────────────────────────────────── */
+.sbh-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.48);
+  backdrop-filter:blur(2px);z-index:800;
+  display:none;align-items:center;justify-content:center;padding:1rem;
+}
+.sbh-modal{
+  background:var(--white);border-radius:var(--radius);
+  box-shadow:0 24px 64px rgba(0,0,0,.18);
+  width:100%;overflow:hidden;
+  animation:sbhScaleIn .2s ease-out both;
+}
+@keyframes sbhScaleIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+.sbh-modal-hdr{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;
+  padding:1.25rem 1.5rem 1rem;border-bottom:1px solid var(--border);
+}
+.sbh-modal-title{font-size:1rem;font-weight:700;color:var(--text);line-height:1.3}
+.sbh-modal-sub{font-size:.8125rem;color:var(--text-3);margin-top:.2rem;line-height:1.5}
+.sbh-modal-x{
+  width:30px;height:30px;border-radius:6px;flex-shrink:0;
+  background:var(--page-bg);border:1px solid var(--border);color:var(--text-3);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;
+}
+.sbh-modal-x:hover{background:var(--border);color:var(--text)}
+.sbh-modal-body{padding:1.25rem 1.5rem;max-height:68vh;overflow-y:auto}
+.sbh-modal-foot{
+  display:flex;align-items:center;justify-content:flex-end;gap:.625rem;
+  padding:.875rem 1.5rem;border-top:1px solid var(--border);
+}
+/* ── Delete confirm modal tweaks ────────────────────────────────── */
+.del-icon-wrap{
+  width:52px;height:52px;border-radius:14px;background:var(--red-light);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;
+}
+.btn-danger-soft{
+  color:var(--red);background:var(--red-light);
+  border:1px solid rgba(220,38,38,.25);
+  padding:.5rem 1.25rem;border-radius:var(--radius-sm);
+  font-size:.8125rem;font-weight:600;cursor:pointer;
+  font-family:'Inter',sans-serif;transition:all .15s;
+}
+.btn-danger-soft:hover{background:#fca5a530;border-color:rgba(220,38,38,.4)}
+/* ── SBH Date Picker ───────────────────────────────────────────── */
+.sbh-dp{position:relative;width:100%}
+.sbh-dp-inp{
+  display:flex;align-items:center;gap:8px;padding:9px 12px;
+  border:1.5px solid var(--border);border-radius:var(--radius-xs);
+  background:var(--white);cursor:pointer;min-height:40px;
+  transition:border-color .15s,box-shadow .15s;user-select:none;
+}
+.sbh-dp-inp:hover:not(.dp-dis){border-color:var(--border-2)}
+.sbh-dp-inp.dp-focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.12)}
+.sbh-dp-lbl{flex:1;font-size:.875rem;color:var(--text-3)}
+.sbh-dp-lbl.dp-set{color:var(--text)}
+.sbh-dp-x{
+  width:18px;height:18px;border-radius:50%;background:var(--border);
+  border:none;cursor:pointer;display:none;align-items:center;justify-content:center;
+  color:var(--text-2);flex-shrink:0;transition:background .1s;padding:0;line-height:1;
+}
+.sbh-dp-x:hover{background:var(--border-2)}
+.sbh-dp-x.dp-show{display:flex}
+.sbh-dp-panel{
+  position:fixed;z-index:900;
+  width:278px;background:var(--white);border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 16px 40px rgba(0,0,0,.14),0 2px 8px rgba(0,0,0,.06);
+  display:none;overflow:hidden;
+  animation:dpIn .15s cubic-bezier(.16,1,.3,1) both;
+}
+@keyframes dpIn{from{opacity:0;transform:translateY(-6px) scale(.96)}to{opacity:1;transform:none}}
+.sbh-dp-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 12px 8px;border-bottom:1px solid var(--border)}
+.sbh-dp-arr{
+  width:28px;height:28px;border-radius:6px;border:1px solid var(--border);
+  background:var(--white);color:var(--text-2);cursor:pointer;font-size:16px;
+  display:flex;align-items:center;justify-content:center;transition:all .12s;flex-shrink:0;
+}
+.sbh-dp-arr:hover{background:var(--page-bg);color:var(--text);border-color:var(--border-2)}
+.sbh-dp-my{font-size:.875rem;font-weight:700;color:var(--text)}
+.sbh-dp-wk{display:grid;grid-template-columns:repeat(7,1fr);padding:6px 10px 2px}
+.sbh-dp-wk s{display:block;text-align:center;font-size:.6rem;font-weight:700;color:var(--text-3);padding:4px 0;letter-spacing:.06em;text-decoration:none}
+.sbh-dp-grid{display:grid;grid-template-columns:repeat(7,1fr);padding:2px 10px 6px;gap:1px}
+.sbh-dp-d{
+  aspect-ratio:1/1;border:none;background:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.775rem;border-radius:50%;color:var(--text);
+  outline:1.5px solid transparent;transition:background .1s,color .1s;
+  font-family:'Inter',sans-serif;width:100%;padding:0;
+}
+.sbh-dp-d:hover{background:var(--page-bg)}
+.sbh-dp-d.dp-other{color:var(--text-3)}
+.sbh-dp-d.dp-today{outline-color:var(--accent);color:var(--accent);font-weight:700}
+.sbh-dp-d.dp-sel{background:var(--accent)!important;color:#fff!important;font-weight:700;outline-color:transparent}
+.sbh-dp-d.dp-dis{color:var(--border-2);cursor:not-allowed;pointer-events:none}
+.sbh-dp-ft{display:flex;justify-content:space-between;padding:7px 14px 9px;border-top:1px solid var(--border)}
+.sbh-dp-ft button{font-size:.8125rem;font-weight:600;color:var(--accent);background:none;border:none;cursor:pointer;font-family:'Inter',sans-serif;transition:color .12s}
+.sbh-dp-ft button:hover{color:var(--accent-2);text-decoration:underline}
+.sbh-dp-leg{display:flex;gap:12px;padding:4px 14px 8px;border-top:1px solid var(--border)}
+.sbh-dp-leg span{display:inline-flex;align-items:center;gap:5px;font-size:.6875rem;color:var(--text-3)}
+.dp-ls{width:9px;height:9px;border-radius:50%;background:var(--accent);flex-shrink:0}
+.dp-lt{width:9px;height:9px;border-radius:50%;outline:1.5px solid var(--accent);flex-shrink:0}
+/* ── Year picker ── */
+.sbh-dp-yr-btn{
+  background:rgba(79,70,229,.1);color:#4F46E5;border:none;border-radius:6px;
+  padding:1px 6px 2px;font-size:14px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;
+  display:inline-flex;align-items:center;gap:3px;transition:background .15s;
+}
+.sbh-dp-yr-btn:hover{background:rgba(79,70,229,.2)}
+.sbh-dp-yr-btn svg{opacity:.7;flex-shrink:0}
+.sbh-dp-yr-view{display:none;flex-direction:column}
+.dp-yr-active .sbh-dp-hd,
+.dp-yr-active .sbh-dp-wk,
+.dp-yr-active .sbh-dp-grid,
+.dp-yr-active .sbh-dp-ft,
+.dp-yr-active .sbh-dp-leg{display:none!important}
+.dp-yr-active .sbh-dp-yr-view{display:flex}
+.sbh-dp-yr-hdr{
+  display:flex;align-items:center;gap:8px;
+  padding:11px 12px 9px;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.sbh-dp-yr-hdr-title{font-size:13.5px;font-weight:700;color:var(--text)}
+.sbh-dp-yrs{
+  max-height:244px;overflow-y:auto;padding:6px 8px;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.sbh-dp-yr{
+  width:100%;padding:9px 12px;border:none;background:none;
+  border-radius:10px;font-size:13.5px;font-weight:600;cursor:pointer;
+  text-align:center;color:#374151;display:block;margin-bottom:2px;
+  font-family:'Inter',sans-serif;transition:background .1s,color .1s;
+}
+.sbh-dp-yr:hover{background:#F3F4F6}
+.sbh-dp-yr.dp-yr-sel{
+  background:#4F46E5;color:#fff;
+  box-shadow:0 2px 8px rgba(79,70,229,.35);
+}
+.sbh-dp-present{
+  display:flex;align-items:center;gap:8px;padding:9px 12px;
+  border:1.5px solid var(--border);border-radius:var(--radius-xs);
+  background:var(--page-bg);font-size:.875rem;color:var(--text-3);min-height:40px;
+}
+.sbh-dp-einfo{display:none;align-items:center;gap:5px;font-size:.75rem;color:var(--amber);margin-top:5px}
+/* ── Month picker ── */
+.sbh-dp-mo-btn{
+  background:none;border:none;font-size:13.5px;font-weight:700;color:var(--text);
+  cursor:pointer;font-family:'Inter',sans-serif;padding:0 2px;
+  display:inline-flex;align-items:center;gap:2px;transition:color .15s;
+}
+.sbh-dp-mo-btn:hover{color:var(--accent)}
+.sbh-dp-mo-view{display:none;flex-direction:column}
+.dp-mo-active .sbh-dp-hd,
+.dp-mo-active .sbh-dp-wk,
+.dp-mo-active .sbh-dp-grid,
+.dp-mo-active .sbh-dp-ft,
+.dp-mo-active .sbh-dp-leg{display:none!important}
+.dp-mo-active .sbh-dp-yr-view{display:none!important}
+.dp-mo-active .sbh-dp-mo-view{display:flex}
+.sbh-dp-mo-hdr{
+  display:flex;align-items:center;gap:8px;
+  padding:11px 12px 9px;border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.sbh-dp-mo-hdr-title{font-size:13.5px;font-weight:700;color:var(--text)}
+.sbh-dp-mos{
+  display:grid;grid-template-columns:1fr 1fr 1fr;
+  gap:4px;padding:10px 8px;
+}
+.sbh-dp-mo{
+  padding:10px 4px;border:none;background:none;
+  border-radius:10px;font-size:12.5px;font-weight:600;cursor:pointer;
+  text-align:center;color:#374151;display:block;
+  font-family:'Inter',sans-serif;transition:background .1s,color .1s;
+}
+.sbh-dp-mo:hover{background:#F3F4F6}
+.sbh-dp-mo.dp-mo-sel{
+  background:#4F46E5;color:#fff;
+  box-shadow:0 2px 8px rgba(79,70,229,.35);
+}
 </style>
 </head>
 <body>
@@ -522,7 +725,7 @@ textarea.fc{resize:vertical;min-height:80px}
             <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
             {% if completion >= 80 %}Strong{% elif completion >= 50 %}Good{% else %}Weak{% endif %}
           </div>
-          <div><span class="completion-hint" onclick="document.getElementById('recoSection').scrollIntoView({behavior:'smooth'})">How to improve%s</span></div>
+          <div><span class="completion-hint" onclick="document.getElementById('recoSection').scrollIntoView({behavior:'smooth'})">How to improve →</span></div>
         </div>
       </div>
     </div>
@@ -733,11 +936,11 @@ textarea.fc{resize:vertical;min-height:80px}
       </div>
 
       <!-- Work Experience -->
-      <div class="card">
+      <div class="card" id="section-work-experience">
         <div class="card-head">
           <div class="card-title">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
-            Work Experience
+            Work Experience{% if experiences and (total_exp_years > 0 or total_exp_months > 0) %} — <strong>{{ total_exp_years }}Yr{% if total_exp_months > 0 %} {{ total_exp_months }}Mo{% endif %}</strong>{% endif %}
           </div>
           <button class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddExp')">+ Add Experience</button>
         </div>
@@ -755,14 +958,28 @@ textarea.fc{resize:vertical;min-height:80px}
                 <div style="font-size:.8125rem;color:var(--text-2);margin-bottom:.25rem">{{ exp.company }}</div>
                 <div class="tl-meta">
                   {% if exp.start_date %}
-                  <span><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>{{ exp.start_date }} — {{ 'Present' if exp.is_current else (exp.end_date or 'Present') }}</span>
+                  <span><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>{{ exp.start_date }}{% if exp.is_current %} — <span style="color:var(--green);font-weight:600">Present</span>{% elif exp.end_date %} — {{ exp.end_date }}{% endif %}</span>
                   {% endif %}
                 </div>
                 {% if exp.description %}<p style="font-size:.8125rem;color:var(--text-2);margin-top:.375rem;line-height:1.5">{{ exp.description }}</p>{% endif %}
               </div>
-              <form method="post" action="{{ url_for('delete_experience', exp_id=exp.id) }}" style="flex-shrink:0">
-                <button type="submit" class="btn-icon" title="Remove" onclick="return confirm('Remove this experience?')"><svg width="13" height="13" fill="none" stroke="var(--red)" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg></button>
-              </form>
+              <button
+                type="button"
+                class="btn-icon exp-menu-btn"
+                title="More options"
+                onclick="toggleExpMenu(this)"
+                data-id="{{ exp.id }}"
+                data-company="{{ exp.company | e }}"
+                data-designation="{{ exp.designation | e }}"
+                data-start="{{ exp.start_date or '' }}"
+                data-end="{{ exp.end_date or '' }}"
+                data-current="{{ '1' if exp.is_current else '0' }}"
+                data-desc="{{ (exp.description or '') | e }}"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/>
+                </svg>
+              </button>
             </div>
             {% endfor %}
           </div>
@@ -779,8 +996,81 @@ textarea.fc{resize:vertical;min-height:80px}
             <div class="form-grid">
               <div class="fg"><label>Company *</label><input class="fc" type="text" name="company" placeholder="e.g. Aspire Systems" required></div>
               <div class="fg"><label>Designation *</label><input class="fc" type="text" name="designation" placeholder="e.g. QA Automation Engineer" required></div>
-              <div class="fg"><label>Start Date</label><input class="fc" type="month" name="start_date"></div>
-              <div class="fg"><label>End Date</label><input class="fc" type="month" name="end_date" placeholder="Leave blank if current"><label style="display:flex;align-items:center;gap:.375rem;margin-top:.375rem;font-size:.8125rem;cursor:pointer"><input type="checkbox" name="is_current" value="1"> Currently working here</label></div>
+              <!-- Add: Start Date -->
+              <div class="fg">
+                <label>Start Date</label>
+                <div class="sbh-dp" id="dpAS">
+                  <div class="sbh-dp-inp" id="dpAS-inp" onclick="dpOpen('AS')">
+                    <svg width="14" height="14" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span class="sbh-dp-lbl" id="dpAS-lbl">Select start date</span>
+                    <button type="button" class="sbh-dp-x" id="dpAS-x" onclick="dpClear('AS',event)">
+                      <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                    <svg width="14" height="14" fill="none" stroke="var(--text-3)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  </div>
+                  <div class="sbh-dp-panel" id="dpAS-panel">
+                    <div class="sbh-dp-hd">
+                      <button type="button" class="sbh-dp-arr" onclick="dpShift('AS',-1)">&#8249;</button>
+                      <span class="sbh-dp-my" id="dpAS-my"></span>
+                      <button type="button" class="sbh-dp-arr" onclick="dpShift('AS',1)">&#8250;</button>
+                    </div>
+                    <div class="sbh-dp-wk"><s>Sun</s><s>Mon</s><s>Tue</s><s>Wed</s><s>Thu</s><s>Fri</s><s>Sat</s></div>
+                    <div class="sbh-dp-grid" id="dpAS-grid"></div>
+                    <div class="sbh-dp-ft">
+                      <button type="button" onclick="dpClear('AS')">Clear</button>
+                      <button type="button" onclick="dpToday('AS')">Today</button>
+                    </div>
+                    <div class="sbh-dp-leg"><span><span class="dp-ls"></span>Selected</span><span><span class="dp-lt"></span>Today</span></div>
+                  </div>
+                </div>
+                <input type="hidden" id="dpAS-val" name="start_date">
+              </div>
+              <!-- Add: End Date -->
+              <div class="fg">
+                <label>End Date</label>
+                <div id="dpAE-wrap">
+                  <div class="sbh-dp" id="dpAE">
+                    <div class="sbh-dp-inp" id="dpAE-inp" onclick="dpOpen('AE')">
+                      <svg width="14" height="14" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                      <span class="sbh-dp-lbl" id="dpAE-lbl">Select end date</span>
+                      <button type="button" class="sbh-dp-x" id="dpAE-x" onclick="dpClear('AE',event)">
+                        <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      </button>
+                      <svg width="14" height="14" fill="none" stroke="var(--text-3)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </div>
+                    <div class="sbh-dp-panel" id="dpAE-panel">
+                      <div class="sbh-dp-hd">
+                        <button type="button" class="sbh-dp-arr" onclick="dpShift('AE',-1)">&#8249;</button>
+                        <span class="sbh-dp-my" id="dpAE-my"></span>
+                        <button type="button" class="sbh-dp-arr" onclick="dpShift('AE',1)">&#8250;</button>
+                      </div>
+                      <div class="sbh-dp-wk"><s>Sun</s><s>Mon</s><s>Tue</s><s>Wed</s><s>Thu</s><s>Fri</s><s>Sat</s></div>
+                      <div class="sbh-dp-grid" id="dpAE-grid"></div>
+                      <div class="sbh-dp-ft">
+                        <button type="button" onclick="dpClear('AE')">Clear</button>
+                        <button type="button" onclick="dpToday('AE')">Today</button>
+                      </div>
+                      <div class="sbh-dp-leg"><span><span class="dp-ls"></span>Selected</span><span><span class="dp-lt"></span>Today</span></div>
+                    </div>
+                  </div>
+                  <div class="sbh-dp-einfo" id="dpAE-info">
+                    <svg width="12" height="12" fill="var(--amber)" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12" stroke="#fff" stroke-width="2.5"/><circle cx="12" cy="16" r="1" fill="#fff"/></svg>
+                    End date cannot be earlier than start date
+                  </div>
+                </div>
+                <div id="dpAE-present" style="display:none">
+                  <div class="sbh-dp-present">
+                    <svg width="14" height="14" fill="none" stroke="var(--text-3)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span style="flex:1;font-size:.875rem">Present</span>
+                    <svg width="13" height="13" fill="none" stroke="var(--text-3)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                  </div>
+                </div>
+                <input type="hidden" id="dpAE-val" name="end_date">
+                <label style="display:flex;align-items:center;gap:.375rem;margin-top:.625rem;font-size:.8125rem;cursor:pointer">
+                  <input type="checkbox" name="is_current" value="1" onchange="dpToggleCurrent(this.checked,'AE')">
+                  Currently working here
+                </label>
+              </div>
               <div class="fg span-2"><label>Description</label><textarea class="fc" name="description" rows="3" placeholder="Describe your role and achievements..."></textarea></div>
             </div>
             <div class="form-actions"><button type="submit" class="btn btn-primary btn-sm">Save Experience</button><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editAddExp')">Cancel</button></div>
@@ -1188,13 +1478,18 @@ function toggleEdit(id) {
   const isCard = el.tagName === 'DIV' && el.classList.contains('card');
   if (isCard) {
     const open = el.style.display !== 'none';
-    el.style.display = open %s 'none' : 'block';
+    el.style.display = open ? 'none' : 'block';
     if (!open) setTimeout(() => el.scrollIntoView({behavior:'smooth',block:'nearest'}), 50);
   } else {
     const open = el.classList.contains('open');
     document.querySelectorAll('.edit-panel.open').forEach(p => p.classList.remove('open'));
     if (!open) {
       el.classList.add('open');
+      /* reset Add-experience pickers when panel opens */
+      if (id === 'editAddExp') {
+        dpClearVal('AS'); dpClearVal('AE');
+        dpToggleCurrent(false, 'AE');
+      }
       setTimeout(() => el.scrollIntoView({behavior:'smooth',block:'nearest'}), 50);
     }
   }
@@ -1218,10 +1513,621 @@ function handleResume(input) {
 function saveVisibility(checkbox, type) {
   // Visual feedback only — backend toggle can be wired when needed
   const label = checkbox.closest('.vis-row').querySelector('.vis-label');
-  if (label) label.style.color = checkbox.checked %s '' : 'var(--text-3)';
+  if (label) label.style.color = checkbox.checked ? '' : 'var(--text-3)';
 }
 
 setTimeout(() => { document.querySelectorAll('.flash').forEach(el => { el.style.transition='opacity .4s'; el.style.opacity='0'; setTimeout(()=>el.remove(),400); }); }, 4500);
+</script>
+
+<!-- ══ Global: Experience action dropdown ══════════════════════════ -->
+<div id="expActionMenu">
+  <button type="button" class="exp-menu-item exp-menu-item--edit" onclick="openEditExpModal()">
+    <span class="exp-menu-icon exp-menu-icon--edit">
+      <svg width="13" height="13" fill="none" stroke="var(--accent)" stroke-width="2.2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </span>
+    Edit employment
+  </button>
+  <div class="exp-menu-divider"></div>
+  <button type="button" class="exp-menu-item exp-menu-item--delete" onclick="openDeleteExpModal()">
+    <span class="exp-menu-icon exp-menu-icon--delete">
+      <svg width="13" height="13" fill="none" stroke="var(--red)" stroke-width="2.2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+    </span>
+    Delete
+  </button>
+</div>
+
+<!-- ══ Edit Experience Modal ═══════════════════════════════════════ -->
+<div id="editExpModal" class="sbh-overlay" onclick="if(event.target===this)closeEditExpModal()">
+  <div class="sbh-modal" style="max-width:500px">
+    <div class="sbh-modal-hdr">
+      <div>
+        <div class="sbh-modal-title">Edit Experience</div>
+        <div class="sbh-modal-sub">Update your work experience details</div>
+      </div>
+      <button type="button" class="sbh-modal-x" onclick="closeEditExpModal()">
+        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <form id="editExpForm" method="post" action="">
+      <div class="sbh-modal-body">
+        <div class="form-grid">
+          <div class="fg"><label>Company *</label><input class="fc" type="text" id="editExpCompany" name="company" required></div>
+          <div class="fg"><label>Designation *</label><input class="fc" type="text" id="editExpDesignation" name="designation" required></div>
+          <!-- ── Start Date picker ── -->
+          <div class="fg">
+            <label>Start Date</label>
+            <div class="sbh-dp" id="dpS">
+              <div class="sbh-dp-inp" id="dpS-inp" onclick="dpOpen('S')">
+                <svg width="14" height="14" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span class="sbh-dp-lbl" id="dpS-lbl">Select start date</span>
+                <button type="button" class="sbh-dp-x" id="dpS-x" onclick="dpClear('S',event)">
+                  <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+                <svg width="14" height="14" fill="none" stroke="var(--text-3)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              </div>
+              <div class="sbh-dp-panel" id="dpS-panel">
+                <div class="sbh-dp-hd">
+                  <button type="button" class="sbh-dp-arr" onclick="dpShift('S',-1)">&#8249;</button>
+                  <span class="sbh-dp-my" id="dpS-my"></span>
+                  <button type="button" class="sbh-dp-arr" onclick="dpShift('S',1)">&#8250;</button>
+                </div>
+                <div class="sbh-dp-wk"><s>Sun</s><s>Mon</s><s>Tue</s><s>Wed</s><s>Thu</s><s>Fri</s><s>Sat</s></div>
+                <div class="sbh-dp-grid" id="dpS-grid"></div>
+                <div class="sbh-dp-ft">
+                  <button type="button" onclick="dpClear('S')">Clear</button>
+                  <button type="button" onclick="dpToday('S')">Today</button>
+                </div>
+                <div class="sbh-dp-leg">
+                  <span><span class="dp-ls"></span>Selected</span>
+                  <span><span class="dp-lt"></span>Today</span>
+                </div>
+              </div>
+            </div>
+            <input type="hidden" id="dpS-val" name="start_date">
+          </div>
+
+          <!-- ── End Date picker ── -->
+          <div class="fg">
+            <label>End Date</label>
+            <div id="dpE-wrap">
+              <div class="sbh-dp" id="dpE">
+                <div class="sbh-dp-inp" id="dpE-inp" onclick="dpOpen('E')">
+                  <svg width="14" height="14" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  <span class="sbh-dp-lbl" id="dpE-lbl">Select end date</span>
+                  <button type="button" class="sbh-dp-x" id="dpE-x" onclick="dpClear('E',event)">
+                    <svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                  <svg width="14" height="14" fill="none" stroke="var(--text-3)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </div>
+                <div class="sbh-dp-panel" id="dpE-panel">
+                  <div class="sbh-dp-hd">
+                    <button type="button" class="sbh-dp-arr" onclick="dpShift('E',-1)">&#8249;</button>
+                    <span class="sbh-dp-my" id="dpE-my"></span>
+                    <button type="button" class="sbh-dp-arr" onclick="dpShift('E',1)">&#8250;</button>
+                  </div>
+                  <div class="sbh-dp-wk"><s>Sun</s><s>Mon</s><s>Tue</s><s>Wed</s><s>Thu</s><s>Fri</s><s>Sat</s></div>
+                  <div class="sbh-dp-grid" id="dpE-grid"></div>
+                  <div class="sbh-dp-ft">
+                    <button type="button" onclick="dpClear('E')">Clear</button>
+                    <button type="button" onclick="dpToday('E')">Today</button>
+                  </div>
+                  <div class="sbh-dp-leg">
+                    <span><span class="dp-ls"></span>Selected</span>
+                    <span><span class="dp-lt"></span>Today</span>
+                  </div>
+                </div>
+              </div>
+              <div class="sbh-dp-einfo" id="dpE-info">
+                <svg width="12" height="12" fill="var(--amber)" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12" stroke="#fff" stroke-width="2.5"/><circle cx="12" cy="16" r="1" fill="#fff"/></svg>
+                End date cannot be earlier than start date
+              </div>
+            </div>
+            <div id="dpE-present" style="display:none">
+              <div class="sbh-dp-present">
+                <svg width="14" height="14" fill="none" stroke="var(--text-3)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                <span style="flex:1;font-size:.875rem">Present</span>
+                <svg width="13" height="13" fill="none" stroke="var(--text-3)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+              </div>
+              <p style="font-size:.75rem;color:var(--text-3);margin-top:4px">End date is set to Present</p>
+            </div>
+            <input type="hidden" id="dpE-val" name="end_date">
+            <label style="display:flex;align-items:center;gap:.375rem;margin-top:.625rem;font-size:.8125rem;cursor:pointer">
+              <input type="checkbox" id="editExpCurrent" name="is_current" value="1" onchange="dpToggleCurrent(this.checked)">
+              Currently working here
+            </label>
+          </div>
+          <div class="fg span-2"><label>Description</label><textarea class="fc" id="editExpDesc" name="description" rows="4" placeholder="Describe your role and achievements..."></textarea></div>
+        </div>
+      </div>
+      <div class="sbh-modal-foot">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="closeEditExpModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ══ Delete Experience Confirm Modal ════════════════════════════= -->
+<div id="deleteExpModal" class="sbh-overlay" onclick="if(event.target===this)closeDeleteExpModal()">
+  <div class="sbh-modal" style="max-width:360px;text-align:center">
+    <div class="sbh-modal-body" style="padding:1.75rem 1.5rem 1rem">
+      <div class="del-icon-wrap">
+        <svg width="22" height="22" fill="none" stroke="var(--red)" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      </div>
+      <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:.625rem">Delete Experience?</div>
+      <div id="deleteExpMsg" style="font-size:.8125rem;color:var(--text-2);line-height:1.65"></div>
+    </div>
+    <div style="display:flex;justify-content:center;gap:.75rem;padding:.875rem 1.5rem 1.5rem">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeDeleteExpModal()">Cancel</button>
+      <form id="deleteExpForm" method="post" action="" style="display:inline;margin:0">
+        <button type="submit" class="btn-danger-soft">Delete</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Experience action menu ─────────────────────────────────────────
+var _exp = {};
+
+function toggleExpMenu(btn) {
+  var menu = document.getElementById('expActionMenu');
+  var id = btn.dataset.id;
+  var alreadyOpen = menu.style.display === 'block' && _exp.id === id;
+  closeExpMenu();
+  if (alreadyOpen) return;
+
+  _exp = {
+    id:          id,
+    company:     btn.dataset.company,
+    designation: btn.dataset.designation,
+    startDate:   btn.dataset.start,
+    endDate:     btn.dataset.end,
+    isCurrent:   btn.dataset.current === '1',
+    description: btn.dataset.desc,
+    btn:         btn
+  };
+
+  var rect = btn.getBoundingClientRect();
+  menu.style.top   = (rect.bottom + 6) + 'px';
+  menu.style.right = (window.innerWidth - rect.right) + 'px';
+  menu.style.display = 'block';
+  /* re-trigger animation */
+  menu.style.animation = 'none';
+  menu.offsetHeight;
+  menu.style.animation = '';
+
+  btn.style.background  = 'var(--accent-light)';
+  btn.style.color       = 'var(--accent)';
+  btn.style.borderColor = 'rgba(79,70,229,.2)';
+}
+
+function closeExpMenu() {
+  var menu = document.getElementById('expActionMenu');
+  menu.style.display = 'none';
+  if (_exp.btn) {
+    _exp.btn.style.background  = '';
+    _exp.btn.style.color       = '';
+    _exp.btn.style.borderColor = '';
+  }
+}
+
+document.addEventListener('mousedown', function(e) {
+  var menu = document.getElementById('expActionMenu');
+  if (menu && menu.style.display === 'block') {
+    if (!menu.contains(e.target) && !e.target.closest('.exp-menu-btn')) closeExpMenu();
+  }
+});
+
+// ── SBH Date Picker ───────────────────────────────────────────────
+var _dp = {};
+var DP_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var DP_SHORT  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function dpState(id) {
+  if (!_dp[id]) { var n = new Date(); _dp[id] = {y:n.getFullYear(),m:n.getMonth(),selY:null,selM:null,selD:null}; }
+  return _dp[id];
+}
+
+var DP_PAIRS = {S:'E', E:'S', AS:'AE', AE:'AS'};
+
+/* Holds the active reposition handler so scroll/resize listeners can be removed */
+var _dpRepos = null;
+
+function dpOpen(id) {
+  var other = DP_PAIRS[id];
+  if (other) dpClose(other);
+  var panel = document.getElementById('dp'+id+'-panel');
+  var inp   = document.getElementById('dp'+id+'-inp');
+  if (!panel || !inp) return;
+  if (panel.style.display === 'block') { dpClose(id); return; }
+
+  /* Always hoist the panel to <body> so no ancestor overflow/transform
+     can ever affect position:fixed.  Do it every open, not just at load. */
+  if (panel.parentNode !== document.body) document.body.appendChild(panel);
+
+  /* Reset to calendar view in case year/month-picker was active last time */
+  panel.classList.remove('dp-yr-active');
+  panel.classList.remove('dp-mo-active');
+
+  var st = dpState(id);
+  if (st.selY !== null) { st.y = st.selY; st.m = st.selM; }
+  dpRender(id);
+
+  function reposition() {
+    var r = inp.getBoundingClientRect();
+    var t = r.bottom + 6;
+    var l = r.left;
+    if (l + 278 > window.innerWidth - 8) l = window.innerWidth - 286;
+    /* Set position:fixed explicitly inline — beats any inherited or class style */
+    panel.style.position = 'fixed';
+    panel.style.top      = t + 'px';
+    panel.style.left     = l + 'px';
+  }
+
+  reposition();
+  panel.style.display = 'block';
+
+  /* Track the trigger while the user scrolls / resizes the window */
+  if (_dpRepos) {
+    window.removeEventListener('scroll', _dpRepos, true);
+    window.removeEventListener('resize', _dpRepos);
+  }
+  _dpRepos = reposition;
+  window.addEventListener('scroll', _dpRepos, true);   /* capture catches nested scroll */
+  window.addEventListener('resize', _dpRepos);
+
+  inp.classList.add('dp-focus');
+}
+
+function dpClose(id) {
+  var p = document.getElementById('dp'+id+'-panel');
+  var i = document.getElementById('dp'+id+'-inp');
+  if (p) p.style.display = 'none';
+  if (i) i.classList.remove('dp-focus');
+  /* Clean up reposition listeners */
+  if (_dpRepos) {
+    window.removeEventListener('scroll', _dpRepos, true);
+    window.removeEventListener('resize', _dpRepos);
+    _dpRepos = null;
+  }
+}
+
+function dpShift(id, d) {
+  var st = dpState(id);
+  st.m += d;
+  if (st.m < 0)  { st.m = 11; st.y--; }
+  if (st.m > 11) { st.m = 0;  st.y++; }
+  dpRender(id);
+}
+
+function dpRender(id) {
+  var st = dpState(id);
+  var y = st.y, m = st.m;
+  /* Clickable month + clickable year button */
+  document.getElementById('dp'+id+'-my').innerHTML =
+    '<button type="button" class="sbh-dp-mo-btn" onclick="dpMonthView(\'' + id + '\')">'
+    + DP_MONTHS[m]
+    + '<svg width="9" height="9" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>'
+    + ' <button type="button" class="sbh-dp-yr-btn" onclick="dpYearView(\'' + id + '\')">'
+    + y + '<svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></button>';
+
+  var now = new Date();
+  var ty = now.getFullYear(), tm = now.getMonth(), td = now.getDate();
+  var firstDay = new Date(y, m, 1).getDay();
+  var daysInM  = new Date(y, m+1, 0).getDate();
+  var prevDays = new Date(y, m, 0).getDate();
+
+  var minMs = null;
+  var startId = DP_PAIRS[id]; /* e.g. E→S, AE→AS */
+  if (startId && id !== 'S' && id !== 'AS') {
+    var sS = dpState(startId);
+    if (sS.selY !== null) minMs = new Date(sS.selY, sS.selM, 1).getTime();
+  }
+
+  var grid = document.getElementById('dp'+id+'-grid');
+  grid.innerHTML = '';
+
+  for (var i = 0; i < 42; i++) {
+    var day, cy = y, cm = m, isOther = false;
+    if (i < firstDay) {
+      day = prevDays - firstDay + i + 1;
+      cm = m===0 ? 11 : m-1; cy = m===0 ? y-1 : y; isOther = true;
+    } else if (i - firstDay >= daysInM) {
+      day = i - firstDay - daysInM + 1;
+      cm = m===11 ? 0 : m+1; cy = m===11 ? y+1 : y; isOther = true;
+    } else {
+      day = i - firstDay + 1;
+    }
+
+    var isToday = !isOther && cy===ty && cm===tm && day===td;
+    var isSel   = !isOther && st.selY===cy && st.selM===cm && st.selD===day;
+    var isDis   = !isOther && minMs !== null && new Date(cy,cm,day).getTime() < minMs;
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = day;
+    btn.className = 'sbh-dp-d'
+      + (isOther  ? ' dp-other' : '')
+      + (isToday && !isSel ? ' dp-today' : '')
+      + (isSel    ? ' dp-sel'   : '')
+      + (isDis    ? ' dp-dis'   : '');
+
+    if (!isDis && !isOther) {
+      (function(cy2,cm2,d2){ btn.onclick = function(){ dpSelect(id,cy2,cm2,d2); }; })(cy,cm,day);
+    }
+    grid.appendChild(btn);
+  }
+}
+
+/* ── Year picker view ───────────────────────────────────────────── */
+function dpYearView(id) {
+  var panel = document.getElementById('dp'+id+'-panel');
+  var st    = dpState(id);
+
+  /* Build the year-view container once, then reuse */
+  var yv = panel.querySelector('.sbh-dp-yr-view');
+  if (!yv) {
+    yv = document.createElement('div');
+    yv.className = 'sbh-dp-yr-view';
+
+    /* Header row: back arrow + title */
+    var hdr = document.createElement('div');
+    hdr.className = 'sbh-dp-yr-hdr';
+    var back = document.createElement('button');
+    back.type = 'button';
+    back.className = 'sbh-dp-arr';
+    back.innerHTML = '&#8249;';
+    back.setAttribute('title', 'Back to calendar');
+    back.onclick = function(){ dpYearViewClose(id); };
+    var ttl = document.createElement('span');
+    ttl.className = 'sbh-dp-yr-hdr-title';
+    ttl.textContent = 'Select Year';
+    hdr.appendChild(back);
+    hdr.appendChild(ttl);
+    yv.appendChild(hdr);
+
+    /* Scrollable year list (current year → 1950) */
+    var list = document.createElement('div');
+    list.className = 'sbh-dp-yrs';
+    var nowY = new Date().getFullYear();
+    for (var y2 = nowY; y2 >= 1950; y2--) {
+      (function(yr){
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'sbh-dp-yr';
+        b.textContent = yr;
+        b.setAttribute('data-yr', yr);
+        b.onclick = function(){ dpSelectYear(id, yr); };
+        list.appendChild(b);
+      })(y2);
+    }
+    yv.appendChild(list);
+    panel.appendChild(yv);
+  }
+
+  /* Highlight the currently navigated year */
+  var btns = yv.querySelectorAll('.sbh-dp-yr');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].classList.toggle('dp-yr-sel', parseInt(btns[i].getAttribute('data-yr')) === st.y);
+  }
+
+  /* Scroll selected year into view */
+  var selB = yv.querySelector('.dp-yr-sel');
+  if (selB) setTimeout(function(){ selB.scrollIntoView({block:'center',behavior:'instant'}); }, 0);
+
+  /* Switch panel to year view */
+  panel.classList.add('dp-yr-active');
+}
+
+function dpYearViewClose(id) {
+  var panel = document.getElementById('dp'+id+'-panel');
+  panel.classList.remove('dp-yr-active');
+  dpRender(id);  /* re-render so month label refreshes */
+}
+
+function dpSelectYear(id, year) {
+  var st = dpState(id);
+  st.y = year;
+  dpYearViewClose(id);
+}
+
+/* ── Month picker view ──────────────────────────────────────────── */
+var DP_MONTHS_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+function dpMonthView(id) {
+  var panel = document.getElementById('dp'+id+'-panel');
+  var st    = dpState(id);
+
+  /* Build the month-view container once, then reuse */
+  var mv = panel.querySelector('.sbh-dp-mo-view');
+  if (!mv) {
+    mv = document.createElement('div');
+    mv.className = 'sbh-dp-mo-view';
+
+    /* Header: back arrow + title */
+    var hdr = document.createElement('div');
+    hdr.className = 'sbh-dp-mo-hdr';
+    var back = document.createElement('button');
+    back.type = 'button';
+    back.className = 'sbh-dp-arr';
+    back.innerHTML = '&#8249;';
+    back.setAttribute('title', 'Back to calendar');
+    back.onclick = function(){ dpMonthViewClose(id); };
+    var ttl = document.createElement('span');
+    ttl.className = 'sbh-dp-mo-hdr-title';
+    ttl.textContent = 'Select Month';
+    hdr.appendChild(back);
+    hdr.appendChild(ttl);
+    mv.appendChild(hdr);
+
+    /* 3-column month grid */
+    var grid = document.createElement('div');
+    grid.className = 'sbh-dp-mos';
+    for (var i = 0; i < 12; i++) {
+      (function(idx){
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'sbh-dp-mo';
+        b.textContent = DP_MONTHS_SHORT[idx];
+        b.setAttribute('data-mo', idx);
+        b.onclick = function(){ dpSelectMonth(id, idx); };
+        grid.appendChild(b);
+      })(i);
+    }
+    mv.appendChild(grid);
+    panel.appendChild(mv);
+  }
+
+  /* Highlight the currently navigated month */
+  var btns = mv.querySelectorAll('.sbh-dp-mo');
+  for (var j = 0; j < btns.length; j++) {
+    btns[j].classList.toggle('dp-mo-sel', parseInt(btns[j].getAttribute('data-mo')) === st.m);
+  }
+
+  /* Switch panel to month view */
+  panel.classList.add('dp-mo-active');
+}
+
+function dpMonthViewClose(id) {
+  var panel = document.getElementById('dp'+id+'-panel');
+  panel.classList.remove('dp-mo-active');
+  dpRender(id);
+}
+
+function dpSelectMonth(id, monthIdx) {
+  var st = dpState(id);
+  st.m = monthIdx;
+  dpMonthViewClose(id);
+}
+
+function dpSelect(id, y, m, d) {
+  var st = dpState(id);
+  st.selY = y; st.selM = m; st.selD = d;
+  document.getElementById('dp'+id+'-val').value = y + '-' + String(m+1).padStart(2,'0');
+  var lbl = document.getElementById('dp'+id+'-lbl');
+  lbl.textContent = DP_SHORT[m] + ' ' + y;
+  lbl.classList.add('dp-set');
+  document.getElementById('dp'+id+'-x').classList.add('dp-show');
+  var endId = DP_PAIRS[id];
+  if (endId && (id==='S'||id==='AS')) {
+    var eS = dpState(endId);
+    if (eS.selY !== null && new Date(eS.selY,eS.selM,1)<new Date(y,m,1)) dpClearVal(endId);
+    dpCheckInfo(endId);
+  }
+  dpClose(id);
+}
+
+function dpClearVal(id) {
+  var st = dpState(id); st.selY = null; st.selM = null; st.selD = null;
+  document.getElementById('dp'+id+'-val').value = '';
+  var lbl = document.getElementById('dp'+id+'-lbl');
+  lbl.textContent = (id==='S'||id==='AS') ? 'Select start date' : 'Select end date';
+  lbl.classList.remove('dp-set');
+  document.getElementById('dp'+id+'-x').classList.remove('dp-show');
+}
+
+function dpClear(id, ev) {
+  if (ev) ev.stopPropagation();
+  dpClearVal(id);
+  dpClose(id);
+  var endId = DP_PAIRS[id];
+  if (endId) dpCheckInfo(endId);
+}
+
+function dpToday(id) {
+  var n = new Date(); dpState(id).y = n.getFullYear(); dpState(id).m = n.getMonth();
+  dpRender(id);
+}
+
+function dpCheckInfo(endId) {
+  endId = endId || 'E';
+  var info = document.getElementById('dp'+endId+'-info');
+  if (!info) return;
+  var startId = DP_PAIRS[endId];
+  var sS = dpState(startId), eS = dpState(endId);
+  info.style.display = (sS.selY&&eS.selY && new Date(eS.selY,eS.selM,1)<new Date(sS.selY,sS.selM,1))
+    ? 'flex' : 'none';
+}
+
+function dpToggleCurrent(checked, endId) {
+  endId = endId || 'E';
+  var wrap    = document.getElementById('dp'+endId+'-wrap');
+  var present = document.getElementById('dp'+endId+'-present');
+  if (!wrap) return;
+  wrap.style.display    = checked ? 'none'  : 'block';
+  present.style.display = checked ? 'block' : 'none';
+  if (checked) { dpClearVal(endId); dpClose(endId); }
+}
+
+function dpLoad(id, yyyymm) {
+  if (!yyyymm) { dpClearVal(id); return; }
+  var parts = yyyymm.split('-');
+  if (parts.length < 2) { dpClearVal(id); return; }
+  var y = parseInt(parts[0]), m = parseInt(parts[1])-1;
+  var st = dpState(id);
+  st.selY=y; st.selM=m; st.selD=1; st.y=y; st.m=m;
+  document.getElementById('dp'+id+'-val').value = yyyymm;
+  var lbl = document.getElementById('dp'+id+'-lbl');
+  lbl.textContent = DP_SHORT[m]+' '+y;
+  lbl.classList.add('dp-set');
+  document.getElementById('dp'+id+'-x').classList.add('dp-show');
+}
+
+document.addEventListener('mousedown', function(e) {
+  ['S','E','AS','AE'].forEach(function(id) {
+    var p = document.getElementById('dp'+id+'-panel');
+    var i = document.getElementById('dp'+id+'-inp');
+    if (p && p.style.display==='block' && !p.contains(e.target) && (!i||!i.contains(e.target))) dpClose(id);
+  });
+});
+
+// ── Edit modal ────────────────────────────────────────────────────
+function openEditExpModal() {
+  closeExpMenu();
+  /* reset date pickers */
+  dpClearVal('S'); dpClearVal('E');
+  dpCheckInfo();
+  document.getElementById('editExpForm').action    = '/candidate/profile/experience/' + _exp.id + '/edit';
+  document.getElementById('editExpCompany').value     = _exp.company;
+  document.getElementById('editExpDesignation').value = _exp.designation;
+  dpLoad('S', _exp.startDate);
+  document.getElementById('editExpCurrent').checked   = _exp.isCurrent;
+  dpToggleCurrent(_exp.isCurrent);
+  if (!_exp.isCurrent) dpLoad('E', _exp.endDate);
+  document.getElementById('editExpDesc').value         = _exp.description;
+  document.getElementById('editExpModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEditExpModal() {
+  document.getElementById('editExpModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// ── Delete modal ──────────────────────────────────────────────────
+function openDeleteExpModal() {
+  closeExpMenu();
+  document.getElementById('deleteExpMsg').innerHTML =
+    'Are you sure you want to remove this work experience from your profile?'
+    + ' <strong style="color:var(--text)">(' + _exp.company + ')</strong>';
+  document.getElementById('deleteExpForm').action =
+    '/candidate/profile/experience/' + _exp.id + '/delete';
+  document.getElementById('deleteExpModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDeleteExpModal() {
+  document.getElementById('deleteExpModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+// ── Escape key closes everything ──────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') { closeExpMenu(); closeEditExpModal(); closeDeleteExpModal(); }
+});
+
+/* Panels are moved to <body> on demand inside dpOpen() */
 </script>
 </body>
 </html>

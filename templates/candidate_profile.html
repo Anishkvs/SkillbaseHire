@@ -271,11 +271,27 @@ img{max-width:100%}
 .resume-actions{display:flex;gap:.5rem;flex-direction:column}
 
 /* ── Job Preferences ── */
-.pref-row{display:flex;align-items:flex-start;padding:.4375rem 0;border-bottom:1px solid var(--border)}
+.pref-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border);gap:.5rem}
 .pref-row:last-child{border-bottom:none}
-.pref-label{font-size:.75rem;color:var(--text-3);font-weight:500;min-width:110px;flex-shrink:0;display:flex;align-items:center;gap:.375rem;padding-top:.0625rem}
+.pref-label{font-size:.75rem;color:var(--text-3);font-weight:500;flex-shrink:0;display:flex;align-items:center;gap:.375rem;white-space:nowrap}
 .pref-label svg{flex-shrink:0;width:13px;height:13px}
-.pref-value{font-size:.8125rem;color:var(--text);font-weight:500;flex:1}
+.pref-value{font-size:.8125rem;color:var(--text);font-weight:600;text-align:right;min-width:0;word-break:break-word}
+.pref-value-pill{display:inline-flex;align-items:center;padding:.2rem .625rem;border-radius:20px;font-size:.75rem;font-weight:600;background:var(--accent-light);color:var(--accent)}
+.pref-value-pill.green{background:var(--green-light);color:var(--green)}
+.pref-value-pill.red{background:var(--red-light);color:var(--red)}
+/* Preferences edit form */
+.pref-edit-grid{display:grid;grid-template-columns:1fr;gap:.75rem}
+.pref-selects-row{display:grid;grid-template-columns:1fr 1fr;gap:.625rem}
+/* Willing to relocate toggle */
+.pref-toggle{display:flex;align-items:center;gap:.75rem;margin-top:.625rem;padding:.625rem .75rem;background:var(--page-bg);border:1px solid var(--border);border-radius:var(--radius-xs);cursor:pointer;user-select:none}
+.pref-toggle input[type=checkbox]{position:absolute;opacity:0;width:0;height:0;pointer-events:none}
+.ptog-track{position:relative;width:36px;height:20px;background:#CBD5E1;border-radius:10px;flex-shrink:0;transition:background .2s}
+.ptog-thumb{position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .18s}
+.pref-toggle input:checked + .ptog-track{background:var(--accent)}
+.pref-toggle input:checked + .ptog-track .ptog-thumb{transform:translateX(16px)}
+.ptog-text{flex:1;min-width:0}
+.ptog-label{font-size:.8125rem;font-weight:600;color:var(--text);display:block}
+.ptog-sub{font-size:.7rem;color:var(--text-3);display:block;margin-top:.0625rem}
 
 /* ── Profile visibility ── */
 .vis-row{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid var(--border)}
@@ -699,9 +715,7 @@ textarea.fc{resize:vertical;min-height:80px}
   </a>
   <nav class="tb-nav">
     <a href="{{ url_for('jobs') }}">Jobs</a>
-    <a href="{{ url_for('search_candidates') }}">Candidates</a>
     <a href="{{ url_for('skills_page') }}">Skills</a>
-    <a href="{{ url_for('candidate_dashboard') }}">Applications</a>
     <a href="{{ url_for('candidate_profile') }}" class="active">My Profile</a>
   </nav>
   <div class="tb-search-wrap">
@@ -1570,50 +1584,142 @@ textarea.fc{resize:vertical;min-height:80px}
       </div>
 
       <!-- Job Preferences -->
-      <div class="card">
+      <div class="card" id="prefs">
         <div class="card-head">
           <div class="card-title">
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
             Job Preferences
           </div>
-          <button class="btn-icon" onclick="toggleEdit('editPrefs')"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="btn-icon" onclick="toggleEdit('editPrefs')" title="Edit preferences">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
         </div>
-        <div class="card-body" style="padding:.75rem 1.25rem">
-          <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>Preferred Role</div><div class="pref-value">{{ profile.job_title if profile and profile.job_title else '—' }}</div></div>
-          <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>Location</div><div class="pref-value">{{ profile.location if profile and profile.location else '—' }}</div></div>
-          <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>Work Mode</div><div class="pref-value">{{ profile.work_mode if profile and profile.work_mode else '—' }}</div></div>
-          <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Notice Period</div><div class="pref-value">{{ profile.notice_period if profile and profile.notice_period else '—' }}</div></div>
-          <div class="pref-row"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Expected Salary</div><div class="pref-value">{{ profile.expected_salary if profile and profile.expected_salary else '—' }}</div></div>
-          <div class="pref-row" style="border-bottom:none"><div class="pref-label"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Willing to Relocate</div><div class="pref-value">{{ 'Yes' if profile and profile.willing_to_relocate else 'No' }}</div></div>
+
+        <!-- ── Display view ── -->
+        <div class="card-body" style="padding:.625rem 1.25rem">
+          <div class="pref-row">
+            <div class="pref-label">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+              Preferred Role
+            </div>
+            <div class="pref-value">{{ profile.job_title if profile and profile.job_title else '—' }}</div>
+          </div>
+          <div class="pref-row">
+            <div class="pref-label">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Location
+            </div>
+            <div class="pref-value">{{ profile.location if profile and profile.location else '—' }}</div>
+          </div>
+          <div class="pref-row">
+            <div class="pref-label">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              Work Mode
+            </div>
+            <div class="pref-value">
+              {% if profile and profile.work_mode %}
+                <span class="pref-value-pill">{{ profile.work_mode }}</span>
+              {% else %}—{% endif %}
+            </div>
+          </div>
+          <div class="pref-row">
+            <div class="pref-label">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Notice Period
+            </div>
+            <div class="pref-value">{{ profile.notice_period if profile and profile.notice_period else '—' }}</div>
+          </div>
+          <div class="pref-row">
+            <div class="pref-label">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+              Expected Salary
+            </div>
+            <div class="pref-value">{{ profile.expected_salary if profile and profile.expected_salary else '—' }}</div>
+          </div>
+          <div class="pref-row">
+            <div class="pref-label">
+              <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+              Relocate
+            </div>
+            <div class="pref-value">
+              {% if profile and profile.willing_to_relocate %}
+                <span class="pref-value-pill green">Open to relocate</span>
+              {% else %}
+                <span class="pref-value-pill red">Not relocating</span>
+              {% endif %}
+            </div>
+          </div>
         </div>
+
+        <!-- ── Edit form ── -->
         <div id="editPrefs" class="edit-panel">
           <form method="post" action="{{ url_for('update_preferences') }}">
-            <input type="hidden" name="job_title" value="{{ profile.job_title if profile else '' }}">
-            <div class="form-grid">
-              <div class="fg"><label>Preferred Role</label><input class="fc" type="text" name="job_title" value="{{ profile.job_title if profile else '' }}" placeholder="e.g. QA Automation Engineer"></div>
-              <div class="fg"><label>Preferred Location</label><input class="fc" type="text" name="location" value="{{ profile.location if profile else '' }}" placeholder="e.g. Bangalore, Remote"></div>
-              <div class="fg"><label>Work Mode</label>
-                <select class="fc" name="work_mode">
-                  <option value="">Select...</option>
-                  <option value="Remote" {{ 'selected' if profile and profile.work_mode == 'Remote' else '' }}>Remote</option>
-                  <option value="On-site" {{ 'selected' if profile and profile.work_mode == 'On-site' else '' }}>On-site</option>
-                  <option value="Hybrid" {{ 'selected' if profile and profile.work_mode == 'Hybrid' else '' }}>Hybrid</option>
-                </select>
+
+            <!-- Preferred Role (full width) -->
+            <div class="pref-edit-grid">
+              <div class="fg">
+                <label>Preferred Role</label>
+                <input class="fc" type="text" name="job_title"
+                       value="{{ profile.job_title if profile else '' }}"
+                       placeholder="e.g. Lead Engineer">
               </div>
-              <div class="fg"><label>Notice Period</label>
-                <select class="fc" name="notice_period">
-                  <option value="">Select...</option>
-                  <option value="Immediate" {{ 'selected' if profile and profile.notice_period == 'Immediate' else '' }}>Immediate</option>
-                  <option value="15 Days" {{ 'selected' if profile and profile.notice_period == '15 Days' else '' }}>15 Days</option>
-                  <option value="30 Days" {{ 'selected' if profile and profile.notice_period == '30 Days' else '' }}>30 Days</option>
-                  <option value="60 Days" {{ 'selected' if profile and profile.notice_period == '60 Days' else '' }}>60 Days</option>
-                  <option value="90 Days" {{ 'selected' if profile and profile.notice_period == '90 Days' else '' }}>90 Days</option>
-                </select>
+
+              <!-- Preferred Location (full width) -->
+              <div class="fg">
+                <label>Preferred Location</label>
+                <input class="fc" type="text" name="location"
+                       value="{{ profile.location if profile else '' }}"
+                       placeholder="e.g. Bangalore, Remote">
               </div>
-              <div class="fg"><label>Expected Salary (per annum)</label><input class="fc" type="text" name="expected_salary" value="{{ profile.expected_salary if profile else '' }}" placeholder="e.g. ₹8-12 LPA"></div>
-              <div class="fg" style="display:flex;align-items:center;gap:.5rem;padding-top:1.5rem"><label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-weight:500"><input type="checkbox" name="willing_to_relocate" value="1" {{ 'checked' if profile and profile.willing_to_relocate else '' }}> Willing to Relocate</label></div>
             </div>
-            <div class="form-actions"><button type="submit" class="btn btn-primary btn-sm">Save Preferences</button><button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editPrefs')">Cancel</button></div>
+
+            <!-- Work Mode + Notice Period (2 columns) -->
+            <div class="pref-selects-row" style="margin-top:.75rem">
+              <div class="fg">
+                <label>Work Mode</label>
+                <select class="fc" name="work_mode">
+                  <option value="">Select…</option>
+                  <option value="Remote"  {{ 'selected' if profile and profile.work_mode == 'Remote'  else '' }}>Remote</option>
+                  <option value="On-site" {{ 'selected' if profile and profile.work_mode == 'On-site' else '' }}>On-site</option>
+                  <option value="Hybrid"  {{ 'selected' if profile and profile.work_mode == 'Hybrid'  else '' }}>Hybrid</option>
+                </select>
+              </div>
+              <div class="fg">
+                <label>Notice Period</label>
+                <select class="fc" name="notice_period">
+                  <option value="">Select…</option>
+                  <option value="Immediate" {{ 'selected' if profile and profile.notice_period == 'Immediate' else '' }}>Immediate</option>
+                  <option value="15 Days"   {{ 'selected' if profile and profile.notice_period == '15 Days'   else '' }}>15 Days</option>
+                  <option value="30 Days"   {{ 'selected' if profile and profile.notice_period == '30 Days'   else '' }}>30 Days</option>
+                  <option value="60 Days"   {{ 'selected' if profile and profile.notice_period == '60 Days'   else '' }}>60 Days</option>
+                  <option value="90 Days"   {{ 'selected' if profile and profile.notice_period == '90 Days'   else '' }}>90 Days</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Expected Salary (full width) -->
+            <div class="fg" style="margin-top:.75rem">
+              <label>Expected Salary (per annum)</label>
+              <input class="fc" type="text" name="expected_salary"
+                     value="{{ profile.expected_salary if profile else '' }}"
+                     placeholder="e.g. ₹8–12 LPA">
+            </div>
+
+            <!-- Willing to Relocate (toggle) -->
+            <label class="pref-toggle">
+              <input type="checkbox" name="willing_to_relocate" value="1"
+                     {{ 'checked' if profile and profile.willing_to_relocate else '' }}>
+              <span class="ptog-track"><span class="ptog-thumb"></span></span>
+              <div class="ptog-text">
+                <span class="ptog-label">Willing to Relocate</span>
+                <span class="ptog-sub">Open to moving for the right opportunity</span>
+              </div>
+            </label>
+
+            <div class="form-actions" style="margin-top:.875rem">
+              <button type="submit" class="btn btn-primary btn-sm">Save Preferences</button>
+              <button type="button" class="btn btn-ghost btn-sm" onclick="toggleEdit('editPrefs')">Cancel</button>
+            </div>
           </form>
         </div>
       </div>

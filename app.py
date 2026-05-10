@@ -1372,7 +1372,7 @@ def update_preferences():
                 job_title, location, session['user_id']])
     db.commit()
     flash('Job preferences updated.', 'success')
-    return redirect(url_for('candidate_profile'))
+    return redirect(url_for('candidate_profile') + '#prefs')
 
 
 @app.route('/candidate/skills/remove/<int:skill_id>', methods=['POST'])
@@ -1873,4 +1873,4 @@ def logout():
 
 if __name__ == '__main__':
     init_db()
-    app.run(debug=False, host='127.0.0.1', port=5000)
+    app.run(debug=True, host='127.0.0.1', port=5000)

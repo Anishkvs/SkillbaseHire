@@ -54,7 +54,7 @@
           <svg viewBox="0 0 120 120" class="er-donut-svg">
             <circle cx="60" cy="60" r="46" fill="none" stroke="#DCFCE7" stroke-width="12"/>
             <circle cx="60" cy="60" r="46" fill="none" stroke="#10B981" stroke-width="12"
-              stroke-dasharray="{{ (result.score / 100 * 289.0) | int }} 289.0"
+              stroke-dasharray="{{ (result.score / 100 * 289.03) | round(2) }} 289.03"
               stroke-dashoffset="72.2"
               stroke-linecap="round"/>
           </svg>
@@ -78,11 +78,11 @@
           {% endif %}
           <div class="er-stat-box">
             <div class="er-stat-icon er-si-blue">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
             </div>
             <div class="er-stat-text">
               <div class="er-stat-val">{{ result.passing }}%</div>
-              <div class="er-stat-lbl">Passing Score</div>
+              <div class="er-stat-lbl">Pass Threshold</div>
             </div>
           </div>
           <div class="er-stat-box">
@@ -168,7 +168,7 @@
           <svg viewBox="0 0 120 120" class="er-donut-svg">
             <circle cx="60" cy="60" r="46" fill="none" stroke="#FEE2E2" stroke-width="12"/>
             <circle cx="60" cy="60" r="46" fill="none" stroke="#EF4444" stroke-width="12"
-              stroke-dasharray="{{ (result.score / 100 * 289.0) | int }} 289.0"
+              stroke-dasharray="{{ (result.score / 100 * 289.03) | round(2) }} 289.03"
               stroke-dashoffset="72.2"
               stroke-linecap="round"/>
           </svg>
@@ -191,11 +191,11 @@
           {% endif %}
           <div class="er-stat-box">
             <div class="er-stat-icon er-si-blue">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
             </div>
             <div class="er-stat-text">
               <div class="er-stat-val">{{ result.passing }}%</div>
-              <div class="er-stat-lbl">Passing Score</div>
+              <div class="er-stat-lbl">Pass Threshold</div>
             </div>
           </div>
           <div class="er-stat-box">

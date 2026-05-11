@@ -162,6 +162,20 @@ def init_db():
                 project_url TEXT DEFAULT '',
                 FOREIGN KEY (user_id) REFERENCES users(id)
             );
+            CREATE TABLE IF NOT EXISTS notifications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                candidate_id INTEGER NOT NULL,
+                job_id INTEGER,
+                application_id INTEGER,
+                title TEXT NOT NULL,
+                message TEXT NOT NULL,
+                type TEXT DEFAULT 'general',
+                is_read INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (candidate_id) REFERENCES users(id),
+                FOREIGN KEY (job_id) REFERENCES jobs(id),
+                FOREIGN KEY (application_id) REFERENCES applications(id)
+            );
         ''')
 
         skills_data = [
@@ -241,12 +255,31 @@ def init_db():
             "ALTER TABLE candidate_profiles ADD COLUMN differently_abled TEXT DEFAULT 'no'",
             "ALTER TABLE candidate_profiles ADD COLUMN profile_photo TEXT",
             "ALTER TABLE recruiter_profiles ADD COLUMN profile_photo TEXT",
+            "ALTER TABLE applications ADD COLUMN updated_at TIMESTAMP",
+            "ALTER TABLE notifications ADD COLUMN redirect_url TEXT DEFAULT ''",
         ]:
             try:
                 db.execute(stmt)
             except Exception:
                 pass
         db.commit()
+
+
+# ── Context processor ───────────────────────────────────────────────────────
+
+@app.context_processor
+def inject_notif_count():
+    if session.get('role') == 'candidate' and session.get('user_id'):
+        try:
+            db = get_db()
+            count = db.execute(
+                'SELECT COUNT(*) FROM notifications WHERE candidate_id=? AND is_read=0',
+                [session['user_id']]
+            ).fetchone()[0]
+            return {'unread_notif_count': count}
+        except Exception:
+            pass
+    return {'unread_notif_count': 0}
 
 
 # ── Jinja2 filters ──────────────────────────────────────────────────────────
@@ -449,7 +482,7 @@ def home():
 @app.route('/jobs')
 def jobs():
     db = get_db()
-    search = request.args.get('q', '').strip()
+    search   = request.args.get('q', '').strip()
     location = request.args.get('location', '').strip()
     job_type = request.args.get('type', '').strip()
 
@@ -460,7 +493,7 @@ def jobs():
                 WHERE js.job_id = j.id) AS skills_list
         FROM jobs j
         JOIN recruiter_profiles rp ON j.recruiter_id = rp.user_id
-        WHERE j.active = '1'
+        WHERE j.active = 1
     '''
     params = []
     if search:
@@ -474,8 +507,73 @@ def jobs():
         params.append(job_type)
     query += ' ORDER BY j.created_at DESC'
 
-    job_list = db.execute(query, params).fetchall()
-    return render_template('jobs.html', jobs=job_list,
+    job_rows = db.execute(query, params).fetchall()
+
+    # Candidate's verified skill names for match calculation
+    verified_skills = set()
+    if session.get('role') == 'candidate' and session.get('user_id'):
+        rows = db.execute('''
+            SELECT s.name FROM user_skills us
+            JOIN skills s ON us.skill_id = s.id
+            WHERE us.user_id = ? AND us.verified = 1
+        ''', [session['user_id']]).fetchall()
+        verified_skills = {r['name'] for r in rows}
+
+    colors = ['#635BFF','#FF5C35','#3B82F6','#10B981','#F59E0B',
+              '#8B5CF6','#0EA5E9','#14B8A6','#F97316','#EF4444']
+
+    jobs_data = []
+    for i, job in enumerate(job_rows):
+        skills     = [s.strip() for s in job['skills_list'].split(', ')] if job['skills_list'] else []
+        company    = job['company_name'] or job['company']
+        color      = colors[i % len(colors)]
+        verified_in = [s for s in skills if s in verified_skills]
+        missing_in  = [s for s in skills if s not in verified_skills]
+        match_pct   = round(len(verified_in) / len(skills) * 100) if skills else 0
+
+        try:
+            posted_dt = datetime.strptime(str(job['created_at'])[:19], '%Y-%m-%d %H:%M:%S')
+            days_ago  = (datetime.utcnow() - posted_dt).days
+            posted_str = 'Today' if days_ago == 0 else f'{days_ago}d ago'
+        except Exception:
+            days_ago, posted_str = 0, 'Recently'
+
+        signals = []
+        if 'remote' in job['location'].lower():
+            signals.append({'label': 'Remote', 'color': 'teal'})
+        if days_ago <= 2:
+            signals.append({'label': 'New', 'color': 'green'})
+        if job['job_type'] == 'Contract':
+            signals.append({'label': 'Contract', 'color': 'orange'})
+
+        sal_min = (job['salary_min'] // 1000) if job['salary_min'] else 0
+        sal_max = (job['salary_max'] // 1000) if job['salary_max'] else 0
+
+        jobs_data.append({
+            'id':         job['id'],
+            'title':      job['title'],
+            'company':    company,
+            'mark':       company[0].upper(),
+            'color':      color,
+            'location':   job['location'],
+            'type':       job['job_type'],
+            'expRange':   [0, 5],
+            'salRange':   [sal_min, sal_max],
+            'posted':     posted_str,
+            'postedSort': days_ago,
+            'match':      match_pct,
+            'signals':    signals,
+            'reqSkills':  skills,
+            'verifiedIn': verified_in,
+            'missingIn':  missing_in,
+            'desc':       job['description'] or '',
+            'requirements': [r.strip() for r in (job['requirements'] or '').split('\n') if r.strip()],
+            'perks':      [],
+            'saved':      False,
+        })
+
+    return render_template('jobs.html',
+                           jobs_data=jobs_data,
                            search=search, location=location, job_type=job_type,
                            user=get_current_user())
 
@@ -944,6 +1042,110 @@ def candidate_login():
     return render_template('candidate_login.html', user=None, email=email)
 
 
+# ── Candidate notifications ──────────────────────────────────────────────────
+
+@app.route('/candidate/notifications')
+@candidate_required
+def candidate_notifications():
+    db = get_db()
+    notifications = db.execute('''
+        SELECT n.*, j.title AS job_title,
+               rp.company AS company_name
+        FROM notifications n
+        LEFT JOIN jobs j ON n.job_id = j.id
+        LEFT JOIN recruiter_profiles rp ON j.recruiter_id = rp.user_id
+        WHERE n.candidate_id=?
+        ORDER BY n.created_at DESC
+    ''', [session['user_id']]).fetchall()
+    return render_template('notifications.html',
+                           notifications=notifications,
+                           user=get_current_user())
+
+
+@app.route('/candidate/notifications/<int:notif_id>/read', methods=['POST'])
+@candidate_required
+def mark_notif_read(notif_id):
+    db = get_db()
+    db.execute('UPDATE notifications SET is_read=1 WHERE id=? AND candidate_id=?',
+               [notif_id, session['user_id']])
+    db.commit()
+    return redirect(url_for('candidate_notifications'))
+
+
+@app.route('/candidate/notifications/read-all', methods=['POST'])
+@candidate_required
+def mark_all_notif_read():
+    db = get_db()
+    db.execute('UPDATE notifications SET is_read=1 WHERE candidate_id=?',
+               [session['user_id']])
+    db.commit()
+    return redirect(url_for('candidate_notifications'))
+
+
+# ── Notification JSON API (for panel) ────────────────────────────────────────
+
+@app.route('/api/notifications')
+@candidate_required
+def api_notifications():
+    db = get_db()
+    rows = db.execute('''
+        SELECT n.id, n.title, n.message, n.type, n.is_read,
+               n.redirect_url, n.created_at,
+               j.title AS job_title, rp.company AS company_name
+        FROM notifications n
+        LEFT JOIN jobs j ON n.job_id = j.id
+        LEFT JOIN recruiter_profiles rp ON j.recruiter_id = rp.user_id
+        WHERE n.candidate_id=?
+        ORDER BY n.created_at DESC
+        LIMIT 30
+    ''', [session['user_id']]).fetchall()
+    unread_count = sum(1 for r in rows if not r['is_read'])
+    notifs = []
+    for r in rows:
+        notifs.append({
+            'id': r['id'],
+            'title': r['title'],
+            'message': r['message'],
+            'type': r['type'],
+            'is_read': bool(r['is_read']),
+            'redirect_url': r['redirect_url'] or '',
+            'created_at': str(r['created_at']),
+            'job_title': r['job_title'] or '',
+            'company_name': r['company_name'] or '',
+        })
+    return jsonify({'notifications': notifs, 'unread_count': unread_count})
+
+
+@app.route('/api/notifications/<int:notif_id>/read', methods=['POST'])
+@candidate_required
+def api_notif_read(notif_id):
+    db = get_db()
+    db.execute('UPDATE notifications SET is_read=1 WHERE id=? AND candidate_id=?',
+               [notif_id, session['user_id']])
+    db.commit()
+    return jsonify({'ok': True})
+
+
+@app.route('/api/notifications/<int:notif_id>/delete', methods=['POST'])
+@candidate_required
+def api_notif_delete(notif_id):
+    db = get_db()
+    db.execute('DELETE FROM notifications WHERE id=? AND candidate_id=?',
+               [notif_id, session['user_id']])
+    db.commit()
+    return jsonify({'ok': True})
+
+
+@app.route('/api/notifications/read-all', methods=['POST'])
+@candidate_required
+def api_notif_read_all():
+    db = get_db()
+    db.execute('UPDATE notifications SET is_read=1 WHERE candidate_id=?',
+               [session['user_id']])
+    db.commit()
+    return jsonify({'ok': True})
+
+
 # ── Candidate dashboard ───────────────────────────────────────────────────────
 
 @app.route('/candidate/dashboard')
@@ -972,7 +1174,7 @@ def candidate_dashboard():
                 JOIN user_skills us ON js.skill_id=us.skill_id
                 WHERE js.job_id=j.id AND us.user_id=?) AS skill_match
         FROM jobs j JOIN recruiter_profiles rp ON j.recruiter_id=rp.user_id
-        WHERE j.active='1'
+        WHERE j.active=1
           AND j.id NOT IN (SELECT job_id FROM applications WHERE candidate_id=?)
         ORDER BY skill_match DESC, j.created_at DESC LIMIT 5
     ''', [session['user_id'], session['user_id']]).fetchall()
@@ -1078,11 +1280,22 @@ def candidate_profile():
     total_exp_years  = total_months // 12
     total_exp_months = total_months % 12
 
+    applications = db.execute('''
+        SELECT a.id, a.status, a.applied_at, a.updated_at,
+               j.title, j.job_type, j.recruiter_id,
+               rp.company AS company_name
+        FROM applications a
+        JOIN jobs j ON a.job_id = j.id
+        JOIN recruiter_profiles rp ON j.recruiter_id = rp.user_id
+        WHERE a.candidate_id=? ORDER BY a.applied_at DESC
+    ''', [session['user_id']]).fetchall()
+
     return render_template('candidate_profile.html',
                            user=get_current_user(), profile=profile, my_skills=my_skills,
                            experiences=experiences, educations=educations,
                            certifications=certifications, projects=projects,
-                           total_exp_years=total_exp_years, total_exp_months=total_exp_months)
+                           total_exp_years=total_exp_years, total_exp_months=total_exp_months,
+                           applications=applications)
 
 
 @app.route('/candidate/profile/upload-resume', methods=['POST'])
@@ -1503,7 +1716,7 @@ def apply_job(job_id):
     job = db.execute('''
         SELECT j.*, rp.company AS company_name
         FROM jobs j JOIN recruiter_profiles rp ON j.recruiter_id=rp.user_id
-        WHERE j.id=? AND j.active='1'
+        WHERE j.id=? AND j.active=1
     ''', [job_id]).fetchone()
 
     if not job:
@@ -1880,26 +2093,51 @@ def update_app_status(app_id):
         return redirect(url_for('recruiter_dashboard'))
 
     db = get_db()
-    if status == 'shortlisted':
-        # EMAIL VERIFICATION CHECK DISABLED — re-enable when ready
-        pass
-        # verified = db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()['email_verified']
-        # if not verified:
-        #     flash('Please verify your work email before shortlisting candidates.', 'error')
-        #     return redirect(url_for('recruiter_dashboard'))
+
+    # Fetch current application state — need old_status and candidate_id for notification logic
     row = db.execute('''
-        SELECT a.job_id FROM applications a JOIN jobs j ON a.job_id=j.id
+        SELECT a.job_id, a.candidate_id, a.status AS old_status
+        FROM applications a JOIN jobs j ON a.job_id=j.id
         WHERE a.id=? AND j.recruiter_id=?
     ''', [app_id, session['user_id']]).fetchone()
 
-    if row:
-        db.execute('UPDATE applications SET status=? WHERE id=?', [status, app_id])
-        db.commit()
-        flash('Status updated.', 'success')
-        return redirect(url_for('job_applications', job_id=row['job_id']))
+    if not row:
+        flash('Application not found.', 'error')
+        return redirect(url_for('recruiter_dashboard'))
 
-    flash('Application not found.', 'error')
-    return redirect(url_for('recruiter_dashboard'))
+    db.execute('UPDATE applications SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
+               [status, app_id])
+
+    # Create shortlisted notification only on first-time transition to shortlisted
+    if status == 'shortlisted' and row['old_status'] != 'shortlisted':
+        already_notified = db.execute(
+            'SELECT id FROM notifications WHERE application_id=? AND type=?',
+            [app_id, 'shortlisted']
+        ).fetchone()
+        if not already_notified:
+            job_info = db.execute('''
+                SELECT j.title, rp.company
+                FROM jobs j JOIN recruiter_profiles rp ON j.recruiter_id=rp.user_id
+                WHERE j.id=?
+            ''', [row['job_id']]).fetchone()
+            if job_info:
+                db.execute('''
+                    INSERT INTO notifications
+                        (candidate_id, job_id, application_id, title, message, type, is_read, redirect_url)
+                    VALUES (?, ?, ?, ?, ?, ?, 0, ?)
+                ''', [
+                    row['candidate_id'],
+                    row['job_id'],
+                    app_id,
+                    'You have been shortlisted!',
+                    f'Congratulations! You have been shortlisted for {job_info["title"]} at {job_info["company"]}.',
+                    'shortlisted',
+                    '/candidate/profile#section-applications',
+                ])
+
+    db.commit()
+    flash('Application status updated successfully.', 'success')
+    return redirect(url_for('job_applications', job_id=row['job_id']))
 
 
 @app.route('/recruiter/candidates')

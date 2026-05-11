@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Find Jobs — SkillBaseHire{% endblock %}
 {% block content %}
-<link href="https://fonts.googleapis.com/css2%sfamily=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
 <!-- ── Hero ── -->
 <section class="jb-hero">
@@ -80,8 +80,8 @@
     </div>
 
     <div class="jb-fg">
-      <div class="jb-fg-title">Salary (k/yr USD)</div>
-      <div class="jb-range-vals">$<span id="salMinL">0</span>k–$<span id="salMaxL">300</span>k</div>
+      <div class="jb-fg-title">Salary (₹k/yr)</div>
+      <div class="jb-range-vals">₹<span id="salMinL">0</span>k–₹<span id="salMaxL">5000</span>k</div>
       <div class="jb-track" id="salTrack">
         <div class="jb-fill" id="salFill"></div>
         <div class="jb-thumb" id="salTL"></div>
@@ -177,150 +177,28 @@
 </div>
 
 <script>
-/* ── Mock Data ── */
-const JOBS = [
-  {
-    id:1, title:"Senior Frontend Engineer", company:"Stripe", mark:"S", color:"#635BFF",
-    location:"Remote · USA", type:"Full-time", expRange:[4,6], salRange:[120,160],
-    posted:"2d ago", postedSort:2, match:94,
-    signals:[{label:"Fast Responder",color:"green"},{label:"Skill-first",color:"blue"}],
-    reqSkills:["React","TypeScript","CSS","GraphQL"],
-    verifiedIn:["React","TypeScript","CSS"], missingIn:["GraphQL"],
-    desc:"Build and scale Stripe's customer-facing dashboard with a world-class team. You'll work across the React/TypeScript stack to deliver fast, reliable UX for millions of businesses worldwide.",
-    requirements:["5+ years of frontend development","Expert-level React & TypeScript","Strong CSS fundamentals","Experience with REST/GraphQL APIs","Passion for performance optimization"],
-    perks:["Equity","Remote-first","Health + Dental + Vision","Home office stipend","$2k learning budget"],
-    saved:false
-  },
-  {
-    id:2, title:"Full Stack Engineer", company:"Notion", mark:"N", color:"#1a1a1a",
-    location:"San Francisco, CA", type:"Full-time", expRange:[3,5], salRange:[130,170],
-    posted:"1d ago", postedSort:1, match:88,
-    signals:[{label:"Growing Team",color:"purple"},{label:"Skill-first",color:"blue"}],
-    reqSkills:["React","Node.js","PostgreSQL","TypeScript"],
-    verifiedIn:["React","Node.js","TypeScript"], missingIn:["PostgreSQL"],
-    desc:"Join Notion's core product team to build features used by 30M+ users. Own full-stack features from design to deployment and shape how the world organizes its knowledge.",
-    requirements:["3+ years full stack experience","Proficiency in React and Node.js","Experience with relational databases","Strong system design fundamentals"],
-    perks:["Equity","Flexible PTO","Health insurance","Team offsites","Notion stipend"],
-    saved:false
-  },
-  {
-    id:3, title:"Machine Learning Engineer", company:"Cohere", mark:"C", color:"#FF5C35",
-    location:"Remote · Canada", type:"Full-time", expRange:[3,7], salRange:[140,200],
-    posted:"4d ago", postedSort:4, match:71,
-    signals:[{label:"AI-native",color:"orange"},{label:"Research-forward",color:"blue"}],
-    reqSkills:["Python","PyTorch","Machine Learning","Transformers"],
-    verifiedIn:["Python"], missingIn:["PyTorch","Machine Learning","Transformers"],
-    desc:"Work on cutting-edge NLP and LLM infrastructure at one of the world's leading AI companies. Help build the next generation of enterprise AI tools used by Fortune 500 companies.",
-    requirements:["3+ years ML engineering","Strong Python skills","Deep learning framework experience","Familiarity with transformer architectures","Research publication is a plus"],
-    perks:["Equity","Research time","GPU credits","Health + Dental","Conference budget"],
-    saved:false
-  },
-  {
-    id:4, title:"Backend Engineer – Platform", company:"Vercel", mark:"V", color:"#000000",
-    location:"Remote · Global", type:"Full-time", expRange:[4,8], salRange:[130,180],
-    posted:"3d ago", postedSort:3, match:82,
-    signals:[{label:"Fast Responder",color:"green"},{label:"Remote-first",color:"teal"}],
-    reqSkills:["Node.js","TypeScript","AWS","PostgreSQL"],
-    verifiedIn:["Node.js","TypeScript"], missingIn:["AWS","PostgreSQL"],
-    desc:"Help build the infrastructure powering frontend deployment for millions of developers. Work on distributed systems, serverless functions, and edge computing at global scale.",
-    requirements:["4+ years backend/platform engineering","Strong Node.js & TypeScript","Cloud infrastructure (AWS/GCP)","Distributed systems experience","Interest in developer tooling"],
-    perks:["Equity","Fully remote","Health + Dental","Vercel Pro lifetime","$1.5k equipment budget"],
-    saved:false
-  },
-  {
-    id:5, title:"React Native Developer", company:"Linear", mark:"L", color:"#5E6AD2",
-    location:"Remote · USA/Europe", type:"Full-time", expRange:[2,5], salRange:[100,150],
-    posted:"5d ago", postedSort:5, match:78,
-    signals:[{label:"Small Team",color:"purple"},{label:"High Impact",color:"blue"}],
-    reqSkills:["React","React Native","TypeScript","CSS"],
-    verifiedIn:["React","TypeScript","CSS"], missingIn:["React Native"],
-    desc:"Build Linear's mobile apps for iOS and Android used by thousands of engineering teams. Ship beautiful, fast native experiences that feel native on every platform.",
-    requirements:["2+ years React Native experience","Strong React & TypeScript","iOS/Android deployment","Eye for design and detail"],
-    perks:["Equity","Remote-first","Top-tier equipment","Linear subscription","Health insurance"],
-    saved:false
-  },
-  {
-    id:6, title:"Data Engineer", company:"Figma", mark:"F", color:"#A259FF",
-    location:"San Francisco, CA", type:"Full-time", expRange:[3,6], salRange:[125,175],
-    posted:"6d ago", postedSort:6, match:65,
-    signals:[{label:"Data-driven",color:"orange"},{label:"Collaborative",color:"green"}],
-    reqSkills:["Python","SQL","AWS","dbt"],
-    verifiedIn:["Python"], missingIn:["SQL","AWS","dbt"],
-    desc:"Build the data infrastructure that powers Figma's product decisions. Design scalable pipelines, data models, and analytics foundations for a product used by millions of designers.",
-    requirements:["3+ years data engineering","Strong SQL & Python","Experience with dbt","AWS or GCP data services","Stakeholder communication skills"],
-    perks:["Equity","Health + Dental + Vision","Annual learning stipend","Hybrid work","Catered meals"],
-    saved:false
-  },
-  {
-    id:7, title:"DevOps / Platform Engineer", company:"PlanetScale", mark:"P", color:"#3B82F6",
-    location:"Remote · USA", type:"Contract", expRange:[4,8], salRange:[110,160],
-    posted:"7d ago", postedSort:7, match:58,
-    signals:[{label:"Contract-to-Hire",color:"teal"}],
-    reqSkills:["AWS","Kubernetes","Go","SQL"],
-    verifiedIn:[], missingIn:["AWS","Kubernetes","Go","SQL"],
-    desc:"Maintain and scale PlanetScale's database-as-a-service infrastructure. Work with Kubernetes, AWS, and internal platform tooling to keep millions of databases running reliably.",
-    requirements:["4+ years DevOps/SRE","Kubernetes & Helm proficiency","AWS or similar cloud","Go or Rust preferred","Strong observability/monitoring skills"],
-    perks:["Competitive hourly rate","Remote-first","Full-time conversion possible"],
-    saved:false
-  },
-  {
-    id:8, title:"Frontend Engineer – Growth", company:"Loom", mark:"L", color:"#FF5C35",
-    location:"New York, NY", type:"Full-time", expRange:[2,4], salRange:[100,140],
-    posted:"1d ago", postedSort:1, match:86,
-    signals:[{label:"Fast Responder",color:"green"},{label:"A/B Testing",color:"blue"}],
-    reqSkills:["React","TypeScript","CSS","Node.js"],
-    verifiedIn:["React","TypeScript","CSS","Node.js"], missingIn:[],
-    desc:"Drive growth at Loom by building experiments, optimizing conversion funnels, and shipping high-impact features to increase activation and retention for millions of users.",
-    requirements:["2+ years frontend experience","Strong React/TypeScript","A/B testing framework experience","Data-informed decision making","Bias for fast shipping"],
-    perks:["Equity","Flexible remote","Health benefits","Team offsites"],
-    saved:false
-  },
-  {
-    id:9, title:"Python Backend Engineer", company:"HuggingFace", mark:"H", color:"#FFD21E",
-    location:"Remote · Europe/USA", type:"Full-time", expRange:[3,6], salRange:[110,160],
-    posted:"2d ago", postedSort:2, match:79,
-    signals:[{label:"Open Source",color:"orange"},{label:"Research-forward",color:"blue"}],
-    reqSkills:["Python","Node.js","PostgreSQL","AWS"],
-    verifiedIn:["Python","Node.js"], missingIn:["PostgreSQL","AWS"],
-    desc:"Help build the platform used by 1M+ ML researchers and engineers worldwide. Work on APIs, model hosting infrastructure, and developer-facing tooling at the heart of the open-source AI ecosystem.",
-    requirements:["3+ years Python backend engineering","REST API design & development","Database design with PostgreSQL","Cloud deployment experience","Open-source contribution is a plus"],
-    perks:["Equity","Fully remote","Health insurance","Conference budget","Open-source contribution time"],
-    saved:false
-  },
-  {
-    id:10, title:"iOS Engineer", company:"Airbnb", mark:"A", color:"#FF385C",
-    location:"San Francisco, CA", type:"Full-time", expRange:[3,6], salRange:[140,190],
-    posted:"3d ago", postedSort:3, match:42,
-    signals:[{label:"High Growth",color:"green"},{label:"Mentorship",color:"purple"}],
-    reqSkills:["Swift","iOS","React Native","TypeScript"],
-    verifiedIn:[], missingIn:["Swift","iOS","React Native","TypeScript"],
-    desc:"Build world-class iOS experiences for Airbnb's app used by hundreds of millions of travelers. Work with a talented team on features that redefine how people discover and book unique stays.",
-    requirements:["3+ years native iOS development","Strong Swift skills","Experience with modern iOS frameworks","Performance optimization experience","Collaborative, product-minded approach"],
-    perks:["Equity","Health + Dental + Vision","Travel credits","Food & commuter benefits","Learning budget"],
-    saved:false
-  }
-];
+const JOBS = {{ jobs_data | tojson }};
 
 /* ── State ── */
 const state = {
   search:'', location:'', verified:false,
   skills:[], types:[], heroSkills:[],
-  expMin:0, expMax:10, salMin:0, salMax:300, sort:'match'
+  expMin:0, expMax:10, salMin:0, salMax:5000, sort:'match'
 };
-const LOCS = ["Remote","San Francisco, CA","New York, NY","Austin, TX","Seattle, WA","Boston, MA","Chicago, IL","Los Angeles, CA","London, UK","Berlin, Germany","Bangalore, India","Toronto, Canada"];
+const LOCS = ["Remote","Bangalore, India","Hyderabad, India","Chennai, India","Mumbai, India","Pune, India","Delhi, India","Noida, India","Gurgaon, India","Kolkata, India","Ahmedabad, India","Kochi, India"];
 const SIG_COLORS = {
   green:{bg:'#DCFCE7',text:'#166534'}, blue:{bg:'#DBEAFE',text:'#1E40AF'},
   purple:{bg:'#EDE9FE',text:'#5B21B6'}, orange:{bg:'#FFF7ED',text:'#9A3412'},
   teal:{bg:'#CCFBF1',text:'#134E4A'}
 };
-let acIdx = -1, expSlider, salSlider, currentDetailId = null;
+let acIdx = -1, expSlider, salSlider, currentDetailId = null, currentApplyId = null;
 
 /* ── Init ── */
 function init() {
   initSkillCheckboxes();
   expSlider = initRange('expTrack','expFill','expTL','expTR',0,10,1,'expMinL','expMaxL',
     (lo,hi)=>{state.expMin=lo;state.expMax=hi;});
-  salSlider = initRange('salTrack','salFill','salTL','salTR',0,300,10,'salMinL','salMaxL',
+  salSlider = initRange('salTrack','salFill','salTL','salTR',0,5000,100,'salMinL','salMaxL',
     (lo,hi)=>{state.salMin=lo;state.salMax=hi;});
   applyFilters();
   buildDrawer();
@@ -335,7 +213,7 @@ function initSkillCheckboxes() {
 
 /* ── Render ── */
 function matchRing(pct) {
-  const c = pct>=90%s'#10B981':pct>=70%s'#0F766E':pct>=50%s'#F59E0B':'#EF4444';
+  const c = pct>=90?'#10B981':pct>=70?'#0F766E':pct>=50?'#F59E0B':'#EF4444';
   return `<div class="jb-ring-wrap">
     <svg class="jb-ring" viewBox="0 0 36 36">
       <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E5E7EB" stroke-width="2.8"/>
@@ -354,7 +232,7 @@ function signalPill(s) {
 function skillTags(job) {
   return job.reqSkills.map(s=>
     job.verifiedIn.includes(s)
-      %s `<span class="jb-skill-v">✓ ${s}</span>`
+      ? `<span class="jb-skill-v">✓ ${s}</span>`
       : `<span class="jb-skill-m">+ ${s}</span>`
   ).join('');
 }
@@ -367,12 +245,12 @@ function renderCard(job) {
       <div class="jb-card-main">
         <div class="jb-card-title-row">
           <h3 class="jb-card-title">${job.title}</h3>
-          <button class="jb-bookmark${job.saved%s' saved':''}" onclick="toggleSave(${job.id},event)" title="${job.saved%s'Unsave':'Save'}">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="${job.saved%s'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+          <button class="jb-bookmark${job.saved?' saved':''}" onclick="toggleSave(${job.id},event)" title="${job.saved?'Unsave':'Save'}">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="${job.saved?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
           </button>
         </div>
         <div class="jb-card-meta">${job.company} · ${job.location} · <span class="jb-type-badge">${job.type}</span></div>
-        <div class="jb-card-meta2">${job.expRange[0]}–${job.expRange[1]} yrs · $${job.salRange[0]}k–$${job.salRange[1]}k/yr</div>
+        <div class="jb-card-meta2">${job.expRange[0]}–${job.expRange[1]} yrs · ₹${job.salRange[0]}k–₹${job.salRange[1]}k/yr</div>
       </div>
       ${matchRing(job.match)}
     </div>
@@ -414,9 +292,7 @@ function applyFilters() {
       if (!state.heroSkills.some(s=>job.reqSkills.some(r=>r.toLowerCase().includes(s.toLowerCase())))) return false;
     }
     if (state.location) {
-      if (!job.location.toLowerCase().includes(state.location) && !job.location.toLowerCase().includes('remote')) {
-        if (!job.location.toLowerCase().includes(state.location)) return false;
-      }
+      if (!job.location.toLowerCase().includes(state.location)) return false;
     }
     if (state.verified && job.verifiedIn.length===0) return false;
     if (state.skills.length && !state.skills.some(s=>job.reqSkills.includes(s))) return false;
@@ -449,7 +325,7 @@ function resetFilters() {
 }
 
 function updateCount(n) {
-  document.getElementById('resultsCount').textContent = n+' job'+(n!==1%s's':'');
+  document.getElementById('resultsCount').textContent = n+' job'+(n!==1?'s':'');
 }
 
 function updateActiveTags() {
@@ -460,7 +336,7 @@ function updateActiveTags() {
   state.skills.forEach(s=>tags.push({label:s,key:'skill:'+s}));
   state.types.forEach(t=>tags.push({label:t,key:'type:'+t}));
   if (state.expMin>0||state.expMax<10) tags.push({label:`${state.expMin}–${state.expMax}yrs`,key:'exp'});
-  if (state.salMin>0||state.salMax<300) tags.push({label:`$${state.salMin}k–$${state.salMax}k`,key:'sal'});
+  if (state.salMin>0||state.salMax<5000) tags.push({label:`₹${state.salMin}k–₹${state.salMax}k`,key:'sal'});
 
   document.getElementById('activeTags').innerHTML = tags.map(t=>
     `<span class="jb-active-tag">${t.label}
@@ -502,7 +378,7 @@ function toggleHeroChip(btn) {
 /* ── Verified sync ── */
 function syncVerified(source) {
   const val = source==='hero'
-    %s document.getElementById('heroVerified').checked
+    ? document.getElementById('heroVerified').checked
     : document.getElementById('sideVerified').checked;
   document.getElementById('heroVerified').checked = val;
   document.getElementById('sideVerified').checked = val;
@@ -561,7 +437,7 @@ function initRange(trackId,fillId,tlId,trId,minVal,maxVal,step,minLabelId,maxLab
     const rect=track.getBoundingClientRect();
     const isLeft=thumb===tl;
     function move(ev) {
-      const cx=ev.touches%sev.touches[0].clientX:ev.clientX;
+      const cx=ev.touches?ev.touches[0].clientX:ev.clientX;
       let pct=Math.max(0,Math.min(1,(cx-rect.left)/rect.width));
       let val=Math.round((minVal+pct*range)/step)*step;
       if(isLeft){low=Math.max(minVal,Math.min(val,high-step));}
@@ -602,19 +478,19 @@ function toggleSave(id, ev) {
   if(card){
     const btn=card.querySelector('.jb-bookmark');
     btn.classList.toggle('saved',job.saved);
-    btn.querySelector('svg').setAttribute('fill',job.saved%s'currentColor':'none');
-    btn.title=job.saved%s'Unsave':'Save';
+    btn.querySelector('svg').setAttribute('fill',job.saved?'currentColor':'none');
+    btn.title=job.saved?'Unsave':'Save';
   }
   if(currentDetailId===id) {
     const dp=document.getElementById('detailBody');
     const bk=dp.querySelector('.jb-bookmark-lg');
     if(bk){bk.classList.toggle('saved',job.saved);bk.innerHTML=bookmarkLgInner(job);}
   }
-  showToast(job.saved%s'Job saved!':'Job removed from saved.');
+  showToast(job.saved?'Job saved!':'Job removed from saved.');
 }
 
 function bookmarkLgInner(job) {
-  return `<svg width="18" height="18" viewBox="0 0 24 24" fill="${job.saved%s'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>${job.saved%s'Saved':'Save'}`;
+  return `<svg width="18" height="18" viewBox="0 0 24 24" fill="${job.saved?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>${job.saved?'Saved':'Save'}`;
 }
 
 function showToast(msg) {
@@ -637,7 +513,7 @@ function openDetail(id) {
       <div style="flex:1;min-width:0">
         <h2 class="jb-dp-title">${job.title}</h2>
         <div class="jb-dp-meta">${job.company} · ${job.location}</div>
-        <div class="jb-dp-meta2">${job.type} · ${job.expRange[0]}–${job.expRange[1]} yrs · $${job.salRange[0]}k–$${job.salRange[1]}k</div>
+        <div class="jb-dp-meta2">${job.type} · ${job.expRange[0]}–${job.expRange[1]} yrs · ₹${job.salRange[0]}k–₹${job.salRange[1]}k</div>
       </div>
       ${matchRing(job.match)}
     </div>
@@ -655,7 +531,7 @@ function openDetail(id) {
       <h4>Your Skill Match</h4>
       <div class="jb-dp-skills">
         ${job.reqSkills.map(s=>job.verifiedIn.includes(s)
-          %s`<span class="jb-skill-v">✓ ${s}</span>`
+          ?`<span class="jb-skill-v">✓ ${s}</span>`
           :`<span class="jb-skill-m">+ ${s}</span>`).join('')}
       </div>
     </div>
@@ -665,7 +541,7 @@ function openDetail(id) {
     </div>
     <div class="jb-dp-actions">
       <button class="btn btn-primary" style="flex:1;padding:.75rem 0" onclick="openApply(${job.id})">Apply Now</button>
-      <button class="jb-bookmark-lg${job.saved%s' saved':''}" onclick="toggleSave(${job.id},event)">${bookmarkLgInner(job)}</button>
+      <button class="jb-bookmark-lg${job.saved?' saved':''}" onclick="toggleSave(${job.id},event)">${bookmarkLgInner(job)}</button>
     </div>`;
   document.getElementById('detailOverlay').classList.add('open');
   document.getElementById('detailPanel').classList.add('open');
@@ -683,6 +559,7 @@ function closeDetail() {
 function openApply(id) {
   const job=JOBS.find(j=>j.id===id);
   if(!job) return;
+  currentApplyId=id;
   const bg=job.color+'22';
   document.getElementById('applyContent').innerHTML=`
     <div class="jb-modal-head">
@@ -706,9 +583,9 @@ function openApply(id) {
         <label>Verified Skills</label>
         <div class="jb-modal-skills">
           ${job.verifiedIn.length
-            %s job.verifiedIn.map(s=>`<span class="jb-skill-v">✓ ${s}</span>`).join('')
+            ? job.verifiedIn.map(s=>`<span class="jb-skill-v">✓ ${s}</span>`).join('')
             : `<span class="jb-no-skills">No verified skills for this role yet. <a href="/skills" style="color:var(--primary)">Take an exam →</a></span>`}
-          ${job.missingIn.length%s`<span class="jb-missing-note">Missing: ${job.missingIn.join(', ')}</span>`:''}
+          ${job.missingIn.length?`<span class="jb-missing-note">Missing: ${job.missingIn.join(', ')}</span>`:''}
         </div>
       </div>
       <div class="jb-mf" style="margin-top:.875rem">
@@ -723,7 +600,7 @@ function openApply(id) {
       </div>
       <div class="jb-mf" style="margin-top:.875rem">
         <label>Cover Message <span class="jb-optional">(optional)</span></label>
-        <textarea class="form-control" rows="4" placeholder="Why are you excited about this role%s"></textarea>
+        <textarea class="form-control" rows="4" placeholder="Why are you excited about this role?"></textarea>
       </div>
       <button class="btn btn-primary" style="width:100%;margin-top:1.25rem;padding:.75rem 0" onclick="submitApply()">Submit Application</button>
     </div>`;
@@ -738,14 +615,34 @@ function setResumeName(input, labelId) {
 }
 
 function submitApply() {
-  document.getElementById('applyContent').style.display='none';
-  document.getElementById('applySuccess').style.display='';
+  const jobId = currentApplyId;
+  if (!jobId) return;
+  const cover = document.querySelector('#applyBox textarea');
+  const form = new FormData();
+  form.append('cover_letter', cover ? cover.value : '');
+  const btn = document.querySelector('#applyBox .btn-primary');
+  if (btn) { btn.disabled=true; btn.textContent='Submitting…'; }
+  fetch(`/jobs/${jobId}/apply`, {method:'POST', body:form, redirect:'follow'})
+    .then(r => {
+      if (r.ok || r.redirected) {
+        document.getElementById('applyContent').style.display='none';
+        document.getElementById('applySuccess').style.display='';
+      } else {
+        if (btn) { btn.disabled=false; btn.textContent='Submit Application'; }
+        alert('Could not submit application. Please make sure you are logged in as a candidate.');
+      }
+    })
+    .catch(() => {
+      document.getElementById('applyContent').style.display='none';
+      document.getElementById('applySuccess').style.display='';
+    });
 }
 
 function closeApply(ev, done) {
   if(ev && ev.target!==document.getElementById('applyBack') && !done) return;
   document.getElementById('applyBack').classList.remove('open');
   document.body.style.overflow='';
+  currentApplyId=null;
 }
 
 /* ── Mobile Filter Drawer ── */
@@ -789,7 +686,6 @@ function openFilterDrawer() {
   document.getElementById('drawerBack').classList.add('open');
 }
 function closeFilterDrawer() {
-  // sync drawer selections back to sidebar
   const dSkills=[...document.querySelectorAll('.dskill-cb:checked')].map(i=>i.value);
   dSkills.forEach(s=>{
     const cb=document.querySelector(`#skillCheckList input[value="${s}"]`);

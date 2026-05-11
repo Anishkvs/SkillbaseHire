@@ -151,7 +151,7 @@
               {% else %}
                 <a href="{{ url_for('exam_instructions', skill_id=skill.id) }}" class="verify-link" title="Take skill test to verify">Verify</a>
               {% endif %}
-              <form action="{{ url_for('remove_skill', skill_id=skill.id) }}" method="post" style="display:inline" onsubmit="return confirm('Remove {{ skill.name }}%s')">
+              <form action="{{ url_for('remove_skill', skill_id=skill.id) }}" method="post" style="display:inline" onsubmit="return confirm('Remove {{ skill.name }}?')">
                 <button type="submit" class="remove-skill-btn" title="Remove">×</button>
               </form>
             </div>
@@ -165,45 +165,57 @@
       {% endif %}
     </div>
 
-    <!-- Applications -->
+    <!-- Application Status -->
     <div class="card">
       <div class="card-header">
-        <h2 class="card-title">My Applications</h2>
+        <h2 class="card-title">Application Status</h2>
+        <span style="font-size:.8125rem;color:var(--text-muted)">{{ applications | length }} application{{ 's' if applications | length != 1 }}</span>
       </div>
       {% if applications %}
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Job</th>
-                <th>Company</th>
-                <th>Type</th>
-                <th>Status</th>
-                <th>Applied</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for app in applications %}
-                <tr>
-                  <td><strong>{{ app.title }}</strong></td>
-                  <td><a href="{{ url_for('recruiter_detail', recruiter_id=app.recruiter_id) }}" class="profile-name-link">{{ app.company_name }}</a></td>
-                  <td><span class="badge badge-gray">{{ app.job_type }}</span></td>
-                  <td>
-                    <span class="app-status status-{{ app.status }}">
-                      {{ app.status | capitalize }}
-                    </span>
-                  </td>
-                  <td style="color:var(--text-muted);font-size:.85rem">{{ app.applied_at | timeago }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+        <div class="asc-list">
+          {% set mark_colors = ['#635BFF','#FF5C35','#3B82F6','#10B981','#F59E0B','#8B5CF6','#0EA5E9','#EF4444'] %}
+          {% for app in applications %}
+            {% set mc = mark_colors[loop.index0 % mark_colors | length] %}
+            <div class="asc-card">
+              <div class="asc-mark" style="background:{{ mc }}22;color:{{ mc }}">
+                {{ app.company_name[0].upper() }}
+              </div>
+              <div class="asc-info">
+                <div class="asc-job-title">{{ app.title }}</div>
+                <div class="asc-company">
+                  <a href="{{ url_for('recruiter_detail', recruiter_id=app.recruiter_id) }}" class="profile-name-link">{{ app.company_name }}</a>
+                  <span style="opacity:.35">·</span>{{ app.job_type }}
+                </div>
+                <div class="asc-dates">
+                  <span>Applied {{ app.applied_at | timeago }}</span>
+                  {% if app.updated_at %}
+                    <span style="opacity:.5">·</span>
+                    <span>Updated {{ app.updated_at | timeago }}</span>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="asc-right">
+                <span class="app-status status-{{ app.status }}">
+                  {% if app.status == 'shortlisted' %}
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-right:3px"><polyline points="20 6 9 17 4 12"/></svg>
+                  {% elif app.status == 'rejected' %}
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" style="margin-right:3px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  {% elif app.status == 'reviewing' %}
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:3px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  {% elif app.status == 'applied' %}
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:3px"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.09 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .9h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+                  {% endif %}
+                  {{ app.status | capitalize }}
+                </span>
+              </div>
+            </div>
+          {% endfor %}
         </div>
       {% else %}
         <div class="empty-state" style="padding:2rem">
           <div class="empty-icon">📋</div>
           <h3>No applications yet</h3>
-          <p>Start applying to jobs that match your skills.</p>
+          <p>You have not applied to any jobs yet.</p>
           <a href="{{ url_for('jobs') }}" class="btn btn-primary">Browse Jobs</a>
         </div>
       {% endif %}

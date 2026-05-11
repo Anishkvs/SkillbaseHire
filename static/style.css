@@ -153,6 +153,46 @@ p:last-child { margin-bottom: 0; }
 .nav-profile-link:hover .nav-name {
   color: var(--primary);
 }
+
+/* ── Notification bell ── */
+.nav-notif-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  color: var(--text-muted);
+  transition: background .15s, color .15s;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+.nav-notif-btn:hover {
+  background: var(--bg);
+  color: var(--primary);
+  text-decoration: none;
+}
+.nav-notif-badge {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  min-width: 16px;
+  height: 16px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 9.5px;
+  font-weight: 700;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+  border: 1.5px solid #fff;
+  pointer-events: none;
+}
+
 .navbar-toggle {
   display: none;
   flex-direction: column;
@@ -324,9 +364,29 @@ textarea.form-control { resize: vertical; min-height: 96px; }
   font-weight: 600;
 }
 .status-applied     { background: #DBEAFE; color: #1D4ED8; }
-.status-reviewing   { background: var(--warning-light); color: var(--warning); }
-.status-shortlisted { background: var(--success-light); color: var(--success); }
-.status-rejected    { background: var(--danger-light); color: var(--danger); }
+.status-reviewing   { background: #FFF7ED; color: #C2410C; }
+.status-shortlisted { background: #DCFCE7; color: #15803D; }
+.status-rejected    { background: #FEE2E2; color: #991B1B; }
+
+/* ── Application Status Cards (candidate dashboard) ── */
+.asc-list { display: flex; flex-direction: column; gap: .625rem; }
+.asc-card {
+  display: flex; align-items: center; gap: .875rem;
+  padding: .875rem 1rem; background: var(--bg);
+  border: 1.5px solid var(--border); border-radius: 10px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.asc-card:hover { border-color: var(--primary); box-shadow: 0 2px 8px rgba(99,91,255,.08); }
+.asc-mark {
+  width: 42px; height: 42px; border-radius: 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 1.0625rem;
+}
+.asc-info { flex: 1; min-width: 0; }
+.asc-job-title { font-weight: 700; font-size: .9375rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.asc-company { font-size: .8125rem; color: var(--text-muted); margin-top: 2px; display: flex; align-items: center; gap: .3rem; }
+.asc-dates { font-size: .75rem; color: var(--text-muted); margin-top: 4px; display: flex; align-items: center; gap: .375rem; flex-wrap: wrap; }
+.asc-right { flex-shrink: 0; }
 
 /* ── Flash messages ───────────────────────────────────────── */
 .flash-container {
@@ -1448,7 +1508,7 @@ tr:hover td { background: #FAFBFC; }
   box-shadow: 0 4px 28px rgba(0,0,0,.1);
   padding: 1.25rem 1.375rem;
 }
-.jb-search-row { display: flex; gap: .625rem; }
+.jb-search-row { display: flex; gap: .625rem; align-items: stretch; }
 .jb-search-field {
   flex: 1; display: flex; align-items: center; gap: .5rem;
   background: var(--bg); border: 1.5px solid var(--border);
@@ -1462,7 +1522,7 @@ tr:hover td { background: #FAFBFC; }
 }
 .jb-search-field input::placeholder { color: var(--text-muted); }
 .jb-loc-field { position: relative; }
-.jb-search-btn { white-space: nowrap; padding: .625rem 1.5rem; flex-shrink: 0; }
+.jb-search-btn { white-space: nowrap; padding: 0 1.75rem; flex-shrink: 0; align-self: stretch; border-radius: 10px; }
 
 /* Autocomplete */
 .jb-autocomplete {

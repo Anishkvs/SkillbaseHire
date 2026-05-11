@@ -1,0 +1,57 @@
+<!-- Notification Panel Partial — include inside <body> for candidates -->
+<div class="np-overlay" id="npOverlay"></div>
+
+<div class="np-panel" id="npPanel" role="dialog" aria-label="Notifications">
+
+  <div class="np-head">
+    <div class="np-head-left">
+      <span class="np-head-title">Notifications</span>
+      <span class="np-head-badge" id="npHeadBadge"
+            style="{{ 'display:none' if unread_notif_count == 0 else '' }}">
+        {{ unread_notif_count if unread_notif_count < 100 else '99+' }}
+      </span>
+    </div>
+    <button class="np-head-read-all" id="npReadAll" type="button">Mark all read</button>
+  </div>
+
+  <div class="np-list" id="npList">
+    <!-- Skeleton while loading -->
+    <div class="np-skeleton">
+      <div class="np-skel-icon"></div>
+      <div class="np-skel-body">
+        <div class="np-skel-line" style="width:70%"></div>
+        <div class="np-skel-line" style="width:90%"></div>
+      </div>
+    </div>
+    <div class="np-skeleton">
+      <div class="np-skel-icon"></div>
+      <div class="np-skel-body">
+        <div class="np-skel-line" style="width:55%"></div>
+        <div class="np-skel-line" style="width:80%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="np-footer">
+    <a href="{{ url_for('candidate_notifications') }}" class="np-footer-link">
+      View all notifications
+    </a>
+  </div>
+
+</div>
+
+<!-- Three-dot context menu (shared, repositioned by JS) -->
+<div class="np-ctx" id="npCtx" role="menu">
+  <button class="np-ctx-item" data-action="mark-read" type="button">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    Mark as read
+  </button>
+  <button class="np-ctx-item" data-action="view" type="button">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+    View details
+  </button>
+  <button class="np-ctx-item np-ctx-item-danger" data-action="delete" type="button">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+    Delete
+  </button>
+</div>

@@ -283,7 +283,7 @@ function addCustomSkill(name) {
 
 /* ── Remove skill ── */
 function removeSkill(id) {
-  selectedSkills = selectedSkills.filter(s => s.id !== id);
+  selectedSkills = selectedSkills.filter(s => String(s.id) !== String(id));
   commit();
   document.getElementById('skillMsInput').focus();
 }

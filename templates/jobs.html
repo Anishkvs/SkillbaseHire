@@ -174,8 +174,8 @@
         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
       </div>
       <h3>Application Sent!</h3>
-      <p>Your application has been submitted. Good luck!</p>
-      <button class="btn btn-primary" onclick="closeApply(null,true)">Done</button>
+      <p>Application submitted successfully! Good luck!</p>
+      <button class="btn btn-primary" onclick="closeApply(null,true);showToast('Application submitted successfully!')">Done</button>
     </div>
   </div>
 </div>
@@ -394,7 +394,9 @@ function renderCard(job) {
       <span class="jb-posted">${job.posted}</span>
       <div class="jb-card-actions">
         <button class="btn btn-outline btn-sm" onclick="openDetail(${job.id})">View Details</button>
-        <button class="btn btn-primary btn-sm" onclick="openApply(${job.id})">Apply</button>
+        ${job.applied
+          ? `<button class="btn btn-sm btn-applied" disabled>✓ Applied</button>`
+          : `<button class="btn btn-primary btn-sm" id="apply-btn-${job.id}" onclick="openApply(${job.id})">Apply</button>`}
       </div>
     </div>
   </div>`;
@@ -678,7 +680,9 @@ function openDetail(id) {
       <div class="jb-dp-perks">${job.perks.map(p=>`<span class="jb-perk">${p}</span>`).join('')}</div>
     </div>
     <div class="jb-dp-actions">
-      <button class="btn btn-primary" style="flex:1;padding:.75rem 0" onclick="openApply(${job.id})">Apply Now</button>
+      ${job.applied
+        ? `<button class="btn btn-applied" style="flex:1;padding:.75rem 0" disabled>✓ Applied</button>`
+        : `<button class="btn btn-primary" id="detail-apply-btn-${job.id}" style="flex:1;padding:.75rem 0" onclick="openApply(${job.id})">Apply Now</button>`}
       <button class="jb-bookmark-lg${job.saved?' saved':''}" onclick="toggleSave(${job.id},event)">${bookmarkLgInner(job)}</button>
     </div>`;
   document.getElementById('detailOverlay').classList.add('open');
@@ -694,9 +698,33 @@ function closeDetail() {
 }
 
 /* ── Apply Modal ── */
+function markApplied(id) {
+  const job = JOBS.find(j => j.id === id);
+  if (job) job.applied = true;
+  // Card button
+  const cardBtn = document.getElementById('apply-btn-' + id);
+  if (cardBtn) {
+    cardBtn.className = 'btn btn-sm btn-applied';
+    cardBtn.disabled = true;
+    cardBtn.textContent = '✓ Applied';
+    cardBtn.onclick = null;
+    cardBtn.id = '';
+  }
+  // Detail panel button
+  const detailBtn = document.getElementById('detail-apply-btn-' + id);
+  if (detailBtn) {
+    detailBtn.className = 'btn btn-applied';
+    detailBtn.disabled = true;
+    detailBtn.textContent = '✓ Applied';
+    detailBtn.onclick = null;
+    detailBtn.id = '';
+  }
+}
+
 function openApply(id) {
   const job=JOBS.find(j=>j.id===id);
   if(!job) return;
+  if(job.applied) { showToast('You have already applied for this job.'); return; }
   currentApplyId=id;
   const bg=job.color+'22';
   document.getElementById('applyContent').innerHTML=`
@@ -781,19 +809,25 @@ function submitApply() {
   form.append('cover_letter', cover ? cover.value : '');
   const btn = document.querySelector('#applyBox .btn-primary');
   if (btn) { btn.disabled=true; btn.textContent='Submitting…'; }
-  fetch(`/jobs/${jobId}/apply`, {method:'POST', body:form, redirect:'follow'})
-    .then(r => {
-      if (r.ok || r.redirected) {
+  fetch(`/jobs/${jobId}/apply`, {method:'POST', body:form})
+    .then(r => r.json())
+    .then(data => {
+      if (data.ok) {
+        markApplied(jobId);
         document.getElementById('applyContent').style.display='none';
         document.getElementById('applySuccess').style.display='';
+      } else if (data.error === 'already_applied') {
+        markApplied(jobId);
+        closeApply(null, true);
+        showToast('You have already applied for this job.');
       } else {
         if (btn) { btn.disabled=false; btn.textContent='Submit Application'; }
-        alert('Could not submit application. Please make sure you are logged in as a candidate.');
+        showToast('Could not submit. Please log in as a candidate.');
       }
     })
     .catch(() => {
-      document.getElementById('applyContent').style.display='none';
-      document.getElementById('applySuccess').style.display='';
+      if (btn) { btn.disabled=false; btn.textContent='Submit Application'; }
+      showToast('Could not submit. Please log in as a candidate.');
     });
 }
 

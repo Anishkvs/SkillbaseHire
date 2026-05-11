@@ -514,6 +514,7 @@ def jobs():
 
     # Candidate's verified skill names for match calculation
     verified_skills = set()
+    applied_job_ids = set()
     if session.get('role') == 'candidate' and session.get('user_id'):
         rows = db.execute('''
             SELECT s.name FROM user_skills us
@@ -521,6 +522,11 @@ def jobs():
             WHERE us.user_id = ? AND us.verified = 1
         ''', [session['user_id']]).fetchall()
         verified_skills = {r['name'] for r in rows}
+        applied_rows = db.execute(
+            'SELECT job_id FROM applications WHERE candidate_id=?',
+            [session['user_id']]
+        ).fetchall()
+        applied_job_ids = {r['job_id'] for r in applied_rows}
 
     colors = ['#635BFF','#FF5C35','#3B82F6','#10B981','#F59E0B',
               '#8B5CF6','#0EA5E9','#14B8A6','#F97316','#EF4444']
@@ -576,6 +582,7 @@ def jobs():
             'requirements': [r.strip() for r in (job['requirements'] or '').split('\n') if r.strip()],
             'perks':      [],
             'saved':      False,
+            'applied':    job['id'] in applied_job_ids,
         })
 
     return render_template('jobs.html',
@@ -1715,7 +1722,7 @@ def remove_skill(skill_id):
 
 # ── Apply ─────────────────────────────────────────────────────────────────────
 
-@app.route('/jobs/<int:job_id>/apply', methods=['GET', 'POST'])
+@app.route('/jobs/<int:job_id>/apply', methods=['POST'])
 @candidate_required
 def apply_job(job_id):
     db = get_db()
@@ -1726,33 +1733,17 @@ def apply_job(job_id):
     ''', [job_id]).fetchone()
 
     if not job:
-        flash('Job not found.', 'error')
-        return redirect(url_for('jobs'))
+        return jsonify({'ok': False, 'error': 'job_not_found'}), 404
 
     if db.execute('SELECT id FROM applications WHERE job_id=? AND candidate_id=?',
                   [job_id, session['user_id']]).fetchone():
-        flash('You already applied for this job.', 'warning')
-        return redirect(url_for('job_detail', job_id=job_id))
+        return jsonify({'ok': False, 'error': 'already_applied'}), 409
 
-    job_skills = db.execute('''
-        SELECT s.* FROM job_skills js JOIN skills s ON js.skill_id=s.id WHERE js.job_id=?
-    ''', [job_id]).fetchall()
-
-    my_skills = {row['name']: row['verified'] for row in db.execute('''
-        SELECT s.name, us.verified FROM user_skills us
-        JOIN skills s ON us.skill_id=s.id WHERE us.user_id=?
-    ''', [session['user_id']]).fetchall()}
-
-    if request.method == 'POST':
-        cover_letter = request.form.get('cover_letter', '').strip()
-        db.execute('INSERT INTO applications (job_id, candidate_id, cover_letter) VALUES (?,?,?)',
-                   [job_id, session['user_id'], cover_letter])
-        db.commit()
-        flash(f'Application submitted for {job["title"]}!', 'success')
-        return redirect(url_for('candidate_profile'))
-
-    return render_template('apply.html', job=job, job_skills=job_skills,
-                           my_skills=my_skills, user=get_current_user())
+    cover_letter = request.form.get('cover_letter', '').strip()
+    db.execute('INSERT INTO applications (job_id, candidate_id, cover_letter) VALUES (?,?,?)',
+               [job_id, session['user_id'], cover_letter])
+    db.commit()
+    return jsonify({'ok': True})
 
 
 # ── Recruiter auth ────────────────────────────────────────────────────────────

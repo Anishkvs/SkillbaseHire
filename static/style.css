@@ -244,6 +244,8 @@ p:last-child { margin-bottom: 0; }
 .btn-outline-white { background: transparent; color: #fff; border-color: rgba(255,255,255,.5); }
 .btn-outline-white:hover { background: rgba(255,255,255,.1); color: #fff; }
 .btn-primary-light { background: var(--primary-light); color: var(--primary); border-color: var(--primary-light); }
+.btn-applied  { background: #E5E7EB; color: #6B7280; border-color: #E5E7EB; cursor: not-allowed; pointer-events: none; }
+.btn-applied:hover { background: #E5E7EB; color: #6B7280; border-color: #E5E7EB; }
 .btn-sm  { padding: .35rem .75rem; font-size: .8125rem; }
 .btn-lg  { padding: .75rem 1.5rem; font-size: 1rem; }
 .btn-full { width: 100%; }

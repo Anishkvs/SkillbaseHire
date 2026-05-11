@@ -546,8 +546,8 @@ def jobs():
         if job['job_type'] == 'Contract':
             signals.append({'label': 'Contract', 'color': 'orange'})
 
-        sal_min = (job['salary_min'] // 1000) if job['salary_min'] else 0
-        sal_max = (job['salary_max'] // 1000) if job['salary_max'] else 0
+        sal_min = (job['salary_min'] // 100000) if job['salary_min'] else 0
+        sal_max = (job['salary_max'] // 100000) if job['salary_max'] else 0
 
         jobs_data.append({
             'id':         job['id'],

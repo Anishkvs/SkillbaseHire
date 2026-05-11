@@ -66,27 +66,49 @@
 
     <div class="jb-fg">
       <div class="jb-fg-title">Required Skills</div>
-      <div class="jb-skill-list" id="skillCheckList"></div>
-    </div>
-
-    <div class="jb-fg">
-      <div class="jb-fg-title">Experience (years)</div>
-      <div class="jb-range-vals"><span id="expMinL">0</span>–<span id="expMaxL">10</span> yrs</div>
-      <div class="jb-track" id="expTrack">
-        <div class="jb-fill" id="expFill"></div>
-        <div class="jb-thumb" id="expTL"></div>
-        <div class="jb-thumb" id="expTR"></div>
+      <div class="jb-sk-chips" id="skillChips"></div>
+      <div class="jb-sk-input-wrap">
+        <input type="text" class="jb-sk-input" id="skillInput"
+               placeholder="Type a skill…" autocomplete="off"
+               oninput="onSkillInput(this.value)"
+               onkeydown="onSkillKeydown(event)"
+               onblur="setTimeout(closeSkillDrop, 150)">
+        <div class="jb-sk-drop" id="skillDrop"></div>
       </div>
     </div>
 
     <div class="jb-fg">
-      <div class="jb-fg-title">Salary (₹k/yr)</div>
-      <div class="jb-range-vals">₹<span id="salMinL">0</span>k–₹<span id="salMaxL">5000</span>k</div>
-      <div class="jb-track" id="salTrack">
-        <div class="jb-fill" id="salFill"></div>
-        <div class="jb-thumb" id="salTL"></div>
-        <div class="jb-thumb" id="salTR"></div>
+      <div class="jb-fg-title">Experience (Years)</div>
+      <div class="jb-sal-display"><span id="expMinL">0</span>&ndash;<span id="expMaxL">30</span> yrs</div>
+      <div class="jb-sal-wrap">
+        <div class="jb-sal-track" id="expTrack">
+          <div class="jb-sal-fill" id="expFill"></div>
+          <div class="jb-sal-thumb" id="expTL" tabindex="0" role="slider" aria-label="Minimum experience">
+            <span class="jb-sal-tip" id="expTipL">0 yrs</span>
+          </div>
+          <div class="jb-sal-thumb" id="expTR" tabindex="0" role="slider" aria-label="Maximum experience">
+            <span class="jb-sal-tip" id="expTipR">30 yrs</span>
+          </div>
+        </div>
       </div>
+      <div class="jb-sal-bounds"><span>0 yrs</span><span>30 yrs</span></div>
+    </div>
+
+    <div class="jb-fg">
+      <div class="jb-fg-title">Salary (₹L/yr)</div>
+      <div class="jb-sal-display">₹<span id="salMinL">0</span>L &ndash; ₹<span id="salMaxL">50</span>L</div>
+      <div class="jb-sal-wrap">
+        <div class="jb-sal-track" id="salTrack">
+          <div class="jb-sal-fill" id="salFill"></div>
+          <div class="jb-sal-thumb" id="salTL" tabindex="0" role="slider" aria-label="Minimum salary">
+            <span class="jb-sal-tip" id="salTipL">₹0L</span>
+          </div>
+          <div class="jb-sal-thumb" id="salTR" tabindex="0" role="slider" aria-label="Maximum salary">
+            <span class="jb-sal-tip" id="salTipR">₹50L</span>
+          </div>
+        </div>
+      </div>
+      <div class="jb-sal-bounds"><span>₹0L</span><span>₹50L</span></div>
     </div>
 
     <div class="jb-fg" style="border-bottom:none;margin-bottom:.5rem">
@@ -183,7 +205,7 @@ const JOBS = {{ jobs_data | tojson }};
 const state = {
   search:'', location:'', verified:false,
   skills:[], types:[], heroSkills:[],
-  expMin:0, expMax:10, salMin:0, salMax:5000, sort:'match'
+  expMin:0, expMax:30, salMin:0, salMax:50, sort:'match'
 };
 const LOCS = ["Remote","Bangalore, India","Hyderabad, India","Chennai, India","Mumbai, India","Pune, India","Delhi, India","Noida, India","Gurgaon, India","Kolkata, India","Ahmedabad, India","Kochi, India"];
 const SIG_COLORS = {
@@ -191,25 +213,137 @@ const SIG_COLORS = {
   purple:{bg:'#EDE9FE',text:'#5B21B6'}, orange:{bg:'#FFF7ED',text:'#9A3412'},
   teal:{bg:'#CCFBF1',text:'#134E4A'}
 };
-let acIdx = -1, expSlider, salSlider, currentDetailId = null, currentApplyId = null;
+const ALL_SKILLS = [...new Set(JOBS.flatMap(j=>j.reqSkills))].sort();
+let acIdx = -1, skillAcIdx = -1;
+let expSlider, salSlider, currentDetailId = null, currentApplyId = null;
 
 /* ── Init ── */
 function init() {
-  initSkillCheckboxes();
-  expSlider = initRange('expTrack','expFill','expTL','expTR',0,10,1,'expMinL','expMaxL',
-    (lo,hi)=>{state.expMin=lo;state.expMax=hi;});
-  salSlider = initRange('salTrack','salFill','salTL','salTR',0,5000,100,'salMinL','salMaxL',
-    (lo,hi)=>{state.salMin=lo;state.salMax=hi;});
+  expSlider = initRange('expTrack','expFill','expTL','expTR',0,30,1,'expMinL','expMaxL',
+    (lo,hi)=>{state.expMin=lo;state.expMax=hi;},
+    {tipLId:'expTipL',tipRId:'expTipR',suffix:' yrs'});
+  salSlider = initRange('salTrack','salFill','salTL','salTR',0,50,1,'salMinL','salMaxL',
+    (lo,hi)=>{state.salMin=lo;state.salMax=hi;},
+    {tipLId:'salTipL',tipRId:'salTipR',prefix:'₹',suffix:'L'});
   applyFilters();
   buildDrawer();
 }
 
-function initSkillCheckboxes() {
-  const skills = [...new Set(JOBS.flatMap(j=>j.reqSkills))].sort();
-  document.getElementById('skillCheckList').innerHTML = skills.map(s=>
-    `<label class="jb-check"><input type="checkbox" value="${s}" onchange="applyFilters()"><span>${s}</span></label>`
-  ).join('');
+/* ── Skill chips filter ── */
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+function escAttr(s) { return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+function hiliteSkill(str, q) {
+  const i = str.toLowerCase().indexOf(q.toLowerCase());
+  if (i < 0) return escHtml(str);
+  return escHtml(str.slice(0,i)) +
+    '<mark>' + escHtml(str.slice(i, i+q.length)) + '</mark>' +
+    escHtml(str.slice(i+q.length));
+}
+
+function _showSkillDrop(val, dropId) {
+  skillAcIdx = -1;
+  const drop = document.getElementById(dropId);
+  const q = val.trim();
+  if (q.length < 2) { _closeSkillDropId(dropId); return; }
+
+  const matches = ALL_SKILLS
+    .filter(s => s.toLowerCase().includes(q.toLowerCase()) && !state.skills.includes(s))
+    .slice(0, 8);
+
+  const rows = matches.map(s => ({label: hiliteSkill(s, q), val: s, add: false}));
+  const alreadySelected = state.skills.some(s => s.toLowerCase() === q.toLowerCase());
+  const inList = ALL_SKILLS.some(s => s.toLowerCase() === q.toLowerCase());
+  if (!alreadySelected && !inList) {
+    rows.push({label: `+ Add <strong>${escHtml(q)}</strong>`, val: q, add: true});
+  }
+
+  if (!rows.length) { _closeSkillDropId(dropId); return; }
+
+  drop.innerHTML = rows.map(r =>
+    `<div class="jb-sk-drop-item${r.add?' jb-sk-drop-item-add':''}" data-skill="${escAttr(r.val)}">${r.label}</div>`
+  ).join('');
+  drop.classList.add('open');
+  drop.querySelectorAll('.jb-sk-drop-item').forEach(el => {
+    el.addEventListener('mousedown', ev => { ev.preventDefault(); addSkill(el.dataset.skill); });
+  });
+}
+
+function _handleSkillKeydown(ev, inputId, dropId) {
+  const drop = document.getElementById(dropId);
+  const items = [...drop.querySelectorAll('.jb-sk-drop-item')];
+  if (!drop.classList.contains('open')) {
+    if (ev.key==='Enter') {
+      const v = document.getElementById(inputId).value.trim();
+      if (v.length >= 1) { ev.preventDefault(); addSkill(v); }
+    }
+    return;
+  }
+  if (ev.key==='ArrowDown') {
+    ev.preventDefault();
+    skillAcIdx = Math.min(skillAcIdx+1, items.length-1);
+    items.forEach((el,i)=>el.classList.toggle('sk-active', i===skillAcIdx));
+  } else if (ev.key==='ArrowUp') {
+    ev.preventDefault();
+    skillAcIdx = Math.max(skillAcIdx-1, 0);
+    items.forEach((el,i)=>el.classList.toggle('sk-active', i===skillAcIdx));
+  } else if (ev.key==='Enter') {
+    ev.preventDefault();
+    if (skillAcIdx >= 0 && items[skillAcIdx]) {
+      addSkill(items[skillAcIdx].dataset.skill);
+    } else {
+      const v = document.getElementById(inputId).value.trim();
+      if (v.length >= 1) addSkill(v);
+    }
+  } else if (ev.key==='Escape') {
+    _closeSkillDropId(dropId);
+  }
+}
+
+function _closeSkillDropId(dropId) {
+  const drop = document.getElementById(dropId);
+  if (drop) { drop.classList.remove('open'); drop.innerHTML = ''; }
+  skillAcIdx = -1;
+}
+
+/* Sidebar wrappers */
+function onSkillInput(val)   { _showSkillDrop(val, 'skillDrop'); }
+function onSkillKeydown(ev)  { _handleSkillKeydown(ev, 'skillInput', 'skillDrop'); }
+
+function addSkill(skill) {
+  if (!skill || state.skills.includes(skill)) return;
+  state.skills.push(skill);
+  document.getElementById('skillInput').value = '';
+  closeSkillDrop();
+  renderSkillChips();
+  applyFilters();
+}
+
+function removeSkill(skill) {
+  state.skills = state.skills.filter(s => s !== skill);
+  renderSkillChips();
+  applyFilters();
+}
+
+function renderSkillChips() {
+  ['skillChips','dSkillChips'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = state.skills.map(s =>
+      `<span class="jb-sk-chip">
+        <span>${escHtml(s)}</span>
+        <button class="jb-sk-chip-rm" type="button" data-skill="${escAttr(s)}" aria-label="Remove ${escHtml(s)}">×</button>
+      </span>`
+    ).join('');
+    el.querySelectorAll('.jb-sk-chip-rm').forEach(btn => {
+      btn.addEventListener('click', () => removeSkill(btn.dataset.skill));
+    });
+  });
+}
+
+function closeSkillDrop() { _closeSkillDropId('skillDrop'); }
 
 /* ── Render ── */
 function matchRing(pct) {
@@ -250,7 +384,7 @@ function renderCard(job) {
           </button>
         </div>
         <div class="jb-card-meta">${job.company} · ${job.location} · <span class="jb-type-badge">${job.type}</span></div>
-        <div class="jb-card-meta2">${job.expRange[0]}–${job.expRange[1]} yrs · ₹${job.salRange[0]}k–₹${job.salRange[1]}k/yr</div>
+        <div class="jb-card-meta2">${job.expRange[0]}–${job.expRange[1]} yrs · ₹${job.salRange[0]}L–₹${job.salRange[1]}L/yr</div>
       </div>
       ${matchRing(job.match)}
     </div>
@@ -280,7 +414,6 @@ function applyFilters() {
   state.location = document.getElementById('locationInput').value.toLowerCase().trim();
   state.verified = document.getElementById('sideVerified').checked;
   state.sort = document.getElementById('sortSel').value;
-  state.skills = [...document.querySelectorAll('#skillCheckList input:checked')].map(i=>i.value);
   state.types = [...document.querySelectorAll('#typeCheckList input:checked')].map(i=>i.value);
 
   let filtered = JOBS.filter(job => {
@@ -316,7 +449,7 @@ function resetFilters() {
   document.getElementById('locationInput').value='';
   document.getElementById('sideVerified').checked=false;
   document.getElementById('heroVerified').checked=false;
-  document.querySelectorAll('#skillCheckList input').forEach(i=>i.checked=false);
+  state.skills = []; renderSkillChips();
   document.querySelectorAll('#typeCheckList input').forEach(i=>i.checked=false);
   document.querySelectorAll('.jb-chip.active').forEach(b=>{b.classList.remove('active');});
   state.heroSkills=[];
@@ -335,8 +468,8 @@ function updateActiveTags() {
   if (state.verified) tags.push({label:'Verified only',key:'verified'});
   state.skills.forEach(s=>tags.push({label:s,key:'skill:'+s}));
   state.types.forEach(t=>tags.push({label:t,key:'type:'+t}));
-  if (state.expMin>0||state.expMax<10) tags.push({label:`${state.expMin}–${state.expMax}yrs`,key:'exp'});
-  if (state.salMin>0||state.salMax<5000) tags.push({label:`₹${state.salMin}k–₹${state.salMax}k`,key:'sal'});
+  if (state.expMin>0||state.expMax<30) tags.push({label:`${state.expMin}–${state.expMax} yrs`,key:'exp'});
+  if (state.salMin>0||state.salMax<50) tags.push({label:`₹${state.salMin}L–₹${state.salMax}L`,key:'sal'});
 
   document.getElementById('activeTags').innerHTML = tags.map(t=>
     `<span class="jb-active-tag">${t.label}
@@ -356,8 +489,8 @@ function removeTag(key) {
     document.querySelectorAll('.jb-chip').forEach(b=>{if(b.dataset.skill===s)b.classList.remove('active');});
   }
   else if (key.startsWith('skill:')){
-    const s=key.slice(6);
-    document.querySelectorAll('#skillCheckList input').forEach(i=>{if(i.value===s)i.checked=false;});
+    state.skills = state.skills.filter(s=>s!==key.slice(6));
+    renderSkillChips();
   }
   else if (key.startsWith('type:')){
     const t=key.slice(5);
@@ -417,11 +550,12 @@ function closeAC() {
 }
 
 /* ── Dual-range slider ── */
-function initRange(trackId,fillId,tlId,trId,minVal,maxVal,step,minLabelId,maxLabelId,onChange) {
+function initRange(trackId,fillId,tlId,trId,minVal,maxVal,step,minLabelId,maxLabelId,onChange,opts) {
   const track=document.getElementById(trackId),fill=document.getElementById(fillId);
   const tl=document.getElementById(tlId),tr=document.getElementById(trId);
   let low=minVal, high=maxVal;
   const range=maxVal-minVal;
+  const pre=(opts&&opts.prefix)||'', suf=(opts&&opts.suffix)||'';
 
   function updateUI() {
     const lp=(low-minVal)/range*100, rp=(high-minVal)/range*100;
@@ -429,11 +563,14 @@ function initRange(trackId,fillId,tlId,trId,minVal,maxVal,step,minLabelId,maxLab
     tl.style.left=lp+'%'; tr.style.left=rp+'%';
     document.getElementById(minLabelId).textContent=low;
     document.getElementById(maxLabelId).textContent=high;
+    if(opts&&opts.tipLId) document.getElementById(opts.tipLId).textContent=pre+low+suf;
+    if(opts&&opts.tipRId) document.getElementById(opts.tipRId).textContent=pre+high+suf;
     onChange(low,high);
   }
 
   function startDrag(thumb,e) {
     e.preventDefault();
+    thumb.classList.add('jb-sal-dragging');
     const rect=track.getBoundingClientRect();
     const isLeft=thumb===tl;
     function move(ev) {
@@ -445,6 +582,7 @@ function initRange(trackId,fillId,tlId,trId,minVal,maxVal,step,minLabelId,maxLab
       updateUI();
     }
     function up(){
+      thumb.classList.remove('jb-sal-dragging');
       document.removeEventListener('mousemove',move);
       document.removeEventListener('mouseup',up);
       document.removeEventListener('touchmove',move);
@@ -513,7 +651,7 @@ function openDetail(id) {
       <div style="flex:1;min-width:0">
         <h2 class="jb-dp-title">${job.title}</h2>
         <div class="jb-dp-meta">${job.company} · ${job.location}</div>
-        <div class="jb-dp-meta2">${job.type} · ${job.expRange[0]}–${job.expRange[1]} yrs · ₹${job.salRange[0]}k–₹${job.salRange[1]}k</div>
+        <div class="jb-dp-meta2">${job.type} · ${job.expRange[0]}–${job.expRange[1]} yrs · ₹${job.salRange[0]}L–₹${job.salRange[1]}L</div>
       </div>
       ${matchRing(job.match)}
     </div>
@@ -664,10 +802,18 @@ function buildDrawer() {
     </div>
     <div class="jb-fg" style="border-bottom:none">
       <div class="jb-fg-title">Required Skills</div>
-      <div id="dSkillList">${[...new Set(JOBS.flatMap(j=>j.reqSkills))].sort().map(s=>
-        `<label class="jb-check"><input type="checkbox" value="${s}" class="dskill-cb"><span>${s}</span></label>`
-      ).join('')}</div>
+      <div class="jb-sk-chips" id="dSkillChips"></div>
+      <div class="jb-sk-input-wrap">
+        <input type="text" class="jb-sk-input" id="dSkillInput" placeholder="Type a skill…" autocomplete="off">
+        <div class="jb-sk-drop" id="dSkillDrop"></div>
+      </div>
     </div>`;
+
+  const di = document.getElementById('dSkillInput');
+  di.addEventListener('input',  ()  => _showSkillDrop(di.value, 'dSkillDrop'));
+  di.addEventListener('keydown', ev => _handleSkillKeydown(ev, 'dSkillInput', 'dSkillDrop'));
+  di.addEventListener('blur',   ()  => setTimeout(() => _closeSkillDropId('dSkillDrop'), 150));
+  renderSkillChips();
 }
 function syncDrawerVerified() {
   const val=document.getElementById('dVerified').checked;
@@ -678,23 +824,16 @@ function syncDrawerVerified() {
 }
 function openFilterDrawer() {
   document.getElementById('dVerified').checked=state.verified;
-  state.skills.forEach(s=>{
-    const cb=document.querySelector(`#dSkillList input[value="${s}"]`);
-    if(cb) cb.checked=true;
-  });
+  renderSkillChips();
   document.getElementById('filterDrawer').classList.add('open');
   document.getElementById('drawerBack').classList.add('open');
 }
 function closeFilterDrawer() {
-  const dSkills=[...document.querySelectorAll('.dskill-cb:checked')].map(i=>i.value);
-  dSkills.forEach(s=>{
-    const cb=document.querySelector(`#skillCheckList input[value="${s}"]`);
-    if(cb) cb.checked=true;
-  });
   const dTypes=[...document.querySelectorAll('.dtype-cb:checked')].map(i=>i.value);
   dTypes.forEach(t=>{
     document.querySelectorAll('#typeCheckList input').forEach(i=>{if(i.value===t)i.checked=true;});
   });
+  _closeSkillDropId('dSkillDrop');
   applyFilters();
   document.getElementById('filterDrawer').classList.remove('open');
   document.getElementById('drawerBack').classList.remove('open');

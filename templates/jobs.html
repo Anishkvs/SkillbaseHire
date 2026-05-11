@@ -809,7 +809,14 @@ function openApply(id) {
         <label>Cover Message <span class="jb-optional">(optional)</span></label>
         <textarea class="form-control" rows="4" placeholder="Why are you excited about this role?"></textarea>
       </div>
-      <button class="btn btn-primary" style="width:100%;margin-top:1.25rem;padding:.75rem 0" onclick="submitApply()">Submit Application</button>
+      ${job.skillTestMandatory && job.missingIn.length > 0
+        ? `<div class="jb-submit-blocked">
+             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+             Complete the required skill tests above to unlock this application
+           </div>
+           <button class="btn btn-primary" style="width:100%;margin-top:.75rem;padding:.75rem 0" disabled>Submit Application</button>`
+        : `<button class="btn btn-primary" style="width:100%;margin-top:1.25rem;padding:.75rem 0" onclick="submitApply()">Submit Application</button>`
+      }
     </div>`;
   document.getElementById('applySuccess').style.display='none';
   document.getElementById('applyContent').style.display='';

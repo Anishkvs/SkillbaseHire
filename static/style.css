@@ -1979,6 +1979,13 @@ mark { background: none; color: inherit; font-weight: 700; }
   border: 1px solid #FDE68A;
 }
 
+.jb-submit-blocked {
+  display: flex; align-items: center; gap: .5rem;
+  margin-top: 1.25rem; padding: .6rem .875rem;
+  background: #FEF3C7; border: 1px solid #FCD34D; border-radius: 8px;
+  font-size: .8rem; font-weight: 500; color: #92400E;
+}
+
 .jb-upload-zone {
   border: 2px dashed var(--border); border-radius: 10px;
   padding: 1.25rem; text-align: center; cursor: pointer; transition: all .15s;

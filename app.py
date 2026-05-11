@@ -490,7 +490,10 @@ def jobs():
         SELECT j.*, rp.company AS company_name,
                (SELECT GROUP_CONCAT(s.name, ', ')
                 FROM job_skills js JOIN skills s ON js.skill_id = s.id
-                WHERE js.job_id = j.id) AS skills_list
+                WHERE js.job_id = j.id) AS skills_list,
+               (SELECT GROUP_CONCAT(js.skill_id, ',')
+                FROM job_skills js
+                WHERE js.job_id = j.id) AS skill_ids_list
         FROM jobs j
         JOIN recruiter_profiles rp ON j.recruiter_id = rp.user_id
         WHERE j.active = 1
@@ -524,11 +527,13 @@ def jobs():
 
     jobs_data = []
     for i, job in enumerate(job_rows):
-        skills     = [s.strip() for s in job['skills_list'].split(', ')] if job['skills_list'] else []
-        company    = job['company_name'] or job['company']
-        color      = colors[i % len(colors)]
+        skills      = [s.strip() for s in job['skills_list'].split(', ')] if job['skills_list'] else []
+        skill_ids   = [int(x) for x in job['skill_ids_list'].split(',')] if job['skill_ids_list'] else []
+        skill_id_map = {name: sid for name, sid in zip(skills, skill_ids)}
+        company     = job['company_name'] or job['company']
+        color       = colors[i % len(colors)]
         verified_in = [s for s in skills if s in verified_skills]
-        missing_in  = [s for s in skills if s not in verified_skills]
+        missing_in  = [{'name': s, 'id': skill_id_map.get(s)} for s in skills if s not in verified_skills]
         match_pct   = round(len(verified_in) / len(skills) * 100) if skills else 0
 
         try:
@@ -566,6 +571,7 @@ def jobs():
             'reqSkills':  skills,
             'verifiedIn': verified_in,
             'missingIn':  missing_in,
+            'skillTestMandatory': bool(job['skill_test_mandatory']),
             'desc':       job['description'] or '',
             'requirements': [r.strip() for r in (job['requirements'] or '').split('\n') if r.strip()],
             'perks':      [],

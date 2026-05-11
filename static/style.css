@@ -1935,6 +1935,48 @@ mark { background: none; color: inherit; font-weight: 700; }
 .jb-no-skills { font-size: .8125rem; color: var(--text-muted); }
 .jb-missing-note { font-size: .75rem; color: #854D0E; background: #FEFCE8; padding: .2rem .625rem; border-radius: 20px; }
 
+/* Skill exam nudge in apply modal */
+.jb-exam-nudge {
+  margin-top: .5rem; padding: .625rem .75rem;
+  border-radius: 10px; background: #F8FAFF;
+  border: 1.5px solid #C7D2FE;
+}
+.jb-exam-nudge.jb-exam-mandatory {
+  background: #FFFBEB; border-color: #FCD34D;
+}
+.jb-exam-nudge-label {
+  font-size: .75rem; font-weight: 600;
+  color: var(--text-muted); margin-bottom: .45rem;
+  display: flex; align-items: center; gap: .375rem;
+}
+.jb-exam-mandatory .jb-exam-nudge-label {
+  color: #92400E;
+}
+.jb-exam-skill-links {
+  display: flex; flex-wrap: wrap; gap: .35rem;
+}
+.jb-exam-skill-link {
+  display: inline-flex; align-items: center; gap: .3rem;
+  padding: 4px 10px; border-radius: 99px;
+  font-size: .75rem; font-weight: 600;
+  background: var(--primary-light); color: var(--primary);
+  text-decoration: none; border: 1px solid #C7D2FE;
+  transition: background .13s, border-color .13s, transform .1s;
+  white-space: nowrap;
+}
+.jb-exam-skill-link:hover {
+  background: #E0E7FF; border-color: var(--primary);
+  text-decoration: none; transform: translateY(-1px);
+}
+.jb-exam-skill-link svg { flex-shrink: 0; }
+.jb-exam-skill-plain {
+  display: inline-flex; align-items: center;
+  padding: 3px 9px; border-radius: 99px;
+  font-size: .75rem; font-weight: 500;
+  background: #FEF9C3; color: #854D0E;
+  border: 1px solid #FDE68A;
+}
+
 .jb-upload-zone {
   border: 2px dashed var(--border); border-radius: 10px;
   padding: 1.25rem; text-align: center; cursor: pointer; transition: all .15s;

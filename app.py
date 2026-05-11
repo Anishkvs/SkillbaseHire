@@ -512,9 +512,10 @@ def jobs():
 
     job_rows = db.execute(query, params).fetchall()
 
-    # Candidate's verified skill names for match calculation
+    # Candidate profile data for match calculation and modal pre-fill
     verified_skills = set()
     applied_job_ids = set()
+    resume_filename = None
     if session.get('role') == 'candidate' and session.get('user_id'):
         rows = db.execute('''
             SELECT s.name FROM user_skills us
@@ -527,6 +528,12 @@ def jobs():
             [session['user_id']]
         ).fetchall()
         applied_job_ids = {r['job_id'] for r in applied_rows}
+        prof_row = db.execute(
+            'SELECT resume_filename FROM candidate_profiles WHERE user_id=?',
+            [session['user_id']]
+        ).fetchone()
+        if prof_row:
+            resume_filename = prof_row['resume_filename']
 
     colors = ['#635BFF','#FF5C35','#3B82F6','#10B981','#F59E0B',
               '#8B5CF6','#0EA5E9','#14B8A6','#F97316','#EF4444']
@@ -588,7 +595,8 @@ def jobs():
     return render_template('jobs.html',
                            jobs_data=jobs_data,
                            search=search, location=location, job_type=job_type,
-                           user=get_current_user())
+                           user=get_current_user(),
+                           resume_filename=resume_filename)
 
 
 @app.route('/jobs/<int:job_id>')

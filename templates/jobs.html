@@ -200,6 +200,7 @@
 
 <script>
 const JOBS = {{ jobs_data | tojson }};
+const RESUME_FILENAME = {{ resume_filename | tojson }};
 
 /* ── State ── */
 const state = {
@@ -777,6 +778,24 @@ function openApply(id) {
       </div>
       <div class="jb-mf" style="margin-top:.875rem">
         <label>Resume / CV</label>
+        ${RESUME_FILENAME ? `
+        <div class="jb-resume-onfile" id="resumeOnFile${job.id}">
+          <div class="jb-resume-onfile-left">
+            <div class="jb-resume-onfile-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </div>
+            <div>
+              <div class="jb-resume-onfile-name">${escHtml(RESUME_FILENAME)}</div>
+              <div class="jb-resume-onfile-status">Resume on file · will be sent with application</div>
+            </div>
+          </div>
+          <label class="jb-resume-replace-btn" for="rf${job.id}" title="Upload a different resume">
+            Replace
+            <input type="file" id="rf${job.id}" accept=".pdf,.doc,.docx" style="display:none" onchange="setResumeName(this,'rc${job.id}')">
+          </label>
+        </div>
+        <div class="jb-upload-chosen-replace" id="rc${job.id}"></div>
+        ` : `
         <div class="jb-upload-zone" onclick="document.getElementById('rf${job.id}').click()">
           <input type="file" id="rf${job.id}" accept=".pdf,.doc,.docx" style="display:none" onchange="setResumeName(this,'rc${job.id}')">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -784,6 +803,7 @@ function openApply(id) {
           <span class="jb-upload-hint">PDF, DOC, DOCX up to 5MB</span>
           <span class="jb-upload-chosen" id="rc${job.id}"></span>
         </div>
+        `}
       </div>
       <div class="jb-mf" style="margin-top:.875rem">
         <label>Cover Message <span class="jb-optional">(optional)</span></label>
@@ -798,7 +818,21 @@ function openApply(id) {
 }
 
 function setResumeName(input, labelId) {
-  if(input.files.length) document.getElementById(labelId).textContent=input.files[0].name;
+  if (!input.files.length) return;
+  const fname = input.files[0].name;
+  const el = document.getElementById(labelId);
+  if (!el) return;
+  // "replace" flow — show new filename below the on-file row
+  el.textContent = '↑ New file selected: ' + fname;
+  el.style.display = 'block';
+  // also swap the on-file row to reflect the new choice
+  const onFileRow = el.previousElementSibling;
+  if (onFileRow && onFileRow.classList.contains('jb-resume-onfile')) {
+    const nameEl = onFileRow.querySelector('.jb-resume-onfile-name');
+    const statusEl = onFileRow.querySelector('.jb-resume-onfile-status');
+    if (nameEl) nameEl.textContent = fname;
+    if (statusEl) statusEl.textContent = 'New file selected · will replace resume on file';
+  }
 }
 
 function submitApply() {

@@ -1988,6 +1988,33 @@ mark { background: none; color: inherit; font-weight: 700; }
 .jb-upload-hint { display: block; font-size: .75rem; color: var(--text-muted); margin-top: .2rem; }
 .jb-upload-chosen { display: block; font-size: .8125rem; color: var(--primary); font-weight: 500; margin-top: .375rem; min-height: 1em; }
 
+/* Resume on-file row */
+.jb-resume-onfile {
+  display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+  padding: .75rem 1rem;
+  border: 1.5px solid #D1FAE5; border-radius: 10px;
+  background: #F0FDF4;
+}
+.jb-resume-onfile-left { display: flex; align-items: center; gap: .75rem; min-width: 0; }
+.jb-resume-onfile-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: #DCFCE7; color: #16A34A;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.jb-resume-onfile-name {
+  font-size: .8125rem; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;
+}
+.jb-resume-onfile-status { font-size: .72rem; color: #16A34A; margin-top: 2px; font-weight: 500; }
+.jb-resume-replace-btn {
+  font-size: .75rem; font-weight: 600; color: var(--primary);
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: .3rem .7rem; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  background: #fff; transition: border-color .15s, background .15s;
+}
+.jb-resume-replace-btn:hover { border-color: var(--primary); background: var(--primary-light); }
+.jb-upload-chosen-replace { font-size: .78rem; color: var(--primary); font-weight: 500; margin-top: .35rem; display: none; }
+
 .jb-apply-success { text-align: center; padding: 3rem 2rem; }
 .jb-success-icon {
   width: 64px; height: 64px; background: #10B981; border-radius: 50%;

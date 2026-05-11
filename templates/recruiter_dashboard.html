@@ -269,6 +269,186 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
   .puc-toast{max-width:100%;transform:translateY(110%)}
   .puc-toast--show{transform:translateY(0)}
 }
+
+/* ══ Modern My Job Postings ══════════════════════════════════ */
+.mjp-hd{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:14px}
+.mjp-hd-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--ink);line-height:1.2}
+.mjp-hd-sub{font-size:11.5px;color:var(--ink-3);margin-top:2px}
+.mjp-new-btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;background:var(--accent);color:#fff;border:none;border-radius:var(--rpill);font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;text-decoration:none;transition:background .15s,box-shadow .15s,transform .12s;white-space:nowrap}
+.mjp-new-btn:hover{background:#4338CA;box-shadow:0 4px 14px rgba(79,70,229,.35);transform:translateY(-1px)}
+
+/* Filter bar */
+.mjp-filters{background:var(--white);border-radius:14px;padding:14px 16px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;box-shadow:0 1px 4px rgba(0,0,0,.05),0 0 0 .5px rgba(0,0,0,.04)}
+.mjp-finp,.mjp-fsel{height:36px;border:1.5px solid #e2e8f0;border-radius:8px;padding:0 .75rem;font-size:.8rem;color:var(--ink);background:#fff;outline:none;box-sizing:border-box;transition:border-color .15s;font-family:inherit}
+.mjp-finp:focus,.mjp-fsel:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+.mjp-finp{min-width:180px;flex:1;padding-left:2rem}
+.mjp-fi-search{position:relative;flex:1;min-width:180px}
+.mjp-fi-search svg{position:absolute;left:.625rem;top:50%;transform:translateY(-50%);pointer-events:none;opacity:.45}
+.mjp-fsel{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right .6rem center;padding-right:1.75rem;cursor:pointer;width:auto;min-width:110px}
+.mjp-reset-btn{height:36px;padding:0 14px;background:#fff;color:var(--accent);border:1.5px solid var(--accent);border-radius:8px;font-size:.8rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .15s,box-shadow .15s,transform .12s;font-family:inherit;white-space:nowrap;flex-shrink:0}
+.mjp-reset-btn:hover{background:var(--accent-light);box-shadow:0 2px 8px rgba(79,70,229,.18);transform:translateY(-1px)}
+
+/* Location autocomplete inside filter bar */
+.mjp-lac{position:relative;min-width:140px}
+.mjp-lac .mjp-finp{width:100%;padding-left:.75rem}
+.mjp-lac-clear{position:absolute;right:.45rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#94a3b8;display:none;align-items:center;border-radius:4px;transition:color .12s;padding:2px}
+.mjp-lac-clear:hover{color:#dc2626}
+.mjp-lac-clear--show{display:flex}
+.mjp-lac-dd{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:300;background:#fff;border-radius:10px;overflow:hidden;display:none;box-shadow:0 8px 20px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.06);max-height:190px;overflow-y:auto}
+.mjp-lac-dd--open{display:block}
+.mjp-lac-opt{padding:8px 13px;font-size:12.5px;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .1s}
+.mjp-lac-opt:hover,.mjp-lac-opt.mjp-lf{background:var(--accent-light);color:var(--accent)}
+.mjp-lac-opt svg{opacity:.5;flex-shrink:0}
+.mjp-lac-hint{padding:9px 13px;font-size:12px;color:var(--ink-3)}
+
+/* Cards grid */
+.mjp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.mjp-card{background:var(--white);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:0;border:1.5px solid transparent;box-shadow:0 1px 4px rgba(0,0,0,.05);transition:border-color .2s,box-shadow .2s,transform .2s}
+.mjp-card:hover{border-color:var(--accent-mid);box-shadow:0 0 0 3px rgba(79,70,229,.08),0 8px 24px rgba(79,70,229,.1)}
+.mjp-card[data-hidden="1"]{display:none}
+
+/* Card top */
+.mjp-ct{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px}
+.mjp-ctitle{font-family:'Syne',sans-serif;font-weight:800;font-size:13.5px;color:var(--ink);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mjp-csub{font-size:11px;color:var(--ink-3);margin-top:2px}
+.mjp-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:var(--rpill);font-size:9.5px;font-weight:700;letter-spacing:.3px;text-transform:uppercase;flex-shrink:0;position:relative;cursor:help}
+.mjp-badge::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.mjp-badge--active{background:var(--green-light);color:var(--green)}.mjp-badge--active::before{background:var(--green)}
+.mjp-badge--paused{background:#fff7ed;color:#c2410c}.mjp-badge--paused::before{background:#f59e0b}
+.mjp-badge--closed{background:#f1f5f9;color:#64748b}.mjp-badge--closed::before{background:#94a3b8}
+.mjp-badge--draft{background:var(--accent-light);color:var(--accent)}.mjp-badge--draft::before{background:var(--accent)}
+/* Status tooltip */
+.mjp-badge .mjp-tip{position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;font-size:10px;font-weight:500;padding:4px 8px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:50}
+.mjp-badge .mjp-tip::after{content:'';position:absolute;top:100%;left:50%;transform:translateX(-50%);border:4px solid transparent;border-top-color:#0f172a}
+.mjp-badge:hover .mjp-tip{opacity:1}
+
+/* Meta chips */
+.mjp-meta{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.mjp-chip{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:var(--rpill);font-size:10.5px;font-weight:600}
+.mjp-chip--blue{background:var(--accent-light);color:var(--accent)}
+.mjp-chip--grey{background:var(--surface);color:var(--ink-3)}
+.mjp-chip--green{background:var(--green-light);color:var(--green)}
+.mjp-chip--sal{background:#fff7ed;color:#c2410c}
+
+/* Skills */
+.mjp-skills{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;min-height:18px}
+.mjp-sk{display:inline-flex;padding:2px 7px;border-radius:var(--rpill);font-size:10px;font-weight:600;background:var(--surface);color:var(--ink-3)}
+.mjp-sk-more{background:transparent;color:var(--ink-4);font-size:10px}
+
+/* Stats row */
+.mjp-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;padding:10px 0;border-top:.5px solid var(--line-2);border-bottom:.5px solid var(--line-2);margin-bottom:10px}
+.mjp-sn{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--ink);line-height:1}
+.mjp-sl{font-size:10px;color:var(--ink-3);margin-top:2px}
+
+/* Top match preview */
+.mjp-match{display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--accent-light);border-radius:8px;margin-bottom:10px}
+.mjp-match-pct{font-family:'Syne',sans-serif;font-size:15px;font-weight:800;color:var(--accent)}
+.mjp-match-info{flex:1;min-width:0}
+.mjp-match-lbl{font-size:9.5px;color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.mjp-match-name{font-size:12px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Action buttons */
+.mjp-foot{display:flex;align-items:center;gap:5px;flex-wrap:wrap;position:relative}
+.mjp-abtn{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;border-radius:7px;font-size:11.5px;font-weight:600;cursor:pointer;border:none;text-decoration:none;transition:background .15s,color .15s,box-shadow .15s;white-space:nowrap;font-family:inherit}
+.mjp-abtn--prim{background:var(--accent);color:#fff}.mjp-abtn--prim:hover{background:#4338CA}
+.mjp-abtn--out{background:transparent;color:var(--accent);border:1.5px solid var(--accent-mid)}.mjp-abtn--out:hover{background:var(--accent-light)}
+.mjp-abtn--ghost{background:var(--surface);color:var(--ink-2)}.mjp-abtn--ghost:hover{background:var(--surface-2)}
+.mjp-abtn--warn{background:#fff7ed;color:#c2410c;border:1.5px solid #fed7aa}.mjp-abtn--warn:hover{background:#ffedd5}
+
+/* ── Three-dot More Menu ── */
+.mjp-more-wrap{margin-left:auto;position:relative}
+.mjp-more-btn{width:30px;height:30px;border-radius:8px;background:var(--surface);color:var(--ink-3);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .18s;flex-shrink:0;outline:none}
+.mjp-more-btn:hover,.mjp-more-btn:focus-visible{background:var(--accent-light);color:var(--accent);border-color:var(--accent-mid)}
+.mjp-more-btn.is-open{background:var(--accent-light);color:var(--accent);border-color:var(--accent-mid)}
+
+/* Dropdown panel */
+.mjp-dd{
+  position:absolute;right:0;z-index:400;
+  background:#fff;border-radius:12px;
+  box-shadow:0 12px 40px rgba(14,15,26,.15),0 0 0 1px rgba(14,15,26,.06);
+  min-width:210px;padding:6px 0;
+  opacity:0;transform:translateY(-6px) scale(.97);pointer-events:none;
+  transition:opacity .18s ease,transform .2s cubic-bezier(.34,1.3,.64,1);
+  top:calc(100% + 6px); /* default below; JS flips to bottom when needed */
+}
+.mjp-more-wrap.mjp-dd--open .mjp-dd{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
+
+/* Dropdown items */
+.mjp-ddi{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 14px;font-size:12.5px;font-weight:500;
+  color:var(--ink-2);cursor:pointer;transition:background .1s,color .1s;
+  border:none;background:none;width:100%;text-align:left;
+  text-decoration:none;font-family:inherit;line-height:1.3;
+  min-height:40px; /* touch-friendly */
+}
+.mjp-ddi:hover{background:var(--accent-light);color:var(--accent)}
+.mjp-ddi svg{opacity:.65;flex-shrink:0;transition:opacity .1s}
+.mjp-ddi:hover svg{opacity:1}
+
+/* Variant: archive (amber) */
+.mjp-ddi--amber{color:var(--amber)}
+.mjp-ddi--amber:hover{background:var(--amber-light);color:var(--amber)}
+
+/* Variant: danger (red) — Delete only */
+.mjp-ddi--danger{color:#dc2626}
+.mjp-ddi--danger:hover{background:#fef2f2;color:#dc2626}
+.mjp-ddi--danger svg{opacity:.7}
+
+/* Separator line */
+.mjp-dd-sep{height:1px;background:var(--line);margin:5px 0}
+
+/* Dropdown label group header */
+.mjp-dd-grp{padding:4px 14px 2px;font-size:10px;font-weight:700;color:var(--ink-4);letter-spacing:.7px;text-transform:uppercase;cursor:default}
+
+/* Empty state */
+.mjp-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 24px;text-align:center;background:var(--white);border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.mjp-empty-ico{width:68px;height:68px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--accent)}
+.mjp-empty h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--ink);margin:0 0 7px}
+.mjp-empty p{font-size:13px;color:var(--ink-3);margin:0 0 20px;line-height:1.6}
+
+/* Skeleton */
+.mjp-skel-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.mjp-skel-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.skel{border-radius:6px;background:linear-gradient(90deg,#f1f5f9 25%,#e8edf5 50%,#f1f5f9 75%);background-size:200% 100%;animation:skel-sh 1.4s ease infinite}
+@keyframes skel-sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── Modals shared base ── */
+.mjp-modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .22s}
+.mjp-modal-bg--open{opacity:1;pointer-events:auto}
+.mjp-modal{background:#fff;border-radius:18px;padding:28px 26px;max-width:400px;width:100%;box-shadow:0 28px 64px rgba(0,0,0,.22);transform:translateY(20px) scale(.96);transition:transform .3s cubic-bezier(.34,1.4,.64,1)}
+.mjp-modal-bg--open .mjp-modal{transform:translateY(0) scale(1)}
+.mjp-modal-ico{width:48px;height:48px;border-radius:13px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.mjp-modal-ico--red{background:#fef2f2;color:#dc2626}
+.mjp-modal-ico--amber{background:var(--amber-light);color:var(--amber)}
+.mjp-modal-ico--purple{background:var(--accent-light);color:var(--accent)}
+.mjp-modal h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--ink);margin:0 0 7px;letter-spacing:-.2px}
+.mjp-modal p{font-size:13px;color:var(--ink-3);margin:0 0 22px;line-height:1.6}
+.mjp-modal-btns{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.mjp-modal-cancel{padding:8px 18px;border-radius:var(--rpill);background:var(--surface);color:var(--ink-2);border:.5px solid var(--line);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .14s}
+.mjp-modal-cancel:hover{background:var(--surface-2)}
+.mjp-modal-confirm{padding:8px 18px;border-radius:var(--rpill);border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .14s}
+.mjp-modal-confirm--red{background:#dc2626;color:#fff}.mjp-modal-confirm--red:hover{background:#b91c1c}
+.mjp-modal-confirm--amber{background:#d97706;color:#fff}.mjp-modal-confirm--amber:hover{background:#b45309}
+
+/* Share modal specifics */
+.mjp-share-opt{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;cursor:pointer;transition:background .12s;border:none;background:none;width:100%;text-align:left;font-family:inherit}
+.mjp-share-opt:hover{background:var(--surface)}
+.mjp-share-opt-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.mjp-share-opt-ico--grey{background:var(--surface-2)}
+.mjp-share-opt-ico--li{background:#E8F4FD;color:#0A66C2}
+.mjp-share-opt-ico--mail{background:#FEF3C7;color:#D97706}
+.mjp-share-opt-lbl{font-size:13.5px;font-weight:600;color:var(--ink)}
+.mjp-share-opt-sub{font-size:12px;color:var(--ink-3);margin-top:1px}
+
+/* Responsive */
+@media(max-width:980px){.mjp-grid,.mjp-skel-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){
+  .mjp-grid,.mjp-skel-grid{grid-template-columns:1fr}
+  .mjp-filters{flex-direction:column;align-items:stretch}
+  .mjp-fsel,.mjp-lac{width:100%}
+  .mjp-lac .mjp-finp{width:100%}
+}
 </style>
 </head>
 <body>
@@ -574,67 +754,358 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
         </div>
       </div>
 
-      <!-- Job postings grid -->
-      <div class="card" style="margin-bottom:16px">
-        <div class="card-head">
+      <!-- ══ My Job Postings (Modern) ══ -->
+      <section style="margin-bottom:24px">
+
+        <!-- Header -->
+        <div class="mjp-hd">
           <div>
-            <div class="card-title">My Job Postings</div>
-            <div class="card-sub">{{ stats.active_jobs }} active · {{ stats.total_jobs }} total</div>
+            <div class="mjp-hd-title">My Job Postings</div>
+            <div class="mjp-hd-sub">{{ stats.active_jobs }} active · {{ stats.total_jobs }} total</div>
           </div>
-          <a href="{{ url_for('post_job') }}" class="btn btn-soft">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          <a href="{{ url_for('post_job') }}" class="mjp-new-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
             New Job
           </a>
         </div>
 
-        {% if my_jobs %}
-        <div class="jobs-grid">
-          {% for job in my_jobs %}
-          <div class="job-card">
-            <div class="job-top">
-              <div>
-                <div class="job-title">{{ job.title }}</div>
-                <div class="job-dept">{{ job.job_type }} · {{ job.location }}</div>
-              </div>
-              <span class="job-pill {{ 'active' if job.active else 'paused' }}">{{ 'Active' if job.active else 'Paused' }}</span>
+        <!-- Skeleton shown briefly on load -->
+        <div id="mjpSkel" class="mjp-skel-grid" style="margin-bottom:14px">
+          {% for _ in range([my_jobs|length, 3]|min if my_jobs else 3) %}
+          <div class="mjp-skel-card">
+            <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+              <div><div class="skel" style="width:120px;height:14px;margin-bottom:6px"></div><div class="skel" style="width:80px;height:10px"></div></div>
+              <div class="skel" style="width:52px;height:20px;border-radius:999px"></div>
             </div>
-            <div class="job-meta">
-              <span class="chip chip-blue">{{ job.job_type }}</span>
-              <span class="chip chip-grey">{{ job.location }}</span>
+            <div style="display:flex;gap:5px;margin-bottom:10px">
+              <div class="skel" style="width:64px;height:18px;border-radius:999px"></div>
+              <div class="skel" style="width:54px;height:18px;border-radius:999px"></div>
             </div>
-            <div class="job-stats">
-              <div>
-                <div class="job-stat-num">{{ job.app_count }}</div>
-                <div class="job-stat-label">Applicants</div>
-              </div>
-              <div>
-                <div class="job-stat-num">{{ 'Active' if job.active else 'Paused' }}</div>
-                <div class="job-stat-label">Status</div>
-              </div>
-              <div>
-                <div class="job-stat-num" style="font-size:12px;font-weight:600;color:var(--ink-3)">{{ job.created_at | timeago }}</div>
-                <div class="job-stat-label">Posted</div>
-              </div>
+            <div style="display:flex;gap:5px;margin-bottom:14px">
+              <div class="skel" style="width:48px;height:16px;border-radius:999px"></div>
+              <div class="skel" style="width:56px;height:16px;border-radius:999px"></div>
+              <div class="skel" style="width:42px;height:16px;border-radius:999px"></div>
             </div>
-            <div class="job-foot">
-              <div class="job-foot-actions">
-                <a href="{{ url_for('job_applications', job_id=job.id) }}" class="btn btn-soft" style="padding:5px 12px;font-size:11px">View Apps</a>
-                <form action="{{ url_for('toggle_job', job_id=job.id) }}" method="post" style="display:inline">
-                  <button type="submit" class="btn btn-ghost" style="padding:5px 12px;font-size:11px">{{ 'Pause' if job.active else 'Activate' }}</button>
-                </form>
-              </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;padding:10px 0;border-top:.5px solid #f1f5f9;border-bottom:.5px solid #f1f5f9;margin-bottom:12px">
+              {% for _ in range(3) %}<div><div class="skel" style="width:30px;height:15px;margin-bottom:4px"></div><div class="skel" style="width:50px;height:9px"></div></div>{% endfor %}
             </div>
+            <div style="display:flex;gap:6px"><div class="skel" style="width:90px;height:28px;border-radius:7px"></div><div class="skel" style="width:60px;height:28px;border-radius:7px"></div><div class="skel" style="width:60px;height:28px;border-radius:7px"></div></div>
           </div>
           {% endfor %}
         </div>
+
+        <!-- Filter bar -->
+        <div class="mjp-filters" id="mjpFilters" style="display:none">
+          <div class="mjp-fi-search">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input class="mjp-finp" id="mjpSearch" type="text" placeholder="Search job title, skill, or location…" autocomplete="off">
+          </div>
+          <select class="mjp-fsel" id="mjpStatus">
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+          </select>
+          <select class="mjp-fsel" id="mjpType">
+            <option value="">All Types</option>
+            <option value="Full-time">Full-time</option>
+            <option value="Part-time">Part-time</option>
+            <option value="Contract">Contract</option>
+            <option value="Internship">Internship</option>
+          </select>
+          <!-- Location autocomplete -->
+          <div class="mjp-lac" id="mjpLacRoot">
+            <input class="mjp-finp" id="mjpLocInp" type="text" placeholder="City or Remote" autocomplete="off" style="padding-left:.75rem">
+            <button type="button" class="mjp-lac-clear" id="mjpLocClear" aria-label="Clear location">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <div class="mjp-lac-dd" id="mjpLocDd"></div>
+          </div>
+          <select class="mjp-fsel" id="mjpSort">
+            <option value="latest">Latest</option>
+            <option value="applicants">Most Applicants</option>
+          </select>
+          <button type="button" class="mjp-reset-btn" id="mjpReset">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            Reset Filters
+          </button>
+        </div>
+
+        {% if my_jobs %}
+        <!-- Jobs grid -->
+        <div class="mjp-grid" id="mjpGrid">
+          {% for job in my_jobs %}
+          {%- set status = 'active' if job.active else 'paused' -%}
+          <div class="mjp-card"
+               data-title="{{ job.title | lower }}"
+               data-type="{{ job.job_type }}"
+               data-status="{{ status }}"
+               data-location="{{ job.location | lower }}"
+               data-apps="{{ job.app_count }}"
+               data-posted="{{ job.created_at }}">
+
+            <!-- Top: title + badge -->
+            <div class="mjp-ct">
+              <div style="min-width:0">
+                <div class="mjp-ctitle" title="{{ job.title }}">{{ job.title }}</div>
+                <div class="mjp-csub">{{ job.job_type }} · {{ job.location }}</div>
+              </div>
+              <span class="mjp-badge mjp-badge--{{ status }}">
+                {{ 'Active' if job.active else 'Paused' }}
+                <span class="mjp-tip">{{ 'Job is live and accepting applications' if job.active else 'Job is paused — not visible to candidates' }}</span>
+              </span>
+            </div>
+
+            <!-- Meta chips -->
+            <div class="mjp-meta">
+              <span class="mjp-chip mjp-chip--blue">{{ job.job_type }}</span>
+              <span class="mjp-chip mjp-chip--grey">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                {{ job.location }}
+              </span>
+              {%- if job.salary_min or job.salary_max -%}
+              <span class="mjp-chip mjp-chip--sal">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                {{ job | salary }}
+              </span>
+              {%- endif -%}
+            </div>
+
+            <!-- Skill chips -->
+            <div class="mjp-skills">
+              {%- if job.skills_list -%}
+                {%- for sk in job.skills_list[:4] -%}
+                  <span class="mjp-sk">{{ sk }}</span>
+                {%- endfor -%}
+                {%- if job.skills_list | length > 4 -%}
+                  <span class="mjp-sk mjp-sk-more">+{{ job.skills_list | length - 4 }} more</span>
+                {%- endif -%}
+              {%- else -%}
+                <span style="font-size:10px;color:var(--ink-4);font-style:italic">No skills added</span>
+              {%- endif -%}
+            </div>
+
+            <!-- Stats -->
+            <div class="mjp-stats">
+              <div>
+                <div class="mjp-sn">{{ job.app_count }}</div>
+                <div class="mjp-sl">Applicants</div>
+              </div>
+              <div>
+                <div class="mjp-sn" style="font-size:13px;color:{{ '#0F6E56' if job.active else '#854F0B' }}">{{ 'Active' if job.active else 'Paused' }}</div>
+                <div class="mjp-sl">Status</div>
+              </div>
+              <div>
+                <div class="mjp-sn" style="font-size:11px;color:var(--ink-3)">{{ job.created_at | timeago }}</div>
+                <div class="mjp-sl">Posted</div>
+              </div>
+            </div>
+
+            <!-- Top candidate preview (shown when there are applicants) -->
+            {% if job.app_count > 0 %}
+            <div class="mjp-match">
+              <div class="mjp-match-pct">—</div>
+              <div class="mjp-match-info">
+                <div class="mjp-match-lbl">Top Candidate Match</div>
+                <div class="mjp-match-name">{{ job.app_count }} applicant{{ 's' if job.app_count != 1 else '' }} waiting</div>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div class="mjp-foot">
+              <a href="{{ url_for('job_applications', job_id=job.id) }}" class="mjp-abtn mjp-abtn--prim">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                View Apps
+              </a>
+              <a href="{{ url_for('edit_job', job_id=job.id) }}" class="mjp-abtn mjp-abtn--out">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Edit
+              </a>
+              <form action="{{ url_for('toggle_job', job_id=job.id) }}" method="post" style="display:inline">
+                <button type="submit" class="mjp-abtn mjp-abtn--{{ 'warn' if job.active else 'ghost' }}">
+                  {% if job.active %}
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                    Pause
+                  {% else %}
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                    Activate
+                  {% endif %}
+                </button>
+              </form>
+              <!-- More dropdown -->
+              <div class="mjp-more-wrap" data-job-id="{{ job.id }}" data-job-title="{{ job.title }}" data-job-status="{{ status }}">
+                <button type="button" class="mjp-more-btn" onclick="mjpToggleDd(this)" aria-label="More actions" title="More actions">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>
+                </button>
+                <div class="mjp-dd" role="menu">
+
+                  <!-- Group: job actions -->
+                  <button type="button" class="mjp-ddi" role="menuitem" onclick="mjpDuplicate(this)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                    Duplicate Job
+                  </button>
+                  <button type="button" class="mjp-ddi" role="menuitem" onclick="mjpOpenShare(this)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                    Share Job
+                  </button>
+                  <button type="button" class="mjp-ddi" role="menuitem" onclick="mjpCopyLink(this)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+                    Copy Job Link
+                  </button>
+                  <a class="mjp-ddi" role="menuitem" href="{{ url_for('job_detail', job_id=job.id) }}" target="_blank" rel="noopener">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    View Public Page
+                  </a>
+
+                  <div class="mjp-dd-sep"></div>
+
+                  <!-- Group: status changes -->
+                  <button type="button" class="mjp-ddi mjp-ddi--amber" role="menuitem" onclick="mjpConfirmArchive(this)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+                    Archive Job
+                  </button>
+                  <button type="button" class="mjp-ddi" role="menuitem" onclick="mjpConfirmClose(this)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                    {{ 'Pause Job' if job.active else 'Activate Job' }}
+                  </button>
+
+                  <div class="mjp-dd-sep"></div>
+
+                  <!-- Group: destructive -->
+                  <button type="button" class="mjp-ddi mjp-ddi--danger" role="menuitem" onclick="mjpConfirmDelete(this)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                    Delete Job
+                  </button>
+
+                </div>
+              </div>
+            </div>
+
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- No results after filtering -->
+        <div id="mjpNoResults" style="display:none;text-align:center;padding:40px;background:#fff;border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.05)">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" style="opacity:.3;margin-bottom:10px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <p style="font-size:14px;color:var(--ink-3);margin:0 0 12px">No jobs match your filters.</p>
+          <button onclick="mjpResetFilters()" class="mjp-abtn mjp-abtn--prim">Reset Filters</button>
+        </div>
+
         {% else %}
-        <div class="empty-card">
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
-          <p>No jobs posted yet.<br>Create your first job listing to start finding candidates.</p>
-          <a href="{{ url_for('post_job') }}" class="btn btn-primary" style="margin-top:4px">Post Your First Job</a>
+        <!-- Empty state -->
+        <div class="mjp-empty">
+          <div class="mjp-empty-ico">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>
+          </div>
+          <h3>No jobs posted yet</h3>
+          <p>Create your first job listing to start<br>finding the right candidates.</p>
+          <a href="{{ url_for('post_job') }}" class="mjp-new-btn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            Create Your First Job
+          </a>
         </div>
         {% endif %}
+
+      </section>
+
+      <!-- ── Pause/Activate Confirmation Modal ── -->
+      <div class="mjp-modal-bg" id="mjpCloseBg" onclick="if(event.target===this)mjpCloseModal('mjpCloseBg')">
+        <div class="mjp-modal">
+          <div class="mjp-modal-ico mjp-modal-ico--amber">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+          </div>
+          <h3 id="mjpCloseTitle">Pause this job?</h3>
+          <p id="mjpCloseMsg">The job will be hidden from candidates while paused. You can reactivate it anytime.</p>
+          <div class="mjp-modal-btns">
+            <button onclick="mjpCloseModal('mjpCloseBg')" class="mjp-modal-cancel">Cancel</button>
+            <form id="mjpCloseForm" method="post" style="display:contents">
+              <button type="submit" id="mjpCloseConfirmBtn" class="mjp-modal-confirm mjp-modal-confirm--amber">Pause Job</button>
+            </form>
+          </div>
+        </div>
       </div>
+
+      <!-- ── Archive Confirmation Modal ── -->
+      <div class="mjp-modal-bg" id="mjpArchiveBg" onclick="if(event.target===this)mjpCloseModal('mjpArchiveBg')">
+        <div class="mjp-modal">
+          <div class="mjp-modal-ico mjp-modal-ico--amber">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+          </div>
+          <h3>Archive this job?</h3>
+          <p id="mjpArchiveMsg">The job will be moved to your archive and hidden from active listings. You can restore it anytime.</p>
+          <div class="mjp-modal-btns">
+            <button onclick="mjpCloseModal('mjpArchiveBg')" class="mjp-modal-cancel">Cancel</button>
+            <form id="mjpArchiveForm" method="post" style="display:contents">
+              <button type="submit" class="mjp-modal-confirm mjp-modal-confirm--amber">Archive Job</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Delete Confirmation Modal ── -->
+      <div class="mjp-modal-bg" id="mjpDeleteBg" onclick="if(event.target===this)mjpCloseModal('mjpDeleteBg')">
+        <div class="mjp-modal">
+          <div class="mjp-modal-ico mjp-modal-ico--red">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+          </div>
+          <h3>Delete this job?</h3>
+          <p id="mjpDeleteMsg">This action cannot be undone. The job and all its applications will be permanently removed.</p>
+          <div class="mjp-modal-btns">
+            <button onclick="mjpCloseModal('mjpDeleteBg')" class="mjp-modal-cancel">Cancel</button>
+            <form id="mjpDeleteForm" method="post" style="display:contents">
+              <button type="submit" class="mjp-modal-confirm mjp-modal-confirm--red">Delete Permanently</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Share Job Modal ── -->
+      <div class="mjp-modal-bg" id="mjpShareBg" onclick="if(event.target===this)mjpCloseModal('mjpShareBg')">
+        <div class="mjp-modal">
+          <div class="mjp-modal-ico mjp-modal-ico--purple">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </div>
+          <h3>Share Job</h3>
+          <p id="mjpShareJobName" style="font-size:12px;color:var(--ink-3);margin-bottom:14px"></p>
+
+          <!-- Share options -->
+          <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:16px">
+            <button type="button" class="mjp-share-opt" id="mjpShareCopyBtn" onclick="mjpShareCopy()">
+              <span class="mjp-share-opt-ico mjp-share-opt-ico--grey">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+              </span>
+              <span>
+                <div class="mjp-share-opt-lbl">Copy Link</div>
+                <div class="mjp-share-opt-sub" id="mjpShareUrlPreview" style="font-family:monospace;font-size:11px"></div>
+              </span>
+            </button>
+            <button type="button" class="mjp-share-opt" onclick="mjpShareLinkedIn()">
+              <span class="mjp-share-opt-ico mjp-share-opt-ico--li">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#0A66C2"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+              </span>
+              <span>
+                <div class="mjp-share-opt-lbl">Share via LinkedIn</div>
+                <div class="mjp-share-opt-sub">Post to your LinkedIn network</div>
+              </span>
+            </button>
+            <button type="button" class="mjp-share-opt" onclick="mjpShareEmail()">
+              <span class="mjp-share-opt-ico mjp-share-opt-ico--mail">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </span>
+              <span>
+                <div class="mjp-share-opt-lbl">Share via Email</div>
+                <div class="mjp-share-opt-sub">Send job link to a contact</div>
+              </span>
+            </button>
+          </div>
+
+          <button onclick="mjpCloseModal('mjpShareBg')" class="mjp-modal-cancel" style="width:100%;text-align:center">Done</button>
+        </div>
+      </div>
+
+      <!-- Toast -->
+      <div id="mjpToastBox" style="position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:9999;pointer-events:none"></div>
 
       <!-- All applications table -->
       {% if recent_apps %}
@@ -699,6 +1170,385 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
     const f = document.getElementById('flashMsg');
     if (f) { f.style.opacity = '0'; f.style.transition = 'opacity .4s'; setTimeout(() => f.remove(), 400); }
   }, 4000);
+</script>
+
+<script>
+/* ── My Job Postings JS ── */
+(function () {
+
+  /* ── 1. Skeleton dismiss (independent of filter/grid) ── */
+  (function () {
+    var skel    = document.getElementById('mjpSkel');
+    var filters = document.getElementById('mjpFilters');
+    if (!skel) return;
+    setTimeout(function () {
+      skel.style.transition = 'opacity .3s';
+      skel.style.opacity    = '0';
+      setTimeout(function () {
+        skel.style.display    = 'none';
+        if (filters) filters.style.removeProperty('display');
+      }, 320);
+    }, 600);
+  })();
+
+  /* ── 2. Filter + sort ── */
+  function mjpFilter() {
+    var q      = (document.getElementById('mjpSearch')  || {value:''}).value;
+    var status = (document.getElementById('mjpStatus')  || {value:''}).value;
+    var type   = (document.getElementById('mjpType')    || {value:''}).value;
+    var loc    = (document.getElementById('mjpLocInp')  || {value:''}).value;
+    var sort   = (document.getElementById('mjpSort')    || {value:'latest'}).value || 'latest';
+
+    var ql = q.toLowerCase().trim();
+    var ll = loc.toLowerCase().trim();
+
+    var cards   = Array.from(document.querySelectorAll('.mjp-card'));
+    var visible = 0;
+
+    cards.forEach(function (card) {
+      var t  = (card.dataset.title    || '').toLowerCase();
+      var cl = (card.dataset.location || '').toLowerCase();
+      var ct = (card.dataset.type     || '').trim();
+      var cs = (card.dataset.status   || '').trim();
+
+      var show = (!ql     || t.indexOf(ql) !== -1 || cl.indexOf(ql) !== -1)
+              && (!status || cs === status)
+              && (!type   || ct === type)
+              && (!ll     || cl.indexOf(ll) !== -1);
+
+      card.style.display  = show ? '' : 'none';
+      card.dataset.hidden = show ? '' : '1';
+      if (show) visible++;
+    });
+
+    var noRes = document.getElementById('mjpNoResults');
+    if (noRes) noRes.style.display = (visible === 0 && cards.length > 0) ? '' : 'none';
+
+    /* Sort-reorder visible cards */
+    var grid = document.getElementById('mjpGrid');
+    if (grid) {
+      var vis = cards.filter(function (c) { return !c.dataset.hidden; });
+      if (sort === 'applicants') {
+        vis.sort(function (a, b) { return (+b.dataset.apps || 0) - (+a.dataset.apps || 0); });
+      } else {
+        vis.sort(function (a, b) { return new Date(b.dataset.posted) - new Date(a.dataset.posted); });
+      }
+      var frag = document.createDocumentFragment();
+      vis.forEach(function (c) { frag.appendChild(c); });
+      grid.insertBefore(frag, grid.firstChild);
+    }
+  }
+
+  window.mjpFilter = mjpFilter;
+
+  /* ── Wire up controls ── */
+  ['mjpSearch','mjpStatus','mjpType','mjpSort'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('change', mjpFilter);
+    el.addEventListener('input',  mjpFilter);
+  });
+
+  /* ── 3. More-dropdown toggle (viewport-aware) ── */
+  window.mjpToggleDd = function (btn) {
+    const wrap = btn.closest('.mjp-more-wrap');
+    if (!wrap) return;
+    const dd     = wrap.querySelector('.mjp-dd');
+    const isOpen = wrap.classList.contains('mjp-dd--open');
+
+    /* Close all open dropdowns first */
+    document.querySelectorAll('.mjp-more-wrap.mjp-dd--open').forEach(w => {
+      w.classList.remove('mjp-dd--open');
+      w.querySelector('.mjp-more-btn').classList.remove('is-open');
+      const c = w.closest('.mjp-card');
+      if (c) { c.style.zIndex = ''; c.style.position = ''; }
+    });
+
+    if (!isOpen && dd) {
+      /* Decide whether to open above or below based on space */
+      const rect       = btn.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+      if (spaceBelow < 280 && spaceAbove > spaceBelow) {
+        dd.style.top    = 'auto';
+        dd.style.bottom = 'calc(100% + 6px)';
+      } else {
+        dd.style.bottom = 'auto';
+        dd.style.top    = 'calc(100% + 6px)';
+      }
+      wrap.classList.add('mjp-dd--open');
+      btn.classList.add('is-open');
+      /* Lift the card so the dropdown sits above all sibling cards */
+      const card = wrap.closest('.mjp-card');
+      if (card) { card.style.position = 'relative'; card.style.zIndex = '20'; }
+    }
+  };
+
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('.mjp-more-wrap')) {
+      document.querySelectorAll('.mjp-more-wrap.mjp-dd--open').forEach(function(w) {
+        w.classList.remove('mjp-dd--open');
+        w.querySelector('.mjp-more-btn').classList.remove('is-open');
+        var c = w.closest('.mjp-card');
+        if (c) { c.style.zIndex = ''; c.style.position = ''; }
+      });
+    }
+  });
+
+  /* Keyboard: close dropdown on Escape */
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.mjp-more-wrap.mjp-dd--open').forEach(w => {
+        w.classList.remove('mjp-dd--open');
+        w.querySelector('.mjp-more-btn').classList.remove('is-open');
+      });
+      _mjpCloseAllModals();
+    }
+  });
+
+  /* ── 4. Modal helpers ── */
+  window.mjpCloseModal = function (bgId) {
+    const bg = document.getElementById(bgId);
+    if (bg) bg.classList.remove('mjp-modal-bg--open');
+  };
+
+  function _mjpOpenModal(bgId) {
+    document.getElementById(bgId).classList.add('mjp-modal-bg--open');
+  }
+
+  function _mjpCloseAllModals() {
+    document.querySelectorAll('.mjp-modal-bg--open').forEach(m => m.classList.remove('mjp-modal-bg--open'));
+  }
+
+  /* close all open dropdowns */
+  function _mjpCloseDds() {
+    document.querySelectorAll('.mjp-more-wrap.mjp-dd--open').forEach(function(w) {
+      w.classList.remove('mjp-dd--open');
+      w.querySelector('.mjp-more-btn').classList.remove('is-open');
+      var c = w.closest('.mjp-card');
+      if (c) { c.style.zIndex = ''; c.style.position = ''; }
+    });
+  }
+
+  /* ── 5. Pause/Activate Job modal ── */
+  window.mjpConfirmClose = function (el) {
+    _mjpCloseDds();
+    var wrap   = el.closest('.mjp-more-wrap');
+    var id     = wrap.dataset.jobId;
+    var title  = wrap.dataset.jobTitle;
+    var active = wrap.dataset.jobStatus === 'active';
+    document.getElementById('mjpCloseTitle').textContent      = active ? 'Pause this job?' : 'Activate this job?';
+    document.getElementById('mjpCloseMsg').textContent        = active
+      ? 'The job will be hidden from candidates while paused. You can reactivate it anytime.'
+      : 'The job will go live immediately and accept new applications.';
+    document.getElementById('mjpCloseConfirmBtn').textContent = active ? 'Pause Job' : 'Activate Job';
+    document.getElementById('mjpCloseForm').action            = '/recruiter/jobs/' + id + '/toggle';
+    _mjpOpenModal('mjpCloseBg');
+  };
+
+  /* ── 6. Archive Job modal ── */
+  window.mjpConfirmArchive = function (el) {
+    _mjpCloseDds();
+    var wrap  = el.closest('.mjp-more-wrap');
+    var id    = wrap.dataset.jobId;
+    var title = wrap.dataset.jobTitle;
+    document.getElementById('mjpArchiveMsg').textContent =
+      '"' + title + '" will be moved to your archive and removed from active listings.';
+    document.getElementById('mjpArchiveForm').action = '/recruiter/jobs/' + id + '/archive';
+    _mjpOpenModal('mjpArchiveBg');
+  };
+
+  /* ── 7. Delete Job modal ── */
+  window.mjpConfirmDelete = function (el) {
+    _mjpCloseDds();
+    var wrap  = el.closest('.mjp-more-wrap');
+    var id    = wrap.dataset.jobId;
+    var title = wrap.dataset.jobTitle;
+    document.getElementById('mjpDeleteMsg').textContent =
+      'Delete "' + title + '"? This cannot be undone — all applications will also be removed.';
+    document.getElementById('mjpDeleteForm').action = '/recruiter/jobs/' + id + '/delete';
+    _mjpOpenModal('mjpDeleteBg');
+  };
+
+  /* ── 8. Share modal ── */
+  var _mjpShareId    = null;
+  var _mjpShareTitle = '';
+
+  window.mjpOpenShare = function (el) {
+    _mjpCloseDds();
+    var wrap       = el.closest('.mjp-more-wrap');
+    _mjpShareId    = wrap.dataset.jobId;
+    _mjpShareTitle = wrap.dataset.jobTitle;
+    var url = window.location.origin + '/jobs/' + _mjpShareId;
+    document.getElementById('mjpShareJobName').textContent    = _mjpShareTitle;
+    document.getElementById('mjpShareUrlPreview').textContent = url;
+    document.getElementById('mjpShareCopyBtn').querySelector('.mjp-share-opt-lbl').textContent = 'Copy Link';
+    _mjpOpenModal('mjpShareBg');
+  };
+
+  window.mjpShareCopy = function () {
+    var url = window.location.origin + '/jobs/' + _mjpShareId;
+    navigator.clipboard.writeText(url).then(function() {
+      document.getElementById('mjpShareCopyBtn').querySelector('.mjp-share-opt-lbl').textContent = 'Copied!';
+      setTimeout(function() {
+        document.getElementById('mjpShareCopyBtn').querySelector('.mjp-share-opt-lbl').textContent = 'Copy Link';
+      }, 2000);
+      _mjpToast('Link copied to clipboard!');
+    }).catch(function() { prompt('Copy this link:', url); });
+  };
+
+  window.mjpShareLinkedIn = function () {
+    var url  = encodeURIComponent(window.location.origin + '/jobs/' + _mjpShareId);
+    var text = encodeURIComponent('We\'re hiring! Check out this role: ' + _mjpShareTitle);
+    window.open('https://www.linkedin.com/sharing/share-offsite/?url=' + url + '&summary=' + text, '_blank');
+  };
+
+  window.mjpShareEmail = function () {
+    var url     = window.location.origin + '/jobs/' + _mjpShareId;
+    var subject = encodeURIComponent('Job Opening: ' + _mjpShareTitle);
+    var body    = encodeURIComponent('Hi,\n\nI wanted to share this job opening with you:\n\n' + _mjpShareTitle + '\n' + url + '\n\nBest,');
+    window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
+  };
+
+  /* ── 9. Copy Link (direct, no modal) ── */
+  window.mjpCopyLink = function (el) {
+    _mjpCloseDds();
+    var id  = el.closest('.mjp-more-wrap').dataset.jobId;
+    var url = window.location.origin + '/jobs/' + id;
+    navigator.clipboard.writeText(url).then(function() {
+      _mjpToast('Job link copied!');
+    }).catch(function() { prompt('Copy this link:', url); });
+  };
+
+  /* ── 10. Duplicate Job ── */
+  window.mjpDuplicate = function (el) {
+    var id = el.closest('.mjp-more-wrap').dataset.jobId;
+    window.location.href = '/recruiter/post-job?duplicate=' + id;
+  };
+
+  /* ── 7. Reset Filters ── */
+  window.mjpResetFilters = function () {
+    ['mjpSearch','mjpLocInp'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    ['mjpStatus','mjpType','mjpSort'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.selectedIndex = 0;
+    });
+    var clear = document.getElementById('mjpLocClear');
+    if (clear) clear.style.display = 'none';
+    /* Show all cards directly — no filter needed when everything is reset */
+    document.querySelectorAll('.mjp-card').forEach(function (c) {
+      c.style.display  = '';
+      c.dataset.hidden = '';
+    });
+    var noRes = document.getElementById('mjpNoResults');
+    if (noRes) noRes.style.display = 'none';
+  };
+
+  var resetBtn = document.getElementById('mjpReset');
+  if (resetBtn) resetBtn.addEventListener('click', mjpResetFilters);
+
+  /* ── 8. Toast helper ── */
+  function _mjpToast(msg) {
+    const box = document.getElementById('mjpToastBox');
+    if (!box) return;
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = 'background:#1e293b;color:#fff;font-size:13px;padding:10px 20px;border-radius:999px;margin-top:8px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 16px rgba(0,0,0,.18)';
+    box.appendChild(t);
+    requestAnimationFrame(() => { t.style.opacity = '1'; });
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2500);
+  }
+  window._mjpToast = _mjpToast;
+
+  /* ── 9. Location autocomplete ── */
+  const MJP_CITIES = [
+    'Mumbai','Delhi','Bangalore','Hyderabad','Ahmedabad','Chennai','Kolkata','Surat','Pune','Jaipur',
+    'Lucknow','Kanpur','Nagpur','Indore','Thane','Bhopal','Visakhapatnam','Patna','Vadodara','Ghaziabad',
+    'Ludhiana','Agra','Nashik','Faridabad','Meerut','Rajkot','Varanasi','Srinagar','Aurangabad','Dhanbad',
+    'Amritsar','Allahabad','Ranchi','Howrah','Jabalpur','Gwalior','Vijayawada','Jodhpur','Madurai','Raipur',
+    'Kota','Chandigarh','Guwahati','Solapur','Hubli','Coimbatore','Tiruchirappalli','Bareilly','Mysore',
+    'Tiruppur','Gurgaon','Aligarh','Jalandhar','Bhubaneswar','Salem','Warangal','Guntur','Bhiwandi',
+    'Saharanpur','Gorakhpur','Bikaner','Noida','Jamshedpur','Bhilai','Cuttack','Firozabad','Kochi',
+    'Nellore','Bhavnagar','Dehradun','Durgapur','Asansol','Nanded','Kolhapur','Ajmer','Akola',
+    'Gulbarga','Jamnagar','Ujjain','Loni','Siliguri','Jhansi','Ulhasnagar','Jammu','Sangli',
+    'Mangalore','Erode','Belgaum','Ambattur','Tirunelveli','Malegaon','Gaya','Jalgaon','Udaipur',
+    'Maheshtala','Remote','Hybrid'
+  ];
+
+  const lacInp   = document.getElementById('mjpLocInp');
+  const lacDd    = document.getElementById('mjpLocDd');
+  const lacClear = document.getElementById('mjpLocClear');
+  let   lacFocus = -1;
+
+  if (lacInp && lacDd) {
+    lacInp.addEventListener('input', function () {
+      const val = this.value.trim();
+      lacFocus  = -1;
+      if (lacClear) lacClear.style.display = val ? 'flex' : 'none';
+      if (val.length < 3) { lacDd.style.display = 'none'; lacDd.innerHTML = ''; return; }
+
+      const matches = MJP_CITIES.filter(c => c.toLowerCase().startsWith(val.toLowerCase())).slice(0, 8);
+      if (!matches.length) { lacDd.style.display = 'none'; return; }
+
+      lacDd.innerHTML = matches.map((c, i) =>
+        '<div class="mjp-lac-item" data-idx="' + i + '" data-val="' + c + '">' +
+          '<b>' + c.slice(0, val.length) + '</b>' + c.slice(val.length) +
+        '</div>'
+      ).join('');
+      lacDd.style.display = 'block';
+
+      lacDd.querySelectorAll('.mjp-lac-item').forEach(item => {
+        item.addEventListener('click', function () {
+          lacInp.value = this.dataset.val;
+          lacDd.style.display = 'none';
+          if (lacClear) lacClear.style.display = 'flex';
+          mjpFilter();
+        });
+      });
+    });
+
+    lacInp.addEventListener('keydown', function (e) {
+      const items = lacDd.querySelectorAll('.mjp-lac-item');
+      if (!items.length || lacDd.style.display === 'none') return;
+      if (e.key === 'ArrowDown') { lacFocus = Math.min(lacFocus + 1, items.length - 1); _lacHL(items); e.preventDefault(); }
+      else if (e.key === 'ArrowUp') { lacFocus = Math.max(lacFocus - 1, 0); _lacHL(items); e.preventDefault(); }
+      else if (e.key === 'Enter' && lacFocus >= 0) {
+        lacInp.value = items[lacFocus].dataset.val;
+        lacDd.style.display = 'none';
+        if (lacClear) lacClear.style.display = 'flex';
+        mjpFilter();
+        e.preventDefault();
+      } else if (e.key === 'Escape') { lacDd.style.display = 'none'; }
+    });
+
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#mjpLacRoot')) lacDd.style.display = 'none';
+    });
+
+    if (lacClear) {
+      lacClear.style.display = 'none';
+      lacClear.addEventListener('click', () => {
+        lacInp.value = '';
+        lacDd.style.display = 'none';
+        lacClear.style.display = 'none';
+        mjpFilter();
+      });
+    }
+
+    lacInp.addEventListener('input', mjpFilter);
+  }
+
+  function _lacHL(items) {
+    items.forEach((it, i) => {
+      it.style.background = i === lacFocus ? 'var(--accent-light)' : '';
+      it.style.color      = i === lacFocus ? 'var(--accent)' : '';
+    });
+  }
+
+})();
 </script>
 </body>
 </html>

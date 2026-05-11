@@ -2,98 +2,813 @@
 {% block title %}Find Candidates — SkillBaseHire{% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <div class="container page-header-inner">
-    <div>
-      <h1>Find Candidates</h1>
-      <p>{{ candidates | length }} candidate{{ 's' if candidates | length != 1 else '' }} found</p>
+<style>
+/* ── Find Candidates Page ───────────────────────────── */
+.fcp { background:#f8fafc; min-height:calc(100vh - 64px); }
+
+/* Header */
+.fcp-hd { background:#fff; border-bottom:1px solid #e2e8f0; }
+.fcp-hd-inner { max-width:1200px; margin:0 auto; padding:1.25rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; }
+.fcp-hd h1 { font-size:1.375rem; font-weight:800; color:#0f172a; margin:0 0 .125rem; }
+.fcp-hd p  { font-size:.8125rem; color:#64748b; margin:0; }
+.fcp-back  { display:inline-flex; align-items:center; gap:.375rem; padding:.4375rem .9rem; border-radius:8px; font-size:.8375rem; font-weight:600; color:#475569; border:1.5px solid #e2e8f0; background:#fff; text-decoration:none; transition:border-color .15s,color .15s; white-space:nowrap; }
+.fcp-back:hover { border-color:#5B4FCF; color:#5B4FCF; }
+
+/* Body */
+.fcp-body { max-width:1200px; margin:0 auto; padding:1.5rem; }
+
+/* Filter card */
+.fcp-card { background:#fff; border-radius:16px; box-shadow:0 1px 4px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.04); padding:1.25rem 1.5rem; margin-bottom:1.25rem; }
+.fcp-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr; gap:.75rem; }
+.fcp-fl   { display:block; font-size:.72rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.06em; margin-bottom:.35rem; }
+.fcp-inp, .fcp-sel {
+  width:100%; height:38px; border:1.5px solid #e2e8f0; border-radius:8px;
+  padding:0 .75rem; font-size:.8375rem; color:#0f172a; background:#fff;
+  transition:border-color .15s; outline:none; box-sizing:border-box;
+}
+.fcp-inp:focus, .fcp-sel:focus { border-color:#5B4FCF; box-shadow:0 0 0 3px rgba(91,79,207,.1); }
+.fcp-sel {
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right .625rem center; padding-right:1.875rem; cursor:pointer;
+}
+.fcp-exp-pair { display:flex; gap:.5rem; }
+.fcp-exp-pair .fcp-inp { flex:1; min-width:52px; }
+.fcp-footer { display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; margin-top:.875rem; }
+.fcp-check { display:flex; align-items:center; gap:.45rem; font-size:.8375rem; color:#475569; font-weight:500; cursor:pointer; line-height:1; user-select:none; }
+.fcp-check input { width:16px; height:16px; accent-color:#5B4FCF; cursor:pointer; flex-shrink:0; margin:0; vertical-align:middle; }
+.fcp-spacer { flex:1; }
+.fcp-reset-btn {
+  height:38px; padding:0 1.125rem;
+  background:#fff; color:#5B4FCF;
+  border:1.5px solid #5B4FCF; border-radius:8px;
+  font-size:.8375rem; font-weight:700; cursor:pointer;
+  display:inline-flex; align-items:center; gap:.375rem;
+  text-decoration:none; white-space:nowrap;
+  transition:background .15s, box-shadow .15s, transform .12s;
+}
+.fcp-reset-btn:hover { background:#f5f3ff; box-shadow:0 2px 8px rgba(91,79,207,.18); transform:translateY(-1px); }
+.fcp-reset-btn:active { transform:translateY(0); }
+.fcp-submit {
+  height:38px; padding:0 1.375rem; background:#5B4FCF; color:#fff; border:none; border-radius:8px;
+  font-size:.8375rem; font-weight:700; cursor:pointer; display:inline-flex; align-items:center;
+  gap:.375rem; transition:background .15s,box-shadow .15s,transform .12s;
+}
+.fcp-submit:hover:not(:disabled) { background:#4c3fc4; box-shadow:0 4px 14px rgba(91,79,207,.35); transform:translateY(-1px); }
+.fcp-submit:active:not(:disabled) { transform:translateY(0); }
+.fcp-submit:disabled { opacity:.7; cursor:not-allowed; }
+@keyframes fcp-spin { to { transform:rotate(360deg); } }
+.fcp-spin { width:14px; height:14px; animation:fcp-spin .7s linear infinite; flex-shrink:0; }
+
+/* Quick actions bar */
+.fcp-qbar { display:flex; align-items:center; gap:.5rem; margin-bottom:.875rem; flex-wrap:wrap; }
+.fcp-qbtn {
+  display:inline-flex; align-items:center; gap:.35rem;
+  padding:.375rem .8rem; border-radius:7px; font-size:.7875rem; font-weight:600;
+  background:#fff; color:#475569; border:1.5px solid #e2e8f0; cursor:pointer;
+  text-decoration:none; transition:border-color .15s,color .15s,background .15s;
+}
+.fcp-qbtn:hover { border-color:#5B4FCF; color:#5B4FCF; background:#f5f3ff; }
+.fcp-qbtn svg { flex-shrink:0; }
+
+/* ── Location autocomplete ── */
+.lac { position:relative; }
+.lac-inp {
+  width:100%; height:38px; border:1.5px solid #e2e8f0; border-radius:8px;
+  padding:0 2.25rem 0 .75rem; font-size:.8375rem; color:#0f172a; background:#fff;
+  transition:border-color .15s,border-radius .1s; outline:none; box-sizing:border-box;
+}
+.lac-inp:focus { border-color:#5B4FCF; box-shadow:0 0 0 3px rgba(91,79,207,.1); }
+.lac-inp--open { border-color:#5B4FCF; box-shadow:0 0 0 3px rgba(91,79,207,.1); border-bottom-left-radius:0; border-bottom-right-radius:0; }
+.lac-clear {
+  position:absolute; right:.5rem; top:50%; transform:translateY(-50%);
+  background:none; border:none; cursor:pointer; padding:3px; color:#94a3b8;
+  display:none; align-items:center; border-radius:4px; transition:color .12s;
+}
+.lac-clear:hover { color:#dc2626; }
+.lac-clear--show { display:flex; }
+.lac-dd {
+  position:absolute; top:100%; left:0; right:0; z-index:200;
+  background:#fff; border:1.5px solid #5B4FCF; border-top:none;
+  border-bottom-left-radius:8px; border-bottom-right-radius:8px;
+  overflow:hidden; display:none; max-height:220px; overflow-y:auto;
+  box-shadow:0 8px 20px rgba(0,0,0,.1);
+}
+.lac-dd--open { display:block; }
+.lac-opt {
+  padding:.5rem .875rem; font-size:.8375rem; color:#0f172a;
+  cursor:pointer; display:flex; align-items:center; gap:.5rem;
+  transition:background .1s;
+}
+.lac-opt:hover, .lac-opt.lac-focused { background:#f5f3ff; color:#5B4FCF; }
+.lac-opt svg { flex-shrink:0; opacity:.5; }
+.lac-opt--remote svg { color:#5B4FCF; opacity:1; }
+.lac-hint { padding:.625rem .875rem; font-size:.7875rem; color:#94a3b8; }
+
+/* ── Skill multi-select ── */
+.sms { position:relative; }
+.sms-box {
+  min-height:38px; border:1.5px solid #e2e8f0; border-radius:8px;
+  background:#fff; display:flex; flex-wrap:wrap; align-items:center;
+  gap:.3rem; padding:.25rem .5rem; cursor:text;
+  transition:border-color .15s, box-shadow .15s;
+}
+.sms-box--open, .sms-box:focus-within {
+  border-color:#5B4FCF; box-shadow:0 0 0 3px rgba(91,79,207,.1);
+}
+.sms-chip {
+  display:inline-flex; align-items:center; gap:.25rem;
+  background:#ede9fe; color:#5B4FCF; border-radius:6px;
+  padding:.2rem .5rem; font-size:.75rem; font-weight:600; line-height:1; white-space:nowrap;
+}
+.sms-chip-x {
+  background:none; border:none; cursor:pointer; color:#7C3AED;
+  padding:0; line-height:1; display:flex; align-items:center; border-radius:3px;
+  transition:color .1s;
+}
+.sms-chip-x:hover { color:#dc2626; }
+.sms-inp {
+  border:none; outline:none; font-size:.8375rem; color:#0f172a;
+  min-width:110px; flex:1; background:transparent; padding:.1rem .25rem;
+  line-height:1.5;
+}
+.sms-inp::placeholder { color:#94a3b8; }
+.sms-dd {
+  position:absolute; top:calc(100% + 4px); left:0; right:0; z-index:200;
+  background:#fff; border-radius:10px; overflow:hidden; display:none;
+  box-shadow:0 8px 24px rgba(0,0,0,.12),0 0 0 1px rgba(0,0,0,.06);
+}
+.sms-dd--open { display:block; }
+.sms-opt {
+  padding:.5rem .875rem; font-size:.8375rem; color:#0f172a;
+  cursor:pointer; transition:background .1s; display:flex; align-items:center; gap:.5rem;
+}
+.sms-opt:hover, .sms-opt.sms-focused { background:#f5f3ff; color:#5B4FCF; }
+.sms-opt-dot { width:6px; height:6px; border-radius:50%; background:#c4b5fd; flex-shrink:0; }
+.sms-none { padding:.75rem .875rem; font-size:.8125rem; color:#94a3b8; }
+
+/* Sort bar */
+.fcp-sort-bar { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; flex-wrap:wrap; gap:.5rem; }
+.fcp-count    { font-size:.875rem; color:#64748b; font-weight:500; }
+.fcp-sort-wrap { display:flex; align-items:center; gap:.5rem; }
+.fcp-sort-lbl  { font-size:.8125rem; color:#64748b; font-weight:500; white-space:nowrap; }
+.fcp-sort-sel  {
+  height:34px; padding:0 1.875rem 0 .75rem; border:1.5px solid #e2e8f0; border-radius:8px;
+  font-size:.8125rem; color:#0f172a; background:#fff; appearance:none; cursor:pointer; outline:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right .6rem center;
+}
+.fcp-sort-sel:focus { border-color:#5B4FCF; }
+
+/* Candidate cards */
+.fcp-cards { display:flex; flex-direction:column; gap:.875rem; }
+.fcp-ccard {
+  background:#fff; border-radius:16px;
+  box-shadow:0 1px 4px rgba(0,0,0,.06),0 0 0 1px rgba(0,0,0,.04);
+  padding:1.25rem 1.5rem; display:flex; align-items:flex-start; gap:1.125rem;
+  transition:box-shadow .2s,transform .15s;
+}
+.fcp-ccard:hover { box-shadow:0 6px 20px rgba(0,0,0,.1),0 0 0 1px rgba(91,79,207,.12); transform:translateY(-1px); }
+
+/* Avatar */
+.fcp-av {
+  width:56px; height:56px; border-radius:50%; flex-shrink:0; overflow:hidden;
+  background:linear-gradient(135deg,#5B4FCF,#7C3AED);
+  color:#fff; font-size:1.375rem; font-weight:800;
+  display:flex; align-items:center; justify-content:center; text-decoration:none;
+}
+.fcp-av img { width:100%; height:100%; object-fit:cover; display:block; border-radius:50%; }
+
+/* Card body */
+.fcp-cb { flex:1; min-width:0; }
+.fcp-name-row { display:flex; align-items:flex-start; gap:.75rem; margin-bottom:.25rem; }
+.fcp-name { font-size:1rem; font-weight:700; color:#0f172a; text-decoration:none; line-height:1.3; }
+.fcp-name:hover { color:#5B4FCF; }
+.fcp-hl   { font-size:.8375rem; color:#64748b; margin-top:.15rem; }
+
+/* Meta row */
+.fcp-meta { display:flex; flex-wrap:wrap; gap:.375rem .875rem; margin:.5rem 0; }
+.fcp-mi   { display:flex; align-items:center; gap:.3rem; font-size:.7875rem; color:#64748b; }
+.fcp-mi svg { flex-shrink:0; opacity:.7; }
+
+/* Skills */
+.fcp-skills { display:flex; flex-wrap:wrap; gap:.375rem; margin-top:.5rem; }
+.fcp-sk {
+  display:inline-flex; align-items:center; gap:.25rem;
+  padding:.25rem .625rem; border-radius:20px; font-size:.75rem; font-weight:600; line-height:1;
+}
+.fcp-sk--v    { background:#dcfce7; color:#15803d; }
+.fcp-sk--u    { background:#f1f5f9; color:#475569; }
+.fcp-sk--more { background:transparent; color:#94a3b8; font-weight:500; font-size:.75rem; }
+
+/* Card right */
+.fcp-cr { display:flex; flex-direction:column; align-items:flex-end; gap:.75rem; flex-shrink:0; }
+.fcp-score-wrap { text-align:center; }
+.fcp-score { font-size:1.375rem; font-weight:900; color:#5B4FCF; line-height:1; }
+.fcp-score-lbl { font-size:.6375rem; color:#94a3b8; font-weight:600; text-transform:uppercase; letter-spacing:.05em; margin-top:.1rem; }
+
+/* Card action buttons */
+.fcp-actions { display:flex; flex-direction:column; gap:.375rem; min-width:148px; }
+.fcp-btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:.35rem;
+  padding:.45rem .9rem; border-radius:8px; font-size:.7875rem; font-weight:600;
+  cursor:pointer; border:none; text-decoration:none;
+  transition:background .15s,box-shadow .15s,border-color .15s; white-space:nowrap;
+}
+.fcp-btn--prim   { background:#5B4FCF; color:#fff; }
+.fcp-btn--prim:hover { background:#4c3fc4; box-shadow:0 4px 10px rgba(91,79,207,.3); }
+.fcp-btn--out    { background:transparent; color:#5B4FCF; border:1.5px solid #c4b5fd; }
+.fcp-btn--out:hover  { background:#f5f3ff; }
+.fcp-btn--ghost  { background:transparent; color:#64748b; border:1.5px solid #e2e8f0; }
+.fcp-btn--ghost:hover { background:#f8fafc; color:#0f172a; }
+
+/* Empty state */
+.fcp-empty { text-align:center; padding:4rem 1rem; background:#fff; border-radius:16px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+.fcp-empty-ico { font-size:3rem; margin-bottom:1rem; }
+.fcp-empty h3 { font-size:1.125rem; font-weight:700; color:#0f172a; margin:0 0 .5rem; }
+.fcp-empty p  { font-size:.875rem; color:#64748b; margin:0 0 1.25rem; }
+
+/* Responsive */
+@media (max-width:1024px) {
+  .fcp-grid { grid-template-columns:repeat(3,1fr); }
+}
+@media (max-width:768px) {
+  .fcp-hd-inner { flex-direction:column; align-items:flex-start; }
+  .fcp-body  { padding:1rem; }
+  .fcp-grid  { grid-template-columns:1fr 1fr; }
+  .fcp-ccard { flex-direction:column; }
+  .fcp-cr    { flex-direction:row; align-items:center; flex-wrap:wrap; width:100%; justify-content:space-between; }
+  .fcp-actions { flex-direction:row; flex-wrap:wrap; min-width:unset; }
+}
+@media (max-width:480px) {
+  .fcp-grid { grid-template-columns:1fr; }
+  .fcp-sort-bar { flex-direction:column; align-items:flex-start; }
+  .fcp-footer { flex-direction:column; align-items:stretch; gap:.5rem; }
+  .fcp-check { justify-content:flex-start; }
+  .fcp-spacer { display:none; }
+  .fcp-submit { width:100%; justify-content:center; }
+  .fcp-reset-btn { width:100%; justify-content:center; }
+  .fcp-exp-pair .fcp-inp { min-width:0; }
+}
+</style>
+
+{# ── experience helper ── #}
+{% macro exp_label(m) -%}
+  {%- if m == 0 -%}—
+  {%- elif m < 12 -%}{{ m }} mo
+  {%- elif m < 24 -%}1 yr
+  {%- else -%}{{ (m / 12) | int }} yrs
+  {%- endif -%}
+{%- endmacro %}
+
+<div class="fcp">
+
+  <!-- ── Header ── -->
+  <div class="fcp-hd">
+    <div class="fcp-hd-inner">
+      <div>
+        <h1>Find Candidates</h1>
+        <p>{{ candidates | length }} candidate{{ 's' if candidates | length != 1 else '' }} found</p>
+      </div>
+      <a href="{{ url_for('recruiter_dashboard') }}" class="fcp-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        Dashboard
+      </a>
     </div>
-    <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-outline">← Dashboard</a>
   </div>
-</div>
 
-<div class="container candidates-page">
-  <!-- Filters -->
-  <form class="search-form" method="get" action="{{ url_for('search_candidates') }}" style="margin-bottom:2rem">
-    <div class="form-group" style="flex:2">
-      <label class="form-label">Search</label>
-      <input class="form-control" type="text" name="q" value="{{ search }}" placeholder="Name or headline">
-    </div>
-    <div class="form-group" style="flex:1">
-      <label class="form-label">Location</label>
-      <input class="form-control" type="text" name="location" value="{{ location_filter }}" placeholder="City or Remote">
-    </div>
-    <div class="form-group" style="flex:1">
-      <label class="form-label">Skill</label>
-      <select class="form-select" name="skill">
-        <option value="">Any Skill</option>
-        {% for s in all_skills %}
-          <option value="{{ s.name }}" {{ 'selected' if skill_filter == s.name else '' }}>{{ s.name }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div style="display:flex;align-items:flex-end;gap:.5rem">
-      <label class="verified-filter-label">
-        <input type="checkbox" name="verified" value="1" {{ 'checked' if verified_only else '' }}>
-        Verified only
-      </label>
-      <button type="submit" class="btn btn-primary">Filter</button>
-      {% if search or skill_filter or location_filter or verified_only %}
-        <a href="{{ url_for('search_candidates') }}" class="btn btn-outline">Clear</a>
-      {% endif %}
-    </div>
-  </form>
+  <div class="fcp-body">
 
-  {% if candidates %}
-    <div class="candidates-grid">
-      {% for c in candidates %}
-        <div class="candidate-card">
-          <a href="{{ url_for('candidate_detail', candidate_id=c.id) }}" class="profile-link-avatar" aria-label="View {{ c.name }}'s profile">
-            <div class="avatar">
+    <!-- ── Filter card ── -->
+    <form class="fcp-card" method="get" action="{{ url_for('search_candidates') }}">
+      <div class="fcp-grid">
+        <!-- Search -->
+        <div>
+          <label class="fcp-fl">Search</label>
+          <input class="fcp-inp" type="text" name="q" value="{{ search }}" placeholder="Name, headline or skill…">
+        </div>
+        <!-- Location autocomplete -->
+        <div>
+          <label class="fcp-fl">Location</label>
+          <div class="lac" id="lacRoot">
+            <input class="lac-inp" id="lacInp" type="text" name="location"
+                   value="{{ location_filter }}" placeholder="City or Remote"
+                   autocomplete="off">
+            <button type="button" class="lac-clear" id="lacClear" aria-label="Clear location">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <div class="lac-dd" id="lacDd"></div>
+          </div>
+        </div>
+        <!-- Skill multi-select -->
+        <div>
+          <label class="fcp-fl">Skills</label>
+          <div class="sms" id="smsRoot">
+            <div class="sms-box" id="smsBox">
+              <!-- chips injected by JS -->
+              <input class="sms-inp" id="smsInp" type="text" placeholder="Search skills…" autocomplete="off">
+            </div>
+            <div class="sms-dd" id="smsDd"></div>
+          </div>
+          <!-- hidden inputs for selected skills (populated by JS) -->
+          <div id="smsHiddens"></div>
+        </div>
+        <!-- Availability -->
+        <div>
+          <label class="fcp-fl">Availability</label>
+          <select class="fcp-sel" name="work_mode">
+            <option value="">Any</option>
+            <option value="Remote"  {{ 'selected' if work_mode_filter == 'Remote'  else '' }}>Remote</option>
+            <option value="On-site" {{ 'selected' if work_mode_filter == 'On-site' else '' }}>On-site</option>
+            <option value="Hybrid"  {{ 'selected' if work_mode_filter == 'Hybrid'  else '' }}>Hybrid</option>
+          </select>
+        </div>
+        <!-- Notice period -->
+        <div>
+          <label class="fcp-fl">Notice Period</label>
+          <select class="fcp-sel" name="notice">
+            <option value="">Any</option>
+            <option value="Immediate" {{ 'selected' if notice_filter == 'Immediate' else '' }}>Immediate</option>
+            <option value="15 Days"   {{ 'selected' if notice_filter == '15 Days'   else '' }}>15 Days</option>
+            <option value="30 Days"   {{ 'selected' if notice_filter == '30 Days'   else '' }}>30 Days</option>
+            <option value="60 Days"   {{ 'selected' if notice_filter == '60 Days'   else '' }}>60 Days</option>
+            <option value="90 Days"   {{ 'selected' if notice_filter == '90 Days'   else '' }}>90 Days</option>
+          </select>
+        </div>
+        <!-- Experience -->
+        <div>
+          <label class="fcp-fl">Experience (yrs)</label>
+          <div class="fcp-exp-pair">
+            <input class="fcp-inp" type="number" name="exp_min" value="{{ exp_min }}" placeholder="Min" min="0" max="30">
+            <input class="fcp-inp" type="number" name="exp_max" value="{{ exp_max }}" placeholder="Max" min="0" max="30">
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer row -->
+      <div class="fcp-footer">
+        <label class="fcp-check">
+          <input type="checkbox" name="verified" value="1" {{ 'checked' if verified_only else '' }}>
+          Verified skills only
+        </label>
+        <input type="hidden" name="sort" value="{{ sort_by }}">
+        <div class="fcp-spacer"></div>
+        <a href="{{ url_for('search_candidates') }}" class="fcp-reset-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+          </svg>
+          Reset Filters
+        </a>
+        <button type="submit" class="fcp-submit" id="fcpSubmit">
+          <svg id="fcpSearchIco" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <svg id="fcpSpinIco" class="fcp-spin" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 11-6.219-8.56"/></svg>
+          <span id="fcpBtnTxt">Search</span>
+        </button>
+      </div>
+    </form>
+
+    {% if candidates %}
+
+      <!-- ── Sort bar ── -->
+      <div class="fcp-sort-bar">
+        <span class="fcp-count">{{ candidates | length }} candidate{{ 's' if candidates | length != 1 else '' }}</span>
+        <div class="fcp-sort-wrap">
+          <span class="fcp-sort-lbl">Sort by</span>
+          <select class="fcp-sort-sel" onchange="applySort(this.value)">
+            <option value="best_match" {{ 'selected' if sort_by == 'best_match' else '' }}>Best Match</option>
+            <option value="recent"     {{ 'selected' if sort_by == 'recent'     else '' }}>Recently Active</option>
+            <option value="experience" {{ 'selected' if sort_by == 'experience' else '' }}>Highest Experience</option>
+            <option value="notice"     {{ 'selected' if sort_by == 'notice'     else '' }}>Notice Period</option>
+            <option value="new"        {{ 'selected' if sort_by == 'new'        else '' }}>Newly Added</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- ── Quick actions ── -->
+      <div class="fcp-qbar">
+        <a href="{{ url_for('search_candidates') }}" class="fcp-qbtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Reset Filters
+        </a>
+        <button type="button" class="fcp-qbtn" onclick="saveSearch()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save Search
+        </button>
+        <a href="{{ url_for('export_candidates') }}?{{ request.query_string.decode() }}" class="fcp-qbtn">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export Candidates
+        </a>
+      </div>
+
+      <!-- ── Candidate cards ── -->
+      <div class="fcp-cards">
+        {% for c in candidates %}
+          <div class="fcp-ccard">
+
+            <!-- Avatar -->
+            <a href="{{ url_for('candidate_detail', candidate_id=c.id) }}" class="fcp-av" aria-label="{{ c.name }}">
               {% if c.profile_photo %}
-                <img src="/static/uploads/photos/{{ c.profile_photo }}" alt="{{ c.name }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">
+                <img src="/static/uploads/photos/{{ c.profile_photo }}" alt="{{ c.name }}">
               {% else %}
                 {{ c.name[0].upper() }}
               {% endif %}
-            </div>
-          </a>
-          <div class="candidate-info">
-            <h3><a href="{{ url_for('candidate_detail', candidate_id=c.id) }}" class="profile-name-link">{{ c.name }}</a></h3>
-            {% if c.headline %}
-              <div class="headline">{{ c.headline }}</div>
-            {% endif %}
-            {% if c.location %}
-              <div class="location">📍 {{ c.location }}</div>
-            {% endif %}
-            {% if c.verified_count > 0 %}
-              <div class="verified-count">✓ {{ c.verified_count }} verified skill{{ 's' if c.verified_count != 1 else '' }}</div>
-            {% endif %}
-            {% if c.skills %}
-              <div class="candidate-skills">
-                {% for skill in c.skills %}
-                  <span class="skill-tag {{ 'verified' if skill.verified else 'unverified' }}">
-                    {{ '✓ ' if skill.verified else '' }}{{ skill.name }}
+            </a>
+
+            <!-- Body -->
+            <div class="fcp-cb">
+              <div class="fcp-name-row">
+                <div>
+                  <a href="{{ url_for('candidate_detail', candidate_id=c.id) }}" class="fcp-name">{{ c.name }}</a>
+                  {% if c.headline %}
+                    <div class="fcp-hl">{{ c.headline }}</div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <!-- Meta -->
+              <div class="fcp-meta">
+                {% if c.location %}
+                  <span class="fcp-mi">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    {{ c.location }}
                   </span>
-                {% endfor %}
-                {% if c.total_skills > c.skills | length %}
-                  <span class="more-skills">+{{ c.total_skills - (c.skills | length) }} more</span>
+                {% endif %}
+                {% if c.exp_months > 0 %}
+                  <span class="fcp-mi">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+                    {{ exp_label(c.exp_months) }} exp
+                  </span>
+                {% endif %}
+                {% if c.notice_period %}
+                  <span class="fcp-mi">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    {{ c.notice_period }} notice
+                  </span>
+                {% endif %}
+                {% if c.work_mode %}
+                  <span class="fcp-mi">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    {{ c.work_mode }}
+                  </span>
                 {% endif %}
               </div>
-            {% endif %}
+
+              <!-- Skills -->
+              {% if c.skills %}
+                <div class="fcp-skills">
+                  {% for sk in c.skills %}
+                    <span class="fcp-sk {{ 'fcp-sk--v' if sk.verified else 'fcp-sk--u' }}">
+                      {% if sk.verified %}
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+                      {% endif %}
+                      {{ sk.name }}
+                    </span>
+                  {% endfor %}
+                  {% if c.total_skills > (c.skills | length) %}
+                    <span class="fcp-sk fcp-sk--more">+{{ c.total_skills - (c.skills | length) }} more</span>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Right: match score + actions -->
+            <div class="fcp-cr">
+              <div class="fcp-score-wrap">
+                <div class="fcp-score">{{ c.match_score }}%</div>
+                <div class="fcp-score-lbl">Match</div>
+              </div>
+              <div class="fcp-actions">
+                <a href="{{ url_for('candidate_detail', candidate_id=c.id) }}" class="fcp-btn fcp-btn--prim">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  View Profile
+                </a>
+                <button class="fcp-btn fcp-btn--out" onclick="shortlist({{ c.id }}, this)">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+                  Shortlist
+                </button>
+                <a href="{{ url_for('candidate_detail', candidate_id=c.id) }}#skills" class="fcp-btn fcp-btn--ghost">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                  Request Skill Test
+                </a>
+              </div>
+            </div>
+
           </div>
-          <div class="candidate-actions">
-            <div style="font-size:.8125rem;color:var(--text-muted)">Joined {{ c.created_at | timeago }}</div>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-  {% else %}
-    <div class="empty-state">
-      <div class="empty-icon">👥</div>
-      <h3>No candidates found</h3>
-      <p>Try adjusting your search filters.</p>
-      <a href="{{ url_for('search_candidates') }}" class="btn btn-primary">Clear Filters</a>
-    </div>
-  {% endif %}
+        {% endfor %}
+      </div>
+
+    {% else %}
+      <!-- Empty state -->
+      <div class="fcp-empty">
+        <div class="fcp-empty-ico">👥</div>
+        <h3>No matching candidates found</h3>
+        <p>Try adjusting or resetting your filters to see more results.</p>
+        <a href="{{ url_for('search_candidates') }}" class="fcp-btn fcp-btn--prim" style="display:inline-flex;margin:0 auto;">Reset Filters</a>
+      </div>
+    {% endif %}
+
+  </div>
 </div>
+
+<script>
+/* ── Sort ── */
+function applySort(val) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('sort', val);
+  window.location.href = url.toString();
+}
+
+/* ── Submit loading spinner ── */
+document.querySelector('.fcp-card').addEventListener('submit', function () {
+  const btn  = document.getElementById('fcpSubmit');
+  const ico  = document.getElementById('fcpSearchIco');
+  const spin = document.getElementById('fcpSpinIco');
+  const txt  = document.getElementById('fcpBtnTxt');
+  if (btn) {
+    btn.disabled   = true;
+    ico.style.display  = 'none';
+    spin.style.display = 'block';
+    txt.textContent    = 'Searching…';
+  }
+});
+
+/* ── Shortlist ── */
+function shortlist(id, btn) {
+  btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg> Shortlisted';
+  btn.style.cssText += 'background:#dcfce7!important;color:#15803d!important;border-color:#86efac!important;';
+  btn.disabled = true;
+}
+
+/* ── Save Search ── */
+function saveSearch() {
+  const url = window.location.href;
+  navigator.clipboard.writeText(url).then(() => {
+    _qToast('Search URL copied to clipboard!', '#15803d');
+  }).catch(() => {
+    _qToast('Copy this URL to save your search.', '#475569');
+  });
+}
+
+/* ── Quick-action toast ── */
+function _qToast(msg, color) {
+  const t = document.createElement('div');
+  t.style.cssText =
+    'position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(20px);' +
+    'background:#fff;color:' + color + ';border:1.5px solid #e2e8f0;border-radius:10px;' +
+    'padding:.625rem 1.125rem;font-size:.8125rem;font-weight:600;' +
+    'box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:9999;opacity:0;transition:opacity .25s,transform .25s;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  requestAnimationFrame(() => {
+    t.style.opacity = '1';
+    t.style.transform = 'translateX(-50%) translateY(0)';
+  });
+  setTimeout(() => {
+    t.style.opacity = '0';
+    t.style.transform = 'translateX(-50%) translateY(20px)';
+    setTimeout(() => t.remove(), 300);
+  }, 2800);
+}
+
+/* ── Skill multi-select ── */
+(function () {
+  const ALL_SKILLS = {{ all_skills | map(attribute='name') | list | tojson }};
+  const PRE = {{ skill_filters | tojson }};
+
+  const box      = document.getElementById('smsBox');
+  const inp      = document.getElementById('smsInp');
+  const dd       = document.getElementById('smsDd');
+  const hiddens  = document.getElementById('smsHiddens');
+
+  const selected = new Set();
+  let focusedIdx = -1;
+
+  /* ── Init: restore from URL ── */
+  PRE.forEach(name => _addChip(name));
+
+  /* ── Chip management ── */
+  function _addChip(name) {
+    if (selected.has(name)) return;
+    selected.add(name);
+
+    const chip = document.createElement('span');
+    chip.className = 'sms-chip';
+    chip.dataset.skill = name;
+    chip.innerHTML =
+      name +
+      '<button type="button" class="sms-chip-x" aria-label="Remove ' + name + '">' +
+      '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>' +
+      '</button>';
+    chip.querySelector('.sms-chip-x').addEventListener('click', () => _removeChip(name));
+    box.insertBefore(chip, inp);
+
+    const h = document.createElement('input');
+    h.type  = 'hidden';
+    h.name  = 'skill';
+    h.value = name;
+    h.id    = 'sms-h-' + name.replace(/\W/g, '_');
+    hiddens.appendChild(h);
+  }
+
+  function _removeChip(name) {
+    selected.delete(name);
+    const chip = box.querySelector('[data-skill="' + name + '"]');
+    if (chip) chip.remove();
+    const h = document.getElementById('sms-h-' + name.replace(/\W/g, '_'));
+    if (h) h.remove();
+    inp.focus();
+    _render(inp.value.trim());
+  }
+
+  /* ── Dropdown ── */
+  function _render(q) {
+    focusedIdx = -1;
+    if (!q) { _close(); return; }
+
+    const matches = ALL_SKILLS
+      .filter(s => !selected.has(s) && s.toLowerCase().includes(q.toLowerCase()))
+      .slice(0, 8);
+
+    if (!matches.length) {
+      dd.innerHTML = '<div class="sms-none">No matching skills</div>';
+    } else {
+      dd.innerHTML = matches.map((s, i) =>
+        '<div class="sms-opt" data-idx="' + i + '" data-name="' + s + '">' +
+        '<span class="sms-opt-dot"></span>' + s + '</div>'
+      ).join('');
+      dd.querySelectorAll('.sms-opt').forEach(el => {
+        el.addEventListener('mousedown', e => { e.preventDefault(); _pick(el.dataset.name); });
+      });
+    }
+    dd.classList.add('sms-dd--open');
+  }
+
+  function _close() {
+    dd.classList.remove('sms-dd--open');
+    dd.innerHTML = '';
+    focusedIdx = -1;
+  }
+
+  function _pick(name) {
+    _addChip(name);
+    inp.value = '';
+    inp.focus();
+    _close();
+  }
+
+  function _moveFocus(dir) {
+    const opts = dd.querySelectorAll('.sms-opt');
+    if (!opts.length) return;
+    opts.forEach(o => o.classList.remove('sms-focused'));
+    focusedIdx = Math.max(0, Math.min(opts.length - 1, focusedIdx + dir));
+    opts[focusedIdx].classList.add('sms-focused');
+  }
+
+  /* ── Events ── */
+  inp.addEventListener('input', () => _render(inp.value.trim()));
+  inp.addEventListener('focus', () => { if (inp.value.trim()) _render(inp.value.trim()); });
+
+  inp.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown')  { e.preventDefault(); _moveFocus(1); }
+    else if (e.key === 'ArrowUp')   { e.preventDefault(); _moveFocus(-1); }
+    else if (e.key === 'Enter') {
+      const focused = dd.querySelector('.sms-focused');
+      if (focused) { e.preventDefault(); _pick(focused.dataset.name); }
+    }
+    else if (e.key === 'Backspace' && inp.value === '' && selected.size) {
+      const last = box.querySelector('.sms-chip:last-of-type');
+      if (last) _removeChip(last.dataset.skill);
+    }
+    else if (e.key === 'Escape') _close();
+  });
+
+  document.addEventListener('click', e => {
+    if (!document.getElementById('smsRoot').contains(e.target)) _close();
+  });
+
+  box.addEventListener('click', () => inp.focus());
+})();
+
+/* ── Location autocomplete ── */
+(function () {
+  const LOCATIONS = [
+    'Remote','On-site',
+    // Metro cities
+    'Mumbai','Delhi','Bangalore','Hyderabad','Chennai','Kolkata','Pune','Ahmedabad',
+    'Jaipur','Surat','Lucknow','Kanpur','Nagpur','Indore','Thane','Bhopal',
+    'Visakhapatnam','Vadodara','Patna','Ludhiana','Agra','Nashik','Meerut','Rajkot',
+    'Faridabad','Kalyan','Vasai','Varanasi','Srinagar','Aurangabad','Amritsar',
+    'Navi Mumbai','Allahabad','Howrah','Guwahati','Dhanbad','Ranchi','Coimbatore',
+    'Vijayawada','Madurai','Raipur','Kota','Chandigarh','Gwalior','Jodhpur',
+    'Mangalore','Thiruvananthapuram','Kozhikode','Thrissur','Kochi','Kolhapur',
+    'Mysore','Hubli','Belgaum','Gulbarga','Davangere','Shimoga','Tumkur',
+    'Tiruchirappalli','Salem','Tiruppur','Vellore','Erode','Dindigul','Tirunelveli',
+    'Cherthala','Chembur','Chennai North','Chennai South','Chikmagalur',
+    'Noida','Gurugram','Ghaziabad','Greater Noida','Faridabad',
+    'Nellore','Guntur','Kurnool','Warangal','Karimnagar','Nizamabad',
+    'Dehradun','Haridwar','Roorkee','Rishikesh',
+    'Jamshedpur','Bokaro','Bhilai','Bhubaneswar','Cuttack','Rourkela',
+    'Jabalpur','Ujjain','Gwalior','Bilaspur',
+    'Udaipur','Bikaner','Ajmer','Kota','Alwar',
+    'Siliguri','Asansol','Durgapur','Barddhaman',
+    'Tirupati','Anantapur','Kadapa',
+    'Solapur','Sangli','Kalyani','Latur','Akola',
+    'Ambala','Rohtak','Panipat','Sonipat','Karnal','Hisar',
+    'Shimla','Dharamsala','Manali',
+    'Goa','Panaji','Margao',
+    'Jammu','Leh',
+    'Raipur','Bilaspur',
+    'Puducherry','Pondicherry',
+    'Kannur','Palakkad','Alappuzha','Malappuram','Kasaragod',
+    'Imphal','Kohima','Aizawl','Itanagar','Shillong','Agartala',
+    'Gangtok','Dimapur',
+    'Andaman','Port Blair',
+  ];
+
+  const inp   = document.getElementById('lacInp');
+  const dd    = document.getElementById('lacDd');
+  const clear = document.getElementById('lacClear');
+  let focusedIdx = -1;
+
+  function _toggleClear() {
+    clear.classList.toggle('lac-clear--show', inp.value.length > 0);
+  }
+
+  function _open(items) {
+    focusedIdx = -1;
+    inp.classList.add('lac-inp--open');
+    dd.innerHTML = items.map((loc, i) => {
+      const isRemote = loc === 'Remote' || loc === 'On-site';
+      const icon = isRemote
+        ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>'
+        : '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+      return '<div class="lac-opt' + (isRemote ? ' lac-opt--remote' : '') + '" data-idx="' + i + '" data-val="' + loc + '">' + icon + loc + '</div>';
+    }).join('');
+    dd.querySelectorAll('.lac-opt').forEach(el => {
+      el.addEventListener('mousedown', e => { e.preventDefault(); _pick(el.dataset.val); });
+    });
+    dd.classList.add('lac-dd--open');
+  }
+
+  function _showHint() {
+    inp.classList.remove('lac-inp--open');
+    dd.classList.remove('lac-dd--open');
+    dd.innerHTML = '';
+  }
+
+  function _pick(val) {
+    inp.value = val;
+    _showHint();
+    _toggleClear();
+    inp.blur();
+  }
+
+  function _moveFocus(dir) {
+    const opts = dd.querySelectorAll('.lac-opt');
+    if (!opts.length) return;
+    opts.forEach(o => o.classList.remove('lac-focused'));
+    focusedIdx = Math.max(0, Math.min(opts.length - 1, focusedIdx + dir));
+    opts[focusedIdx].classList.add('lac-focused');
+    opts[focusedIdx].scrollIntoView({ block: 'nearest' });
+  }
+
+  inp.addEventListener('input', function () {
+    _toggleClear();
+    const q = inp.value.trim();
+    if (q.length < 3) { _showHint(); return; }
+    const matches = LOCATIONS.filter(l => l.toLowerCase().includes(q.toLowerCase())).slice(0, 10);
+    if (matches.length) _open(matches);
+    else {
+      inp.classList.add('lac-inp--open');
+      dd.innerHTML = '<div class="lac-hint">No matching locations found</div>';
+      dd.classList.add('lac-dd--open');
+    }
+  });
+
+  inp.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowDown')  { e.preventDefault(); _moveFocus(1); }
+    else if (e.key === 'ArrowUp')   { e.preventDefault(); _moveFocus(-1); }
+    else if (e.key === 'Enter') {
+      const f = dd.querySelector('.lac-focused');
+      if (f) { e.preventDefault(); _pick(f.dataset.val); }
+    }
+    else if (e.key === 'Escape') _showHint();
+  });
+
+  inp.addEventListener('blur', function () {
+    setTimeout(_showHint, 150);
+  });
+
+  clear.addEventListener('click', function () {
+    inp.value = '';
+    _toggleClear();
+    _showHint();
+    inp.focus();
+  });
+
+  // Init clear button on page load (when filter is pre-filled)
+  _toggleClear();
+})();
+</script>
 {% endblock %}

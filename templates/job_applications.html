@@ -1,83 +1,428 @@
 {% extends "base.html" %}
-{% block title %}Applications for {{ job.title }} — SkillBaseHire{% endblock %}
+{% block title %}Applications — {{ job.title }} · SkillBaseHire{% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <div class="container page-header-inner">
-    <div>
-      <h1>{{ job.title }}</h1>
-      <p>{{ applications | length }} application{{ 's' if applications | length != 1 else '' }} · {{ job.location }} · {{ job.job_type }}</p>
+<style>
+:root{
+  --ink:#0E0F1A;--ink-2:#3A3C52;--ink-3:#7A7C94;--ink-4:#A8A9B8;
+  --surface:#F5F4F0;--surface-2:#EFEEE9;--white:#FFFFFF;
+  --line:rgba(14,15,26,.08);
+  --accent:#4F46E5;--accent-light:#EEF2FF;
+  --green:#0F6E56;--green-light:#E1F5EE;
+  --amber:#854F0B;--amber-light:#FAEEDA;
+  --coral:#993C1D;--coral-light:#FAECE7;
+  --purple:#534AB7;--purple-light:#EEEDFE;
+  --r:12px;--r-sm:8px;--rpill:999px;
+}
+
+/* ── Page shell ── */
+.ja-page{background:var(--surface);min-height:100vh;padding-bottom:60px}
+
+/* ── Header ── */
+.ja-header{background:var(--white);border-bottom:.5px solid var(--line);padding:28px 0 0}
+.ja-header-inner{max-width:1100px;margin:0 auto;padding:0 28px}
+.ja-breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-3);margin-bottom:14px}
+.ja-breadcrumb a{color:var(--ink-3);text-decoration:none}
+.ja-breadcrumb a:hover{color:var(--accent)}
+.ja-breadcrumb-sep{opacity:.4}
+.ja-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;padding-bottom:20px}
+.ja-title{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;letter-spacing:-.4px;color:var(--ink);margin-bottom:6px}
+.ja-meta{display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:13px;color:var(--ink-3)}
+.ja-meta-dot{opacity:.3}
+.ja-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:var(--rpill);font-size:11.5px;font-weight:600}
+.ja-badge-active{background:var(--green-light);color:var(--green)}
+.ja-badge-paused{background:var(--amber-light);color:var(--amber)}
+.ja-hdr-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.ja-btn{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;padding:8px 16px;border-radius:var(--rpill);border:none;cursor:pointer;transition:all .15s;text-decoration:none;font-family:'Syne',sans-serif}
+.ja-btn-primary{background:var(--accent);color:#fff}
+.ja-btn-primary:hover{background:#4338CA}
+.ja-btn-ghost{background:transparent;color:var(--ink-2);border:.5px solid var(--line)}
+.ja-btn-ghost:hover{background:var(--surface)}
+
+/* ── Stats strip ── */
+.ja-stats-strip{display:flex;gap:0;border-top:.5px solid var(--line)}
+.ja-stat{flex:1;display:flex;flex-direction:column;align-items:center;padding:14px 0;border-right:.5px solid var(--line);cursor:pointer;transition:background .12s;user-select:none}
+.ja-stat:last-child{border-right:none}
+.ja-stat:hover{background:var(--surface)}
+.ja-stat.active{background:var(--accent-light)}
+.ja-stat-n{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--ink)}
+.ja-stat.active .ja-stat-n{color:var(--accent)}
+.ja-stat-l{font-size:11px;color:var(--ink-3);margin-top:2px;text-transform:uppercase;letter-spacing:.6px;font-weight:500}
+.ja-stat.active .ja-stat-l{color:var(--accent)}
+
+/* ── Body ── */
+.ja-body{max-width:1100px;margin:0 auto;padding:24px 28px}
+
+/* ── Filter bar ── */
+.ja-filters{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.ja-search-wrap{display:flex;align-items:center;gap:8px;background:var(--white);border:.5px solid var(--line);border-radius:var(--r-sm);padding:0 12px;flex:1;min-width:200px}
+.ja-search-wrap svg{color:var(--ink-4);flex-shrink:0}
+.ja-search-inp{border:none;outline:none;font-size:13px;background:transparent;width:100%;padding:9px 0;color:var(--ink);font-family:inherit}
+.ja-search-inp::placeholder{color:var(--ink-4)}
+.ja-fsel{background:var(--white);border:.5px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;font-size:13px;color:var(--ink-2);outline:none;font-family:inherit;cursor:pointer}
+.ja-fsel:focus{border-color:var(--accent)}
+
+/* ── App cards ── */
+.ja-card{background:var(--white);border:.5px solid var(--line);border-radius:var(--r);padding:20px 22px;margin-bottom:12px;transition:box-shadow .15s}
+.ja-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.07)}
+.ja-card-top{display:flex;align-items:flex-start;gap:14px}
+.ja-avatar{width:44px;height:44px;border-radius:50%;flex-shrink:0;overflow:hidden;background:linear-gradient(135deg,var(--accent),#818CF8);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:16px;color:#fff;text-decoration:none}
+.ja-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.ja-cinfo{flex:1;min-width:0}
+.ja-cname{font-size:15px;font-weight:700;color:var(--ink);text-decoration:none}
+.ja-cname:hover{color:var(--accent)}
+.ja-cheadline{font-size:12.5px;color:var(--ink-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ja-cmeta{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:6px;font-size:12px;color:var(--ink-3)}
+.ja-cmeta svg{flex-shrink:0;opacity:.7}
+.ja-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;flex-shrink:0}
+.ja-status{display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:var(--rpill);font-size:11.5px;font-weight:600}
+.ja-status-applied{background:#EEF2FF;color:var(--accent)}
+.ja-status-reviewing{background:var(--amber-light);color:var(--amber)}
+.ja-status-shortlisted{background:var(--green-light);color:var(--green)}
+.ja-status-rejected{background:var(--coral-light);color:var(--coral)}
+.ja-time{font-size:11px;color:var(--ink-4)}
+.ja-links{display:flex;gap:6px}
+.ja-link-btn{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;padding:4px 10px;border-radius:var(--r-sm);border:.5px solid var(--line);color:var(--ink-2);text-decoration:none;background:var(--white);transition:border-color .12s,color .12s}
+.ja-link-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* Skills row */
+.ja-skills{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}
+.ja-skill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:var(--rpill);font-size:11.5px;font-weight:500}
+.ja-skill-v{background:var(--green-light);color:var(--green)}
+.ja-skill-u{background:var(--surface);color:var(--ink-3)}
+
+/* Cover letter */
+.ja-cover{margin-top:14px;padding:14px 16px;background:var(--surface);border-radius:var(--r-sm);font-size:13px;color:var(--ink-2);line-height:1.6;border-left:3px solid var(--accent)}
+.ja-cover-lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--ink-4);margin-bottom:6px}
+
+/* Status actions */
+.ja-actions-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:14px;padding-top:14px;border-top:.5px solid var(--line)}
+.ja-status-btns{display:flex;gap:6px;flex-wrap:wrap}
+.ja-sbtn{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:5px 12px;border-radius:var(--rpill);border:1.5px solid transparent;cursor:pointer;transition:all .12s;font-family:inherit;background:var(--surface);color:var(--ink-3);border-color:var(--line)}
+.ja-sbtn:hover{border-color:var(--accent);color:var(--accent)}
+.ja-sbtn.cur-applied{background:var(--accent-light);color:var(--accent);border-color:var(--accent)}
+.ja-sbtn.cur-reviewing{background:var(--amber-light);color:var(--amber);border-color:#FBBF24}
+.ja-sbtn.cur-shortlisted{background:var(--green-light);color:var(--green);border-color:#34D399}
+.ja-sbtn.cur-rejected{background:var(--coral-light);color:var(--coral);border-color:#F87171}
+.ja-view-btn{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;padding:6px 14px;border-radius:var(--rpill);background:var(--accent);color:#fff;text-decoration:none;font-family:'Syne',sans-serif;transition:background .12s}
+.ja-view-btn:hover{background:#4338CA}
+
+/* Empty state */
+.ja-empty{display:flex;flex-direction:column;align-items:center;text-align:center;padding:80px 24px;background:var(--white);border:.5px solid var(--line);border-radius:var(--r)}
+.ja-empty-ico{width:72px;height:72px;border-radius:20px;background:var(--accent-light);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;color:var(--accent)}
+.ja-empty h3{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--ink);margin-bottom:8px}
+.ja-empty p{font-size:14px;color:var(--ink-3);margin-bottom:24px;max-width:340px}
+.ja-share-box{display:flex;align-items:center;gap:8px;background:var(--surface);border:.5px solid var(--line);border-radius:var(--r-sm);padding:8px 12px;font-size:12px;color:var(--ink-3);margin-bottom:20px;max-width:400px;width:100%}
+.ja-share-url{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:monospace;font-size:11.5px}
+.ja-copy-btn{flex-shrink:0;background:var(--accent);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:background .12s}
+.ja-copy-btn:hover{background:#4338CA}
+
+/* No-results (filter) */
+.ja-no-filter{display:none;text-align:center;padding:48px 24px;color:var(--ink-3);font-size:14px}
+
+/* Flash */
+.ja-flash{display:flex;align-items:center;gap:10px;padding:10px 28px;font-size:13px;border-bottom:.5px solid transparent}
+.ja-flash-ok{background:#F0FDF4;border-bottom-color:#BBF7D0;color:#15803D}
+.ja-flash-err{background:#FEF2F2;border-bottom-color:#FECACA;color:#DC2626}
+</style>
+
+<div class="ja-page">
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="ja-flash {{ 'ja-flash-ok' if cat == 'success' else 'ja-flash-err' }}">
+        {% if cat == 'success' %}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        {% else %}
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        {% endif %}
+        {{ msg }}
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  <!-- Header -->
+  <div class="ja-header">
+    <div class="ja-header-inner">
+
+      <!-- Breadcrumb -->
+      <div class="ja-breadcrumb">
+        <a href="{{ url_for('recruiter_dashboard') }}">Dashboard</a>
+        <span class="ja-breadcrumb-sep">›</span>
+        <span>Jobs</span>
+        <span class="ja-breadcrumb-sep">›</span>
+        <strong style="color:var(--ink)">{{ job.title }}</strong>
+      </div>
+
+      <!-- Title + actions -->
+      <div class="ja-title-row">
+        <div>
+          <div class="ja-title">{{ job.title }}</div>
+          <div class="ja-meta">
+            <span class="ja-badge {{ 'ja-badge-active' if job.active else 'ja-badge-paused' }}">
+              <svg width="7" height="7" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4" fill="currentColor"/></svg>
+              {{ 'Active' if job.active else 'Paused' }}
+            </span>
+            <span class="ja-meta-dot">·</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+            {{ job.location }}
+            <span class="ja-meta-dot">·</span>
+            {{ job.job_type }}
+            <span class="ja-meta-dot">·</span>
+            Posted {{ job.created_at | timeago }}
+          </div>
+        </div>
+        <div class="ja-hdr-actions">
+          <a href="{{ url_for('job_detail', job_id=job.id) }}" target="_blank" class="ja-btn ja-btn-ghost">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            View Listing
+          </a>
+          <a href="{{ url_for('edit_job', job_id=job.id) }}" class="ja-btn ja-btn-ghost">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit Job
+          </a>
+          <a href="{{ url_for('recruiter_dashboard') }}" class="ja-btn ja-btn-primary">
+            ← Dashboard
+          </a>
+        </div>
+      </div>
+
+      <!-- Stats strip (also works as filter tabs) -->
+      <div class="ja-stats-strip">
+        <div class="ja-stat active" data-filter="" onclick="jaFilter(this,'')">
+          <div class="ja-stat-n">{{ applications | length }}</div>
+          <div class="ja-stat-l">Total</div>
+        </div>
+        <div class="ja-stat" data-filter="applied" onclick="jaFilter(this,'applied')">
+          <div class="ja-stat-n">{{ status_counts.applied }}</div>
+          <div class="ja-stat-l">Applied</div>
+        </div>
+        <div class="ja-stat" data-filter="reviewing" onclick="jaFilter(this,'reviewing')">
+          <div class="ja-stat-n">{{ status_counts.reviewing }}</div>
+          <div class="ja-stat-l">Reviewing</div>
+        </div>
+        <div class="ja-stat" data-filter="shortlisted" onclick="jaFilter(this,'shortlisted')">
+          <div class="ja-stat-n">{{ status_counts.shortlisted }}</div>
+          <div class="ja-stat-l">Shortlisted</div>
+        </div>
+        <div class="ja-stat" data-filter="rejected" onclick="jaFilter(this,'rejected')">
+          <div class="ja-stat-n">{{ status_counts.rejected }}</div>
+          <div class="ja-stat-l">Rejected</div>
+        </div>
+      </div>
+
     </div>
-    <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-outline">← Dashboard</a>
+  </div>
+
+  <!-- Body -->
+  <div class="ja-body">
+
+    {% if applications %}
+
+    <!-- Filter bar -->
+    <div class="ja-filters">
+      <div class="ja-search-wrap">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="ja-search-inp" id="jaSearchInp" type="text" placeholder="Search by name or email…" oninput="jaSearch()">
+      </div>
+      <select class="ja-fsel" id="jaSort" onchange="jaSort()">
+        <option value="newest">Newest First</option>
+        <option value="oldest">Oldest First</option>
+        <option value="name">Name A–Z</option>
+      </select>
+    </div>
+
+    <!-- Application cards -->
+    <div id="jaList">
+      {% for app in applications %}
+      <div class="ja-card"
+           data-status="{{ app.status }}"
+           data-name="{{ app.candidate_name | lower }}"
+           data-email="{{ app.candidate_email | lower }}"
+           data-posted="{{ app.applied_at }}">
+
+        <div class="ja-card-top">
+          <!-- Avatar -->
+          <a href="{{ url_for('candidate_detail', candidate_id=app.candidate_id) }}" class="ja-avatar">
+            {% if app.profile_photo %}
+              <img src="/static/uploads/photos/{{ app.profile_photo }}" alt="{{ app.candidate_name }}">
+            {% else %}
+              {{ app.candidate_name[0].upper() }}
+            {% endif %}
+          </a>
+
+          <!-- Info -->
+          <div class="ja-cinfo">
+            <a href="{{ url_for('candidate_detail', candidate_id=app.candidate_id) }}" class="ja-cname">{{ app.candidate_name }}</a>
+            {% if app.headline %}
+              <div class="ja-cheadline">{{ app.headline }}</div>
+            {% endif %}
+            <div class="ja-cmeta">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              {{ app.candidate_email }}
+              {% if app.candidate_location %}
+                <span style="opacity:.3">·</span>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                {{ app.candidate_location }}
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- Right: status + time + links -->
+          <div class="ja-right">
+            <span class="ja-status ja-status-{{ app.status }}">
+              {% if app.status == 'shortlisted' %}
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              {% elif app.status == 'rejected' %}
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              {% elif app.status == 'reviewing' %}
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              {% endif %}
+              {{ app.status | capitalize }}
+            </span>
+            <div class="ja-time">{{ app.applied_at | timeago }}</div>
+            {% if app.linkedin or app.github %}
+            <div class="ja-links">
+              {% if app.linkedin %}
+                <a href="{{ app.linkedin }}" target="_blank" rel="noopener" class="ja-link-btn">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
+                  LinkedIn
+                </a>
+              {% endif %}
+              {% if app.github %}
+                <a href="{{ app.github }}" target="_blank" rel="noopener" class="ja-link-btn">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+                  GitHub
+                </a>
+              {% endif %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Skills -->
+        {% if app.skills %}
+        <div class="ja-skills">
+          {% for skill in app.skills %}
+            <span class="ja-skill {{ 'ja-skill-v' if skill.verified else 'ja-skill-u' }}">
+              {% if skill.verified %}<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>{% endif %}
+              {{ skill.name }}
+            </span>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Cover letter -->
+        {% if app.cover_letter %}
+        <div class="ja-cover">
+          <div class="ja-cover-lbl">Cover Letter</div>
+          {{ app.cover_letter }}
+        </div>
+        {% endif %}
+
+        <!-- Status change + view profile -->
+        <div class="ja-actions-row">
+          <form method="post" action="{{ url_for('update_app_status', app_id=app.id) }}" style="display:contents">
+            <div class="ja-status-btns">
+              {% for st, lbl in [('applied','Applied'),('reviewing','Reviewing'),('shortlisted','Shortlisted'),('rejected','Rejected')] %}
+                <button type="submit" name="status" value="{{ st }}"
+                        class="ja-sbtn {{ 'cur-' + st if app.status == st else '' }}">
+                  {% if st == 'shortlisted' %}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>{% endif %}
+                  {% if st == 'rejected' %}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>{% endif %}
+                  {{ lbl }}
+                </button>
+              {% endfor %}
+            </div>
+          </form>
+          <a href="{{ url_for('candidate_detail', candidate_id=app.candidate_id) }}" class="ja-view-btn">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>
+            View Profile
+          </a>
+        </div>
+
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- No-filter results -->
+    <div class="ja-no-filter" id="jaNoFilter">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" style="opacity:.3;display:block;margin:0 auto 10px"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      No applications match your filter.
+    </div>
+
+    {% else %}
+
+    <!-- Empty state -->
+    <div class="ja-empty">
+      <div class="ja-empty-ico">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.09 9.81a19.79 19.79 0 01-3.07-8.68A2 2 0 012 .9h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 8.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+      </div>
+      <h3>No applications yet</h3>
+      <p>Share the job link below to attract candidates. Once they apply, you'll manage everything here.</p>
+
+      <div class="ja-share-box">
+        <span class="ja-share-url" id="jaShareUrl">{{ request.host_url }}jobs/{{ job.id }}</span>
+        <button class="ja-copy-btn" onclick="jaCopyLink()">Copy</button>
+      </div>
+
+      <a href="{{ url_for('recruiter_dashboard') }}" class="ja-btn ja-btn-primary">← Back to Dashboard</a>
+    </div>
+
+    {% endif %}
+
   </div>
 </div>
 
-<div class="container" style="padding:2.5rem 1.5rem">
-  {% if applications %}
-    <div class="applications-list">
-      {% for app in applications %}
-        <div class="app-card">
-          <div class="app-card-header">
-            <a href="{{ url_for('candidate_detail', candidate_id=app.candidate_id) }}" class="profile-link-avatar" aria-label="View {{ app.candidate_name }}'s profile">
-              <div class="avatar">{{ app.candidate_name[0].upper() }}</div>
-            </a>
-            <div class="app-candidate-info">
-              <h3><a href="{{ url_for('candidate_detail', candidate_id=app.candidate_id) }}" class="profile-name-link">{{ app.candidate_name }}</a></h3>
-              <div class="app-meta">
-                {{ app.candidate_email }}
-                {% if app.headline %} · {{ app.headline }}{% endif %}
-                {% if app.candidate_location %} · 📍 {{ app.candidate_location }}{% endif %}
-              </div>
-              {% if app.skills %}
-                <div class="app-skills">
-                  {% for skill in app.skills %}
-                    <span class="skill-tag {{ 'verified' if skill.verified else 'unverified' }}">
-                      {{ '✓ ' if skill.verified else '' }}{{ skill.name }}
-                    </span>
-                  {% endfor %}
-                </div>
-              {% endif %}
-            </div>
-            <div class="app-actions">
-              <span class="app-status status-{{ app.status }}">{{ app.status | capitalize }}</span>
-              <div style="font-size:.8125rem;color:var(--text-muted);text-align:right">{{ app.applied_at | timeago }}</div>
-              {% if app.linkedin %}
-                <a href="{{ app.linkedin }}" target="_blank" class="btn btn-sm btn-outline">LinkedIn</a>
-              {% endif %}
-              {% if app.github %}
-                <a href="{{ app.github }}" target="_blank" class="btn btn-sm btn-outline">GitHub</a>
-              {% endif %}
-            </div>
-          </div>
+<script>
+let jaStatusFilter = '';
 
-          {% if app.cover_letter %}
-            <div class="cover-letter">
-              <div class="cover-letter-label">Cover Letter</div>
-              <p>{{ app.cover_letter }}</p>
-            </div>
-          {% endif %}
+function jaFilter(tab, status) {
+  jaStatusFilter = status;
+  document.querySelectorAll('.ja-stat').forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  _jaApply();
+}
 
-          <div class="app-status-form">
-            <span class="status-label">Update status:</span>
-            <form action="{{ url_for('update_app_status', app_id=app.id) }}" method="post" style="display:flex;gap:.5rem;flex-wrap:wrap">
-              {% for status, label in [('applied','Applied'), ('reviewing','Reviewing'), ('shortlisted','Shortlisted'), ('rejected','Rejected')] %}
-                <button type="submit" name="status" value="{{ status }}"
-                        class="btn btn-sm {{ 'btn-primary' if app.status == status else 'btn-outline' }}">
-                  {{ label }}
-                </button>
-              {% endfor %}
-            </form>
-          </div>
-        </div>
-      {% endfor %}
-    </div>
-  {% else %}
-    <div class="empty-state">
-      <div class="empty-icon">📬</div>
-      <h3>No applications yet</h3>
-      <p>Share the job link to attract candidates.</p>
-      <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
-    </div>
-  {% endif %}
-</div>
+function jaSearch() { _jaApply(); }
+
+function jaSort() {
+  const sortVal = document.getElementById('jaSort').value;
+  const list    = document.getElementById('jaList');
+  if (!list) return;
+  const cards = Array.from(list.querySelectorAll('.ja-card'));
+  cards.sort((a, b) => {
+    if (sortVal === 'name')   return a.dataset.name.localeCompare(b.dataset.name);
+    if (sortVal === 'oldest') return new Date(a.dataset.posted) - new Date(b.dataset.posted);
+    return new Date(b.dataset.posted) - new Date(a.dataset.posted);
+  });
+  cards.forEach(c => list.appendChild(c));
+}
+
+function _jaApply() {
+  const q    = (document.getElementById('jaSearchInp') || {}).value || '';
+  const list = document.getElementById('jaList');
+  const noF  = document.getElementById('jaNoFilter');
+  if (!list) return;
+
+  let visible = 0;
+  list.querySelectorAll('.ja-card').forEach(card => {
+    const matchStatus = !jaStatusFilter || card.dataset.status === jaStatusFilter;
+    const matchQ = !q || card.dataset.name.includes(q.toLowerCase()) || card.dataset.email.includes(q.toLowerCase());
+    const show = matchStatus && matchQ;
+    card.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  if (noF) noF.style.display = visible === 0 ? 'block' : 'none';
+}
+
+function jaCopyLink() {
+  const url = document.getElementById('jaShareUrl').textContent.trim();
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.querySelector('.ja-copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
+</script>
 {% endblock %}

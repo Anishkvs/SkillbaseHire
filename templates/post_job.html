@@ -58,36 +58,36 @@
 <div class="page-header">
   <div class="container page-header-inner">
     <div>
-      <h1>Post a Job</h1>
-      <p>Posting for <strong>{{ profile.company }}</strong></p>
+      <h1>{% if edit_job %}Edit Job{% else %}Post a Job{% endif %}</h1>
+      <p>{% if edit_job %}Editing <strong>{{ edit_job.title }}</strong>{% else %}Posting for <strong>{{ profile.company }}</strong>{% endif %}</p>
     </div>
     <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-outline">← Dashboard</a>
   </div>
 </div>
 
 <div class="container" style="max-width:800px;padding:2.5rem 1.5rem">
-  <form method="post" action="{{ url_for('post_job') }}">
+  <form method="post" action="{{ url_for('edit_job', job_id=edit_job.id) if edit_job else url_for('post_job') }}">
     <div class="card" style="margin-bottom:1.5rem">
       <div class="form-section-title">Job Details</div>
       <div class="form-group">
         <label class="form-label" for="title">Job Title <span class="required">*</span></label>
         <input class="form-control" type="text" id="title" name="title"
-               placeholder="e.g. Senior Backend Engineer" required>
+               placeholder="e.g. Senior Backend Engineer" required
+               value="{{ edit_job.title if edit_job else '' }}">
       </div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label" for="location">Location <span class="required">*</span></label>
           <input class="form-control" type="text" id="location" name="location"
-                 placeholder="e.g. Bangalore or Remote" required>
+                 placeholder="e.g. Bangalore or Remote" required
+                 value="{{ edit_job.location if edit_job else '' }}">
         </div>
         <div class="form-group">
           <label class="form-label" for="job_type">Job Type</label>
           <select class="form-select" id="job_type" name="job_type">
-            <option value="Full-time">Full-time</option>
-            <option value="Part-time">Part-time</option>
-            <option value="Contract">Contract</option>
-            <option value="Internship">Internship</option>
-            <option value="Freelance">Freelance</option>
+            {% for t in ['Full-time','Part-time','Contract','Internship','Freelance'] %}
+            <option value="{{ t }}"{% if edit_job and edit_job.job_type == t %} selected{% endif %}>{{ t }}</option>
+            {% endfor %}
           </select>
         </div>
       </div>
@@ -95,12 +95,14 @@
         <div class="form-group">
           <label class="form-label" for="salary_min">Min Salary (₹/year)</label>
           <input class="form-control" type="number" id="salary_min" name="salary_min"
-                 placeholder="e.g. 800000" min="0">
+                 placeholder="e.g. 800000" min="0"
+                 value="{{ edit_job.salary_min if edit_job and edit_job.salary_min else '' }}">
         </div>
         <div class="form-group">
           <label class="form-label" for="salary_max">Max Salary (₹/year)</label>
           <input class="form-control" type="number" id="salary_max" name="salary_max"
-                 placeholder="e.g. 1500000" min="0">
+                 placeholder="e.g. 1500000" min="0"
+                 value="{{ edit_job.salary_max if edit_job and edit_job.salary_max else '' }}">
         </div>
       </div>
     </div>
@@ -110,12 +112,12 @@
       <div class="form-group">
         <label class="form-label" for="description">Description <span class="required">*</span></label>
         <textarea class="form-control" id="description" name="description" rows="6"
-                  placeholder="Describe the role, responsibilities, team, and what makes this opportunity exciting..." required></textarea>
+                  placeholder="Describe the role, responsibilities, team, and what makes this opportunity exciting..." required>{{ edit_job.description if edit_job else '' }}</textarea>
       </div>
       <div class="form-group">
         <label class="form-label" for="requirements">Requirements &amp; Qualifications</label>
         <textarea class="form-control" id="requirements" name="requirements" rows="4"
-                  placeholder="List the experience, qualifications, and must-have qualities..."></textarea>
+                  placeholder="List the experience, qualifications, and must-have qualities...">{{ edit_job.requirements if edit_job else '' }}</textarea>
       </div>
     </div>
 
@@ -189,7 +191,7 @@
     </div>
 
     <div style="display:flex;gap:.75rem">
-      <button type="submit" class="btn btn-primary btn-lg">Publish Job</button>
+      <button type="submit" class="btn btn-primary btn-lg">{% if edit_job %}Update Job{% else %}Publish Job{% endif %}</button>
       <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-outline btn-lg">Cancel</a>
     </div>
   </form>
@@ -203,7 +205,17 @@ const ALL_SKILLS = [
   {% endfor %}
 ];
 
-let selectedSkills = [];
+let selectedSkills = {{ job_skills | map(attribute='id') | list | tojson if job_skills else '[]' }}.map(function(id) {
+  var sk = ALL_SKILLS.find(function(s) { return s.id === id; });
+  return sk ? { id: sk.id, name: sk.name, custom: false } : null;
+}).filter(Boolean);
+{% if edit_job and job_skills %}
+{% for sk in job_skills %}
+if (!selectedSkills.find(function(s) { return s.id === {{ sk.id }}; })) {
+  selectedSkills.push({ id: {{ sk.id }}, name: {{ sk.name | tojson }}, custom: false });
+}
+{% endfor %}
+{% endif %}
 let kbdIndex = -1;
 
 /* ── Search ── */
@@ -416,7 +428,15 @@ function updateStrSection() {
   }
 }
 
-// Init: show lock state on load
+// Init: render pre-loaded skills and restore skill test selection in edit mode
+if (selectedSkills.length > 0) commit();
+{% if edit_job %}
+(function () {
+  var strVal = '{{ "mandatory" if edit_job.skill_test_mandatory else "optional" }}';
+  var radio  = document.querySelector('input[name="skill_test_requirement"][value="' + strVal + '"]');
+  if (radio) { radio.checked = true; onStrChange(radio); }
+})();
+{% endif %}
 updateStrSection();
 
 /* ── Form validation on submit ── */

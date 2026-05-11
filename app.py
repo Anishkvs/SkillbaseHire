@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, g, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, g, jsonify, Response
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
@@ -1631,9 +1631,13 @@ def recruiter_dashboard():
                          [session['user_id']]).fetchone()
     my_jobs = db.execute('''
         SELECT j.*,
-               (SELECT COUNT(*) FROM applications WHERE job_id=j.id) AS app_count
-        FROM jobs j WHERE j.recruiter_id=? ORDER BY j.created_at DESC
+               (SELECT COUNT(*) FROM applications WHERE job_id=j.id) AS app_count,
+               (SELECT GROUP_CONCAT(s.name, ',')
+                FROM job_skills js JOIN skills s ON js.skill_id=s.id
+                WHERE js.job_id=j.id) AS skills_csv
+        FROM jobs j WHERE j.recruiter_id=? AND j.active != 2 ORDER BY j.created_at DESC
     ''', [session['user_id']]).fetchall()
+    my_jobs = [dict(j, skills_list=(j['skills_csv'] or '').split(',') if j['skills_csv'] else []) for j in my_jobs]
 
     recent_apps = db.execute('''
         SELECT a.*, j.title AS job_title, u.name AS candidate_name, u.email AS candidate_email
@@ -1724,6 +1728,70 @@ def post_job():
                            all_skills=all_skills, profile=profile)
 
 
+@app.route('/recruiter/jobs/<int:job_id>/edit', methods=['GET', 'POST'])
+@recruiter_required
+def edit_job(job_id):
+    db = get_db()
+    job = db.execute('SELECT * FROM jobs WHERE id=? AND recruiter_id=?',
+                     [job_id, session['user_id']]).fetchone()
+    if not job:
+        flash('Job not found.', 'error')
+        return redirect(url_for('recruiter_dashboard'))
+
+    all_skills = db.execute('SELECT * FROM skills ORDER BY category, name').fetchall()
+    profile    = db.execute('SELECT * FROM recruiter_profiles WHERE user_id=?',
+                            [session['user_id']]).fetchone()
+    job_skills = db.execute('''
+        SELECT s.id, s.name FROM job_skills js
+        JOIN skills s ON js.skill_id = s.id
+        WHERE js.job_id = ?
+    ''', [job_id]).fetchall()
+
+    if request.method == 'POST':
+        title       = request.form.get('title', '').strip()
+        location    = request.form.get('location', '').strip()
+        job_type    = request.form.get('job_type', 'Full-time')
+        description = request.form.get('description', '').strip()
+        requirements = request.form.get('requirements', '').strip()
+        salary_min  = request.form.get('salary_min', 0, type=int)
+        salary_max  = request.form.get('salary_max', 0, type=int)
+        skill_ids   = request.form.getlist('skills', type=int)
+        custom_skill_names = [n.strip() for n in request.form.getlist('custom_skill_names') if n.strip()]
+        skill_test_mandatory = 1 if request.form.get('skill_test_requirement') == 'mandatory' else 0
+
+        if not all([title, location, description]):
+            flash('Title, location, and description are required.', 'error')
+            return render_template('post_job.html', user=get_current_user(),
+                                   all_skills=all_skills, profile=profile,
+                                   edit_job=job, job_skills=job_skills)
+
+        db.execute('''
+            UPDATE jobs SET title=?, location=?, job_type=?, description=?,
+                            requirements=?, salary_min=?, salary_max=?,
+                            skill_test_mandatory=?
+            WHERE id=?
+        ''', [title, location, job_type, description, requirements,
+              salary_min, salary_max, skill_test_mandatory, job_id])
+
+        db.execute('DELETE FROM job_skills WHERE job_id=?', [job_id])
+        for sid in skill_ids:
+            db.execute('INSERT OR IGNORE INTO job_skills (job_id, skill_id) VALUES (?,?)',
+                       [job_id, sid])
+        for name in custom_skill_names:
+            existing = db.execute('SELECT id FROM skills WHERE LOWER(name)=LOWER(?)', [name]).fetchone()
+            sid = existing['id'] if existing else db.execute(
+                'INSERT INTO skills (name, category) VALUES (?,?)', [name, 'Other']).lastrowid
+            db.execute('INSERT OR IGNORE INTO job_skills (job_id, skill_id) VALUES (?,?)', [job_id, sid])
+
+        db.commit()
+        flash(f'"{title}" updated successfully!', 'success')
+        return redirect(url_for('job_detail', job_id=job_id))
+
+    return render_template('post_job.html', user=get_current_user(),
+                           all_skills=all_skills, profile=profile,
+                           edit_job=job, job_skills=job_skills)
+
+
 @app.route('/recruiter/jobs/<int:job_id>/toggle', methods=['POST'])
 @recruiter_required
 def toggle_job(job_id):
@@ -1734,6 +1802,34 @@ def toggle_job(job_id):
         db.execute('UPDATE jobs SET active=? WHERE id=?', [0 if job['active'] else 1, job_id])
         db.commit()
         flash('Job status updated.', 'success')
+    return redirect(url_for('recruiter_dashboard'))
+
+
+@app.route('/recruiter/jobs/<int:job_id>/archive', methods=['POST'])
+@recruiter_required
+def archive_job(job_id):
+    db = get_db()
+    job = db.execute('SELECT * FROM jobs WHERE id=? AND recruiter_id=?',
+                     [job_id, session['user_id']]).fetchone()
+    if job:
+        db.execute('UPDATE jobs SET active=2 WHERE id=?', [job_id])
+        db.commit()
+        flash(f'"{job["title"]}" has been archived.', 'success')
+    return redirect(url_for('recruiter_dashboard'))
+
+
+@app.route('/recruiter/jobs/<int:job_id>/delete', methods=['POST'])
+@recruiter_required
+def delete_job(job_id):
+    db = get_db()
+    job = db.execute('SELECT * FROM jobs WHERE id=? AND recruiter_id=?',
+                     [job_id, session['user_id']]).fetchone()
+    if job:
+        db.execute('DELETE FROM job_skills WHERE job_id=?', [job_id])
+        db.execute('DELETE FROM applications WHERE job_id=?', [job_id])
+        db.execute('DELETE FROM jobs WHERE id=?', [job_id])
+        db.commit()
+        flash(f'"{job["title"]}" has been permanently deleted.', 'success')
     return redirect(url_for('recruiter_dashboard'))
 
 
@@ -1750,6 +1846,7 @@ def job_applications(job_id):
     raw_apps = db.execute('''
         SELECT a.*, u.name AS candidate_name, u.email AS candidate_email,
                cp.headline, cp.location AS candidate_location, cp.linkedin, cp.github,
+               cp.profile_photo,
                (SELECT GROUP_CONCAT(s.name||':'||us.verified, ',')
                 FROM user_skills us JOIN skills s ON us.skill_id=s.id
                 WHERE us.user_id=a.candidate_id) AS skills_data
@@ -1764,8 +1861,14 @@ def job_applications(job_id):
         d['skills'] = parse_skills_data(a['skills_data'])[:8]
         applications.append(d)
 
+    status_counts = {'applied': 0, 'reviewing': 0, 'shortlisted': 0, 'rejected': 0}
+    for a in applications:
+        if a['status'] in status_counts:
+            status_counts[a['status']] += 1
+
     return render_template('job_applications.html', job=job,
-                           applications=applications, user=get_current_user())
+                           applications=applications, user=get_current_user(),
+                           status_counts=status_counts)
 
 
 @app.route('/recruiter/applications/<int:app_id>/status', methods=['POST'])
@@ -1802,20 +1905,22 @@ def update_app_status(app_id):
 @app.route('/recruiter/candidates')
 @recruiter_required
 def search_candidates():
+    from datetime import datetime as _dt
     db = get_db()
-    # EMAIL VERIFICATION CHECK DISABLED — re-enable when ready
-    # viewer = db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()
-    # if viewer and not viewer['email_verified']:
-    #     flash('Please verify your work email to search and view candidate profiles.', 'error')
-    #     return redirect(url_for('recruiter_dashboard'))
-    search = request.args.get('q', '').strip()
-    skill_filter = request.args.get('skill', '').strip()
+    search          = request.args.get('q', '').strip()
+    skill_filters   = [s.strip() for s in request.args.getlist('skill') if s.strip()]
     location_filter = request.args.get('location', '').strip()
-    verified_only = request.args.get('verified', '') == '1'
+    verified_only   = request.args.get('verified', '') == '1'
+    notice_filter   = request.args.get('notice', '').strip()
+    work_mode_filter= request.args.get('work_mode', '').strip()
+    exp_min         = request.args.get('exp_min', '').strip()
+    exp_max         = request.args.get('exp_max', '').strip()
+    sort_by         = request.args.get('sort', 'best_match')
 
     query = '''
         SELECT DISTINCT u.id, u.name, u.email, u.created_at,
                cp.headline, cp.location, cp.profile_photo,
+               cp.notice_period, cp.work_mode, cp.work_status,
                (SELECT COUNT(*) FROM user_skills WHERE user_id=u.id AND verified=1) AS verified_count,
                (SELECT COUNT(*) FROM user_skills WHERE user_id=u.id) AS total_skills,
                (SELECT GROUP_CONCAT(s.name||':'||us.verified, ',')
@@ -1831,27 +1936,149 @@ def search_candidates():
     if location_filter:
         query += ' AND cp.location LIKE ?'
         params.append(f'%{location_filter}%')
-    if skill_filter:
-        query += ''' AND u.id IN (
-            SELECT us.user_id FROM user_skills us JOIN skills s ON us.skill_id=s.id
-            WHERE s.name LIKE ?)'''
-        params.append(f'%{skill_filter}%')
+    if skill_filters:
+        ph = ','.join('?' * len(skill_filters))
+        query += f''' AND u.id IN (
+            SELECT DISTINCT us.user_id FROM user_skills us JOIN skills s ON us.skill_id=s.id
+            WHERE s.name IN ({ph}))'''
+        params.extend(skill_filters)
     if verified_only:
         query += ' AND (SELECT COUNT(*) FROM user_skills WHERE user_id=u.id AND verified=1) > 0'
+    if notice_filter:
+        query += ' AND cp.notice_period = ?'
+        params.append(notice_filter)
+    if work_mode_filter:
+        query += ' AND cp.work_mode = ?'
+        params.append(work_mode_filter)
     query += ' ORDER BY verified_count DESC, u.created_at DESC'
 
     raw = db.execute(query, params).fetchall()
+
+    # Fetch work experience for all candidates in one query
+    exp_map = {}
+    if raw:
+        ids = [c['id'] for c in raw]
+        placeholders = ','.join('?' * len(ids))
+        all_exps = db.execute(
+            f'SELECT user_id, start_date, end_date, is_current FROM candidate_work_experience WHERE user_id IN ({placeholders})',
+            ids
+        ).fetchall()
+        now = _dt.now()
+        for exp in all_exps:
+            uid = exp['user_id']
+            if not exp['start_date']:
+                continue
+            try:
+                sy, sm = int(exp['start_date'][:4]), int(exp['start_date'][5:7])
+                if exp['is_current'] or not exp['end_date']:
+                    ey, em = now.year, now.month
+                else:
+                    ey, em = int(exp['end_date'][:4]), int(exp['end_date'][5:7])
+                exp_map[uid] = exp_map.get(uid, 0) + max(0, (ey - sy) * 12 + (em - sm))
+            except Exception:
+                pass
+
     candidates = []
     for c in raw:
         d = dict(c)
-        d['skills'] = parse_skills_data(c['skills_data'])[:6]
+        d['skills']     = parse_skills_data(c['skills_data'])[:6]
+        d['exp_months'] = exp_map.get(c['id'], 0)
+        score = 30
+        if d.get('headline'):      score += 5
+        if d.get('location'):      score += 5
+        if d.get('profile_photo'): score += 5
+        if d.get('work_status'):   score += 5
+        score += min(d.get('verified_count', 0) * 12, 45)
+        d['match_score'] = min(score, 99)
         candidates.append(d)
 
+    # Python-side experience filter
+    if exp_min:
+        try:
+            candidates = [c for c in candidates if c['exp_months'] >= int(exp_min) * 12]
+        except ValueError:
+            pass
+    if exp_max:
+        try:
+            candidates = [c for c in candidates if c['exp_months'] <= int(exp_max) * 12]
+        except ValueError:
+            pass
+
+    # Sort
+    _notice_order = {'Immediate': 0, '15 Days': 1, '30 Days': 2, '60 Days': 3, '90 Days': 4}
+    if sort_by == 'experience':
+        candidates.sort(key=lambda c: c['exp_months'], reverse=True)
+    elif sort_by == 'notice':
+        candidates.sort(key=lambda c: _notice_order.get(c.get('notice_period') or '', 9))
+    elif sort_by in ('recent', 'new'):
+        candidates.sort(key=lambda c: c['created_at'] or '', reverse=True)
+    else:
+        candidates.sort(key=lambda c: c['match_score'], reverse=True)
+
+    has_filters = any([search, skill_filters, location_filter, verified_only,
+                       notice_filter, work_mode_filter, exp_min, exp_max])
     all_skills = db.execute('SELECT * FROM skills ORDER BY name').fetchall()
     return render_template('candidates.html', candidates=candidates,
                            all_skills=all_skills, search=search,
-                           skill_filter=skill_filter, location_filter=location_filter,
-                           verified_only=verified_only, user=get_current_user())
+                           skill_filters=skill_filters, location_filter=location_filter,
+                           verified_only=verified_only, notice_filter=notice_filter,
+                           work_mode_filter=work_mode_filter, exp_min=exp_min, exp_max=exp_max,
+                           sort_by=sort_by, has_filters=has_filters,
+                           user=get_current_user())
+
+
+@app.route('/recruiter/candidates/export')
+@recruiter_required
+def export_candidates():
+    import csv, io
+    db = get_db()
+    search          = request.args.get('q', '').strip()
+    skill_filters   = [s.strip() for s in request.args.getlist('skill') if s.strip()]
+    location_filter = request.args.get('location', '').strip()
+    verified_only   = request.args.get('verified', '') == '1'
+    notice_filter   = request.args.get('notice', '').strip()
+    work_mode_filter= request.args.get('work_mode', '').strip()
+
+    query = '''
+        SELECT DISTINCT u.name, u.email, cp.headline, cp.location,
+               cp.notice_period, cp.work_mode, cp.work_status,
+               (SELECT COUNT(*) FROM user_skills WHERE user_id=u.id AND verified=1) AS verified_skills,
+               (SELECT COUNT(*) FROM user_skills WHERE user_id=u.id) AS total_skills
+        FROM users u LEFT JOIN candidate_profiles cp ON u.id=cp.user_id
+        WHERE u.role='candidate'
+    '''
+    params = []
+    if search:
+        query += ' AND (u.name LIKE ? OR cp.headline LIKE ?)'
+        params += [f'%{search}%', f'%{search}%']
+    if location_filter:
+        query += ' AND cp.location LIKE ?'
+        params.append(f'%{location_filter}%')
+    if skill_filters:
+        ph = ','.join('?' * len(skill_filters))
+        query += f' AND u.id IN (SELECT DISTINCT us.user_id FROM user_skills us JOIN skills s ON us.skill_id=s.id WHERE s.name IN ({ph}))'
+        params.extend(skill_filters)
+    if verified_only:
+        query += ' AND (SELECT COUNT(*) FROM user_skills WHERE user_id=u.id AND verified=1) > 0'
+    if notice_filter:
+        query += ' AND cp.notice_period = ?'
+        params.append(notice_filter)
+    if work_mode_filter:
+        query += ' AND cp.work_mode = ?'
+        params.append(work_mode_filter)
+    query += ' ORDER BY u.name'
+
+    rows = db.execute(query, params).fetchall()
+    out = io.StringIO()
+    w = csv.writer(out)
+    w.writerow(['Name', 'Email', 'Headline', 'Location', 'Notice Period', 'Availability', 'Status', 'Verified Skills', 'Total Skills'])
+    for r in rows:
+        w.writerow([r['name'], r['email'], r['headline'] or '', r['location'] or '',
+                    r['notice_period'] or '', r['work_mode'] or '', r['work_status'] or '',
+                    r['verified_skills'], r['total_skills']])
+    out.seek(0)
+    return Response(out.getvalue(), mimetype='text/csv',
+                    headers={'Content-Disposition': 'attachment;filename=candidates.csv'})
 
 
 # ── Candidate Detail ─────────────────────────────────────────────────────────

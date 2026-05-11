@@ -257,6 +257,8 @@ def init_db():
             "ALTER TABLE recruiter_profiles ADD COLUMN profile_photo TEXT",
             "ALTER TABLE applications ADD COLUMN updated_at TIMESTAMP",
             "ALTER TABLE notifications ADD COLUMN redirect_url TEXT DEFAULT ''",
+            "ALTER TABLE user_skills ADD COLUMN correct_answers INTEGER",
+            "ALTER TABLE user_skills ADD COLUMN time_taken_secs INTEGER",
         ]:
             try:
                 db.execute(stmt)
@@ -864,22 +866,26 @@ def verify_skill(skill_id):
         pct = int((score / total) * 100)
         verified = 1 if pct >= meta['passing'] else 0
 
+        time_elapsed = request.form.get('time_elapsed', 0, type=int)
+        mins = time_elapsed // 60
+        secs = time_elapsed % 60
+        time_taken_str = f'{mins}:{secs:02d}'
+
         existing = db.execute(
             'SELECT id FROM user_skills WHERE user_id=? AND skill_id=?',
             [session['user_id'], skill_id]
         ).fetchone()
         if existing:
-            db.execute('UPDATE user_skills SET verified=?, score=? WHERE user_id=? AND skill_id=?',
-                       [verified, pct, session['user_id'], skill_id])
+            db.execute(
+                'UPDATE user_skills SET verified=?, score=?, correct_answers=?, time_taken_secs=? WHERE user_id=? AND skill_id=?',
+                [verified, pct, score, time_elapsed, session['user_id'], skill_id]
+            )
         else:
-            db.execute('INSERT INTO user_skills (user_id, skill_id, verified, score) VALUES (?,?,?,?)',
-                       [session['user_id'], skill_id, verified, pct])
+            db.execute(
+                'INSERT INTO user_skills (user_id, skill_id, verified, score, correct_answers, time_taken_secs) VALUES (?,?,?,?,?,?)',
+                [session['user_id'], skill_id, verified, pct, score, time_elapsed]
+            )
         db.commit()
-
-        time_elapsed = request.form.get('time_elapsed', 0, type=int)
-        mins = time_elapsed // 60
-        secs = time_elapsed % 60
-        time_taken_str = f'{mins}:{secs:02d}'
 
         session['exam_result'] = {
             'skill_id': skill_id,
@@ -914,16 +920,18 @@ def exam_result(skill_id):
         if not skill or not us:
             return redirect(url_for('skills_page'))
         meta = SKILL_META.get(skill['name'], DEFAULT_META)
+        tt_secs = us['time_taken_secs']
+        time_taken_str = f'{tt_secs // 60}:{tt_secs % 60:02d}' if tt_secs else None
         result = {
             'skill_id': skill_id,
             'skill_name': skill['name'],
             'score': us['score'],
-            'correct': None,
+            'correct': us['correct_answers'],
             'total': meta['questions'],
             'verified': bool(us['verified']),
             'passing': meta['passing'],
             'duration': meta['duration'],
-            'time_taken': None,
+            'time_taken': time_taken_str,
         }
     return render_template('exam_result.html', result=result, user=get_current_user())
 

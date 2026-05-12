@@ -2011,7 +2011,7 @@ def edit_job(job_id):
 
         db.commit()
         flash(f'"{title}" updated successfully!', 'success')
-        return redirect(url_for('recruiter_dashboard') + f'#job-{job_id}')
+        return redirect(url_for('job_detail', job_id=job_id))
 
     return render_template('post_job.html', user=get_current_user(),
                            all_skills=all_skills, profile=profile,

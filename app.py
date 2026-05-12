@@ -2,6 +2,10 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+from flask_wtf.csrf import CSRFProtect, CSRFError
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from dotenv import load_dotenv
 import sqlite3
 import os
 import re
@@ -11,8 +15,32 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 from functools import wraps
 
+load_dotenv()
+
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', 'skillbasehire-dev-secret-2024')
+
+_secret_key = os.environ.get('SECRET_KEY', '')
+if not _secret_key:
+    import secrets as _secrets
+    _secret_key = _secrets.token_hex(32)
+    print('[WARNING] SECRET_KEY not set in .env — using a random key. '
+          'Sessions will not persist across restarts.')
+app.secret_key = _secret_key
+
+app.config.update(
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE='Lax',
+    SESSION_COOKIE_SECURE=os.environ.get('FLASK_ENV') == 'production',
+    WTF_CSRF_TIME_LIMIT=3600,
+)
+
+csrf = CSRFProtect(app)
+
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    storage_uri='memory://',
+)
 
 DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'skillbasehire.db')
 
@@ -42,6 +70,53 @@ def close_connection(_exception):
     db = getattr(g, '_database', None)
     if db is not None:
         db.close()
+
+
+@app.after_request
+def set_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+    if os.environ.get('FLASK_ENV') == 'production':
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    return response
+
+
+@app.errorhandler(CSRFError)
+def csrf_error(e):
+    if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'error': 'Session expired. Please refresh and try again.'}), 400
+    flash('Your session has expired. Please try again.', 'error')
+    return redirect(request.referrer or url_for('home'))
+
+
+@app.errorhandler(429)
+def ratelimit_error(e):
+    if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'error': 'Too many requests. Please wait and try again.'}), 429
+    flash('Too many attempts. Please wait a moment and try again.', 'error')
+    return redirect(request.referrer or url_for('home')), 429
+
+
+def validate_file_magic(stream, allowed_types):
+    """Return True if the file's magic bytes match one of the allowed_types."""
+    header = stream.read(12)
+    stream.seek(0)
+    if 'pdf' in allowed_types and header[:4] == b'%PDF':
+        return True
+    if 'docx' in allowed_types and header[:2] == b'PK':
+        return True
+    if 'doc' in allowed_types and header[:4] == b'\xd0\xcf\x11\xe0':
+        return True
+    if ('jpg' in allowed_types or 'jpeg' in allowed_types) and header[:3] == b'\xff\xd8\xff':
+        return True
+    if 'png' in allowed_types and header[:4] == b'\x89PNG':
+        return True
+    if 'webp' in allowed_types and header[:4] == b'RIFF' and header[8:12] == b'WEBP':
+        return True
+    return False
 
 
 def init_db():
@@ -965,6 +1040,7 @@ def register():
 # ── Candidate auth ────────────────────────────────────────────────────────────
 
 @app.route('/candidate/signup', methods=['GET', 'POST'])
+@limiter.limit('10 per minute')
 def candidate_signup():
     if session.get('role') == 'candidate':
         return redirect(url_for('candidate_profile'))
@@ -1021,6 +1097,10 @@ def candidate_signup():
                 return render_template('candidate_signup.html', user=None, all_skills=all_skills,
                                        form=request.form, sel_skills=skill_ids)
             resume_file.seek(0)
+            if not validate_file_magic(resume_file, ALLOWED_RESUME_EXT):
+                flash('Resume file content does not match the declared format.', 'error')
+                return render_template('candidate_signup.html', user=None, all_skills=all_skills,
+                                       form=request.form, sel_skills=skill_ids)
             os.makedirs(RESUME_UPLOAD_FOLDER, exist_ok=True)
             resume_filename = secure_filename(f'{email}_{resume_file.filename}')
             resume_file.save(os.path.join(RESUME_UPLOAD_FOLDER, resume_filename))
@@ -1049,6 +1129,7 @@ def candidate_signup():
 
 
 @app.route('/candidate/login', methods=['GET', 'POST'])
+@limiter.limit('15 per minute')
 def candidate_login():
     if session.get('role') == 'candidate':
         return redirect(url_for('jobs'))
@@ -1347,6 +1428,9 @@ def upload_resume():
     if size > MAX_RESUME_SIZE:
         flash('File exceeds the 5 MB limit. Please upload a smaller file.', 'error')
         return redirect(url_for('candidate_profile'))
+    if not validate_file_magic(file, ALLOWED_RESUME_EXT):
+        flash('File content does not match the declared format.', 'error')
+        return redirect(url_for('candidate_profile'))
     os.makedirs(RESUME_UPLOAD_FOLDER, exist_ok=True)
     filename = secure_filename(f"resume_{session['user_id']}_{file.filename}")
     db = get_db()
@@ -1379,6 +1463,8 @@ def candidate_upload_photo():
     if len(file.read()) > MAX_PHOTO_SIZE:
         return ('File too large', 400)
     file.seek(0)
+    if not validate_file_magic(file, ALLOWED_PHOTO_EXT):
+        return ('Invalid image content', 400)
     os.makedirs(PHOTO_UPLOAD_FOLDER, exist_ok=True)
     filename = f"candidate_{session['user_id']}.{ext}"
     old = db.execute('SELECT profile_photo FROM candidate_profiles WHERE user_id=?',
@@ -1409,6 +1495,8 @@ def recruiter_upload_photo():
     if len(file.read()) > MAX_PHOTO_SIZE:
         return ('File too large', 400)
     file.seek(0)
+    if not validate_file_magic(file, ALLOWED_PHOTO_EXT):
+        return ('Invalid image content', 400)
     os.makedirs(PHOTO_UPLOAD_FOLDER, exist_ok=True)
     filename = f"recruiter_{session['user_id']}.{ext}"
     old = db.execute('SELECT profile_photo FROM recruiter_profiles WHERE user_id=?',
@@ -1765,6 +1853,7 @@ def apply_job(job_id):
 # ── Recruiter auth ────────────────────────────────────────────────────────────
 
 @app.route('/recruiter/signup', methods=['GET', 'POST'])
+@limiter.limit('10 per minute')
 def recruiter_signup():
     if session.get('role') == 'recruiter':
         return redirect(url_for('recruiter_dashboard'))
@@ -1825,6 +1914,7 @@ def recruiter_signup():
 
 
 @app.route('/recruiter/login', methods=['GET', 'POST'])
+@limiter.limit('15 per minute')
 def recruiter_login():
     if session.get('role') == 'recruiter':
         return redirect(url_for('recruiter_dashboard'))
@@ -2170,7 +2260,7 @@ def search_candidates():
 
     query = '''
         SELECT DISTINCT u.id, u.name, u.email, u.created_at,
-               cp.headline, cp.location, cp.profile_photo,
+               cp.headline, cp.location, cp.profile_photo, cp.experience,
                cp.notice_period, cp.work_mode, cp.work_status,
                (SELECT COUNT(*) FROM user_skills WHERE user_id=u.id AND verified=1) AS verified_count,
                (SELECT COUNT(*) FROM user_skills WHERE user_id=u.id) AS total_skills,
@@ -2182,8 +2272,11 @@ def search_candidates():
     '''
     params = []
     if search:
-        query += ' AND (u.name LIKE ? OR cp.headline LIKE ? OR cp.bio LIKE ?)'
-        params += [f'%{search}%', f'%{search}%', f'%{search}%']
+        query += ''' AND (u.name LIKE ? OR cp.headline LIKE ? OR cp.bio LIKE ?
+                    OR u.id IN (
+                        SELECT DISTINCT us.user_id FROM user_skills us JOIN skills s ON us.skill_id=s.id
+                        WHERE s.name LIKE ?))'''
+        params += [f'%{search}%', f'%{search}%', f'%{search}%', f'%{search}%']
     if location_filter:
         query += ' AND cp.location LIKE ?'
         params.append(f'%{location_filter}%')
@@ -2191,8 +2284,8 @@ def search_candidates():
         ph = ','.join('?' * len(skill_filters))
         query += f''' AND u.id IN (
             SELECT DISTINCT us.user_id FROM user_skills us JOIN skills s ON us.skill_id=s.id
-            WHERE s.name IN ({ph}))'''
-        params.extend(skill_filters)
+            WHERE LOWER(s.name) IN ({ph}))'''
+        params.extend(s.lower() for s in skill_filters)
     if verified_only:
         query += ' AND (SELECT COUNT(*) FROM user_skills WHERE user_id=u.id AND verified=1) > 0'
     if notice_filter:
@@ -2229,11 +2322,17 @@ def search_candidates():
             except Exception:
                 pass
 
+    import re as _re
     candidates = []
     for c in raw:
         d = dict(c)
         d['skills']     = parse_skills_data(c['skills_data'])[:6]
-        d['exp_months'] = exp_map.get(c['id'], 0)
+        exp_months = exp_map.get(c['id'], 0)
+        if exp_months == 0 and c['experience']:
+            m = _re.search(r'(\d+(?:\.\d+)?)', c['experience'])
+            if m:
+                exp_months = int(float(m.group(1)) * 12)
+        d['exp_months'] = exp_months
         score = 30
         if d.get('headline'):      score += 5
         if d.get('location'):      score += 5

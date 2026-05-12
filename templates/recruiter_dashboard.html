@@ -1189,6 +1189,11 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
       setTimeout(function () {
         skel.style.display    = 'none';
         if (filters) filters.style.removeProperty('display');
+        // Re-scroll to hash target after skeleton removal shifts the layout
+        if (location.hash) {
+          var target = document.querySelector(location.hash);
+          if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
       }, 320);
     }, 600);
   })();

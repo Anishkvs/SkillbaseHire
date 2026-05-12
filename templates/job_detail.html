@@ -8,7 +8,7 @@
     <!-- Left: Main content -->
     <div class="job-detail-main">
       {% if session.get('role') == 'recruiter' %}
-      <a href="{{ url_for('recruiter_dashboard') }}" class="back-link">← Back to Dashboard</a>
+      <a href="{{ url_for('recruiter_dashboard') }}#job-{{ job.id }}" class="back-link">← Back to Dashboard</a>
       {% else %}
       <a href="{{ url_for('jobs') }}" class="back-link">← Back to Jobs</a>
       {% endif %}

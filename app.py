@@ -2028,7 +2028,7 @@ def toggle_job(job_id):
         db.execute('UPDATE jobs SET active=? WHERE id=?', [0 if job['active'] else 1, job_id])
         db.commit()
         flash('Job status updated.', 'success')
-    return redirect(url_for('recruiter_dashboard'))
+    return redirect(url_for('recruiter_dashboard') + f'#job-{job_id}')
 
 
 @app.route('/recruiter/jobs/<int:job_id>/archive', methods=['POST'])
@@ -2041,7 +2041,7 @@ def archive_job(job_id):
         db.execute('UPDATE jobs SET active=2 WHERE id=?', [job_id])
         db.commit()
         flash(f'"{job["title"]}" has been archived.', 'success')
-    return redirect(url_for('recruiter_dashboard'))
+    return redirect(url_for('recruiter_dashboard') + '#my-job-postings')
 
 
 @app.route('/recruiter/jobs/<int:job_id>/delete', methods=['POST'])
@@ -2056,7 +2056,7 @@ def delete_job(job_id):
         db.execute('DELETE FROM jobs WHERE id=?', [job_id])
         db.commit()
         flash(f'"{job["title"]}" has been permanently deleted.', 'success')
-    return redirect(url_for('recruiter_dashboard'))
+    return redirect(url_for('recruiter_dashboard') + '#my-job-postings')
 
 
 @app.route('/recruiter/jobs/<int:job_id>/applications')

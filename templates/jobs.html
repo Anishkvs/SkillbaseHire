@@ -314,8 +314,10 @@ function onSkillInput(val)   { _showSkillDrop(val, 'skillDrop'); }
 function onSkillKeydown(ev)  { _handleSkillKeydown(ev, 'skillInput', 'skillDrop'); }
 
 function addSkill(skill) {
-  if (!skill || state.skills.includes(skill)) return;
-  state.skills.push(skill);
+  if (!skill) return;
+  const normalized = ALL_SKILLS.find(s => s.toLowerCase() === skill.toLowerCase()) || skill;
+  if (state.skills.some(s => s.toLowerCase() === normalized.toLowerCase())) return;
+  state.skills.push(normalized);
   document.getElementById('skillInput').value = '';
   closeSkillDrop();
   renderSkillChips();
@@ -431,7 +433,7 @@ function applyFilters() {
       if (!job.location.toLowerCase().includes(state.location)) return false;
     }
     if (state.verified && job.verifiedIn.length===0) return false;
-    if (state.skills.length && !state.skills.some(s=>job.reqSkills.includes(s))) return false;
+    if (state.skills.length && !state.skills.some(s=>job.reqSkills.some(r=>r.toLowerCase()===s.toLowerCase()))) return false;
     if (job.expRange[0] > state.expMax || job.expRange[1] < state.expMin) return false;
     if (job.salRange[0] > state.salMax || job.salRange[1] < state.salMin) return false;
     if (state.types.length && !state.types.includes(job.type)) return false;

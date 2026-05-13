@@ -15,7 +15,19 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 from functools import wraps
 
-load_dotenv()
+# Read APP_ENV before loading any .env file so the system env var takes priority.
+# Set APP_ENV=production on DigitalOcean; leave it unset (or set to "development") locally.
+_app_env = os.environ.get('APP_ENV', 'development')
+
+if _app_env == 'production':
+    # On DigitalOcean, real secrets are injected by the platform, so override=False
+    # ensures platform variables win over anything in the file.
+    load_dotenv('.env.production', override=False)
+else:
+    load_dotenv('.env.development')
+
+# True only in production — controls HTTPS-only cookies, HSTS header, etc.
+_is_production = (_app_env == 'production')
 
 app = Flask(__name__)
 
@@ -27,10 +39,13 @@ if not _secret_key:
           'Sessions will not persist across restarts.')
 app.secret_key = _secret_key
 
+# DEBUG=True shows detailed error pages; always False in production
+app.debug = os.environ.get('DEBUG', 'False').lower() == 'true'
+
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
-    SESSION_COOKIE_SECURE=os.environ.get('FLASK_ENV') == 'production',
+    SESSION_COOKIE_SECURE=_is_production,  # HTTPS-only cookies in production
     WTF_CSRF_TIME_LIMIT=3600,
 )
 
@@ -79,7 +94,7 @@ def set_security_headers(response):
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
-    if os.environ.get('FLASK_ENV') == 'production':
+    if _is_production:  # HSTS only makes sense over HTTPS in production
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     return response
 

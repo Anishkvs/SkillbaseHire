@@ -123,6 +123,25 @@ _CONTACT_RE = re.compile(
     re.IGNORECASE,
 )
 
+_CERT_RE = re.compile(
+    r'\b(?:certified|certification|certificate|license|credential|'
+    r'vskills|coursera|udemy|linkedin\s+learning|edx|nptel|'
+    r'aws\s+certified|microsoft\s+certified|google\s+certified|'
+    r'oracle\s+certified|cisco\s+certified|pmp|itil|six\s*sigma|'
+    r'comptia|isaca|pmbok)\b',
+    re.IGNORECASE,
+)
+
+_ACTION_VERB_RE = re.compile(
+    r'^(?:developed|implemented|designed|built|created|managed|led|worked|'
+    r'responsible|handled|performed|achieved|maintained|supported|assisted|'
+    r'analyzed|analysed|optimized|deployed|configured|integrated|tested|'
+    r'collaborated|coordinated|provided|delivered|ensured|established|'
+    r'automated|enhanced|improved|reduced|increased|migrated|monitored|'
+    r'resolved|troubleshot|wrote|wrote|reviewed|participated)\b',
+    re.IGNORECASE,
+)
+
 _MONTH_MAP = {
     'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04',
     'may': '05', 'jun': '06', 'jul': '07', 'aug': '08',
@@ -148,29 +167,25 @@ def extract_text(filepath: str, ext: str) -> str:
 
 
 def parse_resume(text: str) -> dict:
-    """
-    Parse a plain-text resume and return a structured dict:
-    {
-        headline, job_title, experience, location,
-        skills:          [str, ...],
-        work_experience: [{company, designation, start_date, end_date, is_current, description}, ...],
-        education:       [{degree, college, start_year, end_year}, ...],
-        projects:        [{project_name, domain, description, project_url, year}, ...],
-        certifications:  [{cert_name, issued_by, year, credential_url}, ...],
-    }
-    """
     lines    = [l.rstrip() for l in text.split('\n')]
     sections = _detect_sections(lines)
+    headline,  hl_conf  = _extract_headline(lines, sections)
+    job_title, jt_conf  = _extract_job_title(lines, sections)
+    # Sort work experience latest-first (current roles first)
+    work_exp = _extract_work_experience(sections)
+    work_exp.sort(key=lambda e: (e.get('is_current', 0), e.get('start_date', '')), reverse=True)
     return {
-        'headline':        _extract_headline(lines, sections),
-        'job_title':       _extract_job_title(lines, sections),
-        'experience':      _extract_exp_years(text, sections),
-        'location':        _extract_location(text),
-        'skills':          _extract_skills(sections, text),
-        'work_experience': _extract_work_experience(sections),
-        'education':       _extract_education(sections),
-        'projects':        _extract_projects(sections),
-        'certifications':  _extract_certifications(sections),
+        'headline':              headline,
+        'headline_confidence':   hl_conf,
+        'job_title':             job_title,
+        'job_title_confidence':  jt_conf,
+        'experience':            _extract_exp_years(text, sections),
+        'location':              _extract_location(text),
+        'skills':                _extract_skills(sections, text),
+        'work_experience':       work_exp,
+        'education':             _extract_education(sections),
+        'projects':              _extract_projects(sections),
+        'certifications':        _extract_certifications(sections),
     }
 
 
@@ -234,27 +249,50 @@ def _detect_sections(lines: list) -> dict:
 
 # ── Field extractors ──────────────────────────────────────────────────────────
 
-def _extract_headline(lines: list, sections: dict) -> str:
+def _extract_headline(lines: list, sections: dict) -> tuple:
+    """Return (headline_text, confidence) where confidence is 'high'|'low'."""
     header_lines = [l.strip() for l in sections.get('header', []) if l.strip()]
-    # Skip line 0 (usually the candidate's name) and contact lines
-    for line in header_lines[1:5]:
-        if not _CONTACT_RE.search(line) and len(line) > 4:
-            return line[:120]
-    # Fallback: first line of summary
+    for line in header_lines[1:6]:
+        if _CONTACT_RE.search(line) or len(line) < 5:
+            continue
+        if _CERT_RE.search(line):
+            continue
+        if _ACTION_VERB_RE.match(line):
+            continue
+        words = line.split()
+        # Headline: 2–10 words, starts uppercase
+        if 2 <= len(words) <= 10 and line[0].isupper():
+            conf = 'high' if _DESIGNATION_RE.search(line) else 'low'
+            return line[:120], conf
+    # Fallback: first sentence of summary that isn't a cert
     for line in sections.get('summary', []):
         l = line.strip()
-        if l:
-            return l[:120]
-    return ''
+        if l and not _CERT_RE.search(l) and not _ACTION_VERB_RE.match(l):
+            return l[:120], 'low'
+    return '', 'low'
 
 
-def _extract_job_title(lines: list, sections: dict) -> str:
-    # Same heuristic as headline — designation near the top of the resume
+def _extract_job_title(lines: list, sections: dict) -> tuple:
+    """Return (job_title_text, confidence). Prefer current role from work exp."""
+    work_exp = _extract_work_experience(sections)
+    # Current role = designation from the most recent current entry
+    for e in work_exp:
+        if e.get('is_current') and e.get('designation', '').strip():
+            d = e['designation'].strip()
+            if not _CERT_RE.search(d) and _DESIGNATION_RE.search(d):
+                return d[:120], 'high'
+    # Latest entry with a designation
+    for e in work_exp:
+        if e.get('designation', '').strip():
+            d = e['designation'].strip()
+            if not _CERT_RE.search(d) and _DESIGNATION_RE.search(d):
+                return d[:120], 'high'
+    # Header fallback: line with a designation word, no cert
     header_lines = [l.strip() for l in sections.get('header', []) if l.strip()]
     for line in header_lines[1:5]:
-        if not _CONTACT_RE.search(line) and _DESIGNATION_RE.search(line):
-            return line[:120]
-    return _extract_headline(lines, sections)
+        if not _CONTACT_RE.search(line) and _DESIGNATION_RE.search(line) and not _CERT_RE.search(line):
+            return line[:120], 'high'
+    return '', 'low'
 
 
 def _extract_exp_years(text: str, sections: dict) -> str:
@@ -527,6 +565,13 @@ def _split_degree_college(text: str) -> tuple:
 
 
 def _looks_like_entry_header(text: str) -> bool:
-    if len(text) > 80 or text[0] in '•·-–—○●▪▫▸►*':
+    if len(text) > 70 or text[0] in '•·-–—○●▪▫▸►*':
+        return False
+    words = text.split()
+    # Reject long sentences — description lines have many words
+    if len(words) > 7:
+        return False
+    # Reject lines that start with an action verb (description bullets)
+    if _ACTION_VERB_RE.match(text):
         return False
     return bool(re.match(r'^[A-Za-z0-9\s&.,\-()/]+$', text))

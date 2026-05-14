@@ -102,21 +102,29 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text)}
 .ri-val.empty{color:var(--text-4);font-style:italic}
 
 /* Action buttons */
-.ri-actions{display:flex;gap:.375rem;flex-wrap:nowrap}
-.ri-btn-accept{background:var(--green);color:#fff;border:none;border-radius:6px;
-  padding:.3rem .625rem;font-size:.75rem;font-weight:600;cursor:pointer;
-  display:flex;align-items:center;gap:.25rem;white-space:nowrap;transition:opacity .15s}
-.ri-btn-accept:hover{opacity:.85}
-.ri-btn-accept.active{outline:2px solid var(--green);outline-offset:2px}
+.ri-actions{display:flex;gap:.375rem;flex-wrap:nowrap;align-items:center}
+.ri-btn-accept{background:#fff;color:var(--green);border:1.5px solid var(--green);
+  border-radius:6px;padding:.3rem .625rem;font-size:.75rem;font-weight:600;cursor:pointer;
+  display:inline-flex;align-items:center;gap:.25rem;white-space:nowrap;transition:all .15s}
+.ri-btn-accept:hover{background:var(--green-light)}
+.ri-btn-accept.accepted{background:var(--green);color:#fff;border-color:var(--green);
+  cursor:default;opacity:1}
 .ri-btn-skip{background:transparent;color:var(--text-3);border:1px solid var(--border);
   border-radius:6px;padding:.3rem .625rem;font-size:.75rem;font-weight:600;
   cursor:pointer;transition:background .15s;white-space:nowrap}
 .ri-btn-skip:hover{background:var(--bg)}
 .ri-btn-skip.active{background:#fee2e2;color:var(--red);border-color:#fca5a5}
-.ri-btn-edit{background:transparent;color:var(--accent);border:1px solid var(--accent-mid);
+.ri-btn-edit{background:transparent;color:#475569;border:1px solid #cbd5e1;
   border-radius:6px;padding:.3rem .625rem;font-size:.75rem;font-weight:600;cursor:pointer;
-  transition:background .15s;white-space:nowrap}
-.ri-btn-edit:hover{background:var(--accent-light)}
+  display:inline-flex;align-items:center;gap:.25rem;white-space:nowrap;transition:background .15s}
+.ri-btn-edit:hover{background:#f1f5f9}
+/* Accepted row highlight */
+tr.ri-row-accepted td{background:#f0fdf4}
+tr.ri-row-accepted td:first-child{border-left:3px solid var(--green)}
+/* Needs-review badge */
+.ri-needs-review{display:inline-flex;align-items:center;gap:.25rem;background:#FEF3C7;
+  color:#92400E;border:1px solid #FDE68A;border-radius:4px;font-size:.68rem;
+  font-weight:700;padding:.1rem .4rem;margin-left:.4rem;vertical-align:middle}
 
 /* List item cards */
 .ri-item-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);
@@ -625,16 +633,20 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text)}
     buildReview();
   };
 
+  var PENCIL_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+  var CHECK_SVG  = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg>';
+  var WARN_BADGE = '<span class="ri-needs-review"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Needs Review</span>';
+
   function buildReview() {
     var ex   = parsed.extracted;
     var exist = parsed.existing;
 
     /* Profile fields */
     var fieldDefs = [
-      { key: 'headline',   label: 'Headline' },
-      { key: 'job_title',  label: 'Current Role' },
-      { key: 'experience', label: 'Experience (yrs)' },
-      { key: 'location',   label: 'Location' },
+      { key: 'headline',   label: 'Headline',         highConf: ex.headline_confidence   === 'high' },
+      { key: 'job_title',  label: 'Current Role',     highConf: ex.job_title_confidence  === 'high' },
+      { key: 'experience', label: 'Experience (yrs)', highConf: true },
+      { key: 'location',   label: 'Location',         highConf: true },
     ];
     var tbody     = document.getElementById('riFieldsBody');
     tbody.innerHTML = '';
@@ -644,7 +656,7 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text)}
       var extVal  = (ex[fd.key] || '').toString().trim();
       if (!extVal) return;
       var curVal  = (exist[fd.key] || '').toString().trim();
-      var accepted = !(curVal);  // auto-accept if empty, else default skip
+      var accepted = !curVal;  // auto-accept if field is empty, else default to skip
 
       if (!(fd.key in fieldDecisions)) {
         fieldDecisions[fd.key] = { accept: accepted, value: extVal };
@@ -652,22 +664,31 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text)}
       var dec = fieldDecisions[fd.key];
       fieldCount++;
 
+      var needsReview = !fd.highConf;
+      var displayVal  = esc(extVal) + (needsReview ? WARN_BADGE : '');
+
       var tr = document.createElement('tr');
       tr.setAttribute('data-field', fd.key);
+      if (dec.accept) tr.classList.add('ri-row-accepted');
       tr.innerHTML =
         '<td class="ri-field-name">' + esc(fd.label) + '</td>' +
         '<td class="ri-val existing">' + (curVal ? esc(curVal) : '<span class="ri-val empty">—</span>') + '</td>' +
         '<td class="ri-val extracted" id="cell_' + fd.key + '">' +
-          '<span id="disp_' + fd.key + '">' + esc(extVal) + '</span>' +
+          '<span id="disp_' + fd.key + '">' + displayVal + '</span>' +
           '<input class="ri-edit-input" id="inp_' + fd.key + '" value="' + esc(extVal) +
           '" style="display:none" oninput="onFieldEdit(\'' + fd.key + '\', this.value)">' +
         '</td>' +
         '<td><div class="ri-actions">' +
-          '<button class="ri-btn-accept' + (dec.accept ? ' active' : '') + '" ' +
-          'onclick="toggleField(\'' + fd.key + '\', true)" id="acc_' + fd.key + '">✓ Accept</button>' +
+          '<button class="ri-btn-accept' + (dec.accept ? ' accepted' : '') + '" ' +
+          (dec.accept ? 'disabled ' : '') +
+          'onclick="toggleField(\'' + fd.key + '\', true)" id="acc_' + fd.key + '">' +
+            CHECK_SVG + (dec.accept ? ' Accepted' : ' Accept') +
+          '</button>' +
           '<button class="ri-btn-skip' + (!dec.accept ? ' active' : '') + '" ' +
           'onclick="toggleField(\'' + fd.key + '\', false)" id="sk_' + fd.key + '">✗ Skip</button>' +
-          '<button class="ri-btn-edit" onclick="editField(\'' + fd.key + '\')" id="edit_' + fd.key + '">✏</button>' +
+          '<button class="ri-btn-edit" onclick="editField(\'' + fd.key + '\')" id="edit_' + fd.key + '" title="Edit this field">' +
+            PENCIL_SVG + ' Edit' +
+          '</button>' +
         '</div></td>';
       tbody.appendChild(tr);
     });
@@ -682,12 +703,20 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text)}
       ex.work_experience || [],
       'exp',
       function(item) {
+        var desig   = (item.designation || '').trim();
+        var company = (item.company     || '').trim();
+        // Reject description-text masquerading as a title/company (> 7 words)
+        if (desig.split(' ').length > 7)   desig   = '';
+        if (company.split(' ').length > 7) company = '';
+        var roleLabel = desig || 'Role not detected';
         return {
-          title: (item.designation || 'Unknown Role') + (item.company ? ' · ' + item.company : ''),
+          title: roleLabel + (company ? ' · ' + company : ''),
           sub:   formatDateRange(item.start_date, item.end_date, item.is_current),
           desc:  item.description || '',
+          lowConf: !desig,
         };
-      }
+      },
+      'No work experience detected from resume. You can add it manually.'
     );
 
     /* Education */
@@ -738,7 +767,8 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text)}
           sub:   (item.domain ? item.domain : '') + (item.year ? ' · ' + item.year : ''),
           desc:  item.description || '',
         };
-      }
+      },
+      'No projects detected from resume. You can add projects manually.'
     );
 
     /* Certifications */
@@ -752,22 +782,32 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text)}
           sub:   (item.issued_by ? item.issued_by : '') + (item.year ? ' · ' + item.year : ''),
           desc:  '',
         };
-      }
+      },
+      'No certifications detected from resume. You can add them manually.'
     );
   }
 
-  function renderListSection(listId, countId, sectionId, items, key, mapper) {
+  function renderListSection(listId, countId, sectionId, items, key, mapper, emptyMsg) {
     var container = document.getElementById(listId);
     container.innerHTML = '';
     document.getElementById(countId).textContent = items.length;
-    document.getElementById(sectionId).style.display = items.length ? '' : 'none';
+
+    if (items.length === 0) {
+      // Always show the section with an empty-state message
+      document.getElementById(sectionId).style.display = '';
+      if (emptyMsg) {
+        container.innerHTML = '<div style="font-size:.8rem;color:var(--text-4);padding:.25rem 0 .5rem;font-style:italic">' + esc(emptyMsg) + '</div>';
+      }
+      return;
+    }
+    document.getElementById(sectionId).style.display = '';
 
     if (!listDecisions[key] || listDecisions[key].length !== items.length) {
       listDecisions[key] = items.map(function(){ return true; });
     }
 
     items.forEach(function(item, i) {
-      var info  = mapper(item);
+      var info    = mapper(item);
       var checked = listDecisions[key][i];
 
       var card = document.createElement('div');
@@ -785,12 +825,15 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text)}
         card.classList.toggle('ri-item-skipped', !on);
       });
 
+      var titleHtml = esc(info.title);
+      if (info.lowConf) titleHtml += WARN_BADGE;
+
       var body = document.createElement('div');
       body.className = 'ri-item-body';
       body.innerHTML =
-        '<div class="ri-item-title">' + esc(info.title) + '</div>' +
-        (info.sub.trim() ? '<div class="ri-item-sub">' + esc(info.sub) + '</div>' : '') +
-        (info.desc.trim() ? '<div class="ri-item-desc">' + esc(info.desc) + '</div>' : '');
+        '<div class="ri-item-title">' + titleHtml + '</div>' +
+        (info.sub && info.sub.trim() ? '<div class="ri-item-sub">' + esc(info.sub) + '</div>' : '') +
+        (info.desc && info.desc.trim() ? '<div class="ri-item-desc">' + esc(info.desc) + '</div>' : '');
 
       card.appendChild(checkEl);
       card.appendChild(body);
@@ -801,30 +844,51 @@ body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text)}
   /* ── Field decision helpers ─────────────────────────────────────────── */
   window.toggleField = function(key, accept) {
     fieldDecisions[key].accept = accept;
-    document.getElementById('acc_' + key).classList.toggle('active', accept);
-    document.getElementById('sk_'  + key).classList.toggle('active', !accept);
+    var accBtn = document.getElementById('acc_' + key);
+    var skpBtn = document.getElementById('sk_'  + key);
+    var row    = document.querySelector('tr[data-field="' + key + '"]');
+    if (accept) {
+      accBtn.className = 'ri-btn-accept accepted';
+      accBtn.innerHTML = CHECK_SVG + ' Accepted';
+      accBtn.disabled  = true;
+      skpBtn.className = 'ri-btn-skip';
+      if (row) row.classList.add('ri-row-accepted');
+    } else {
+      accBtn.className = 'ri-btn-accept';
+      accBtn.innerHTML = CHECK_SVG + ' Accept';
+      accBtn.disabled  = false;
+      skpBtn.className = 'ri-btn-skip active';
+      if (row) row.classList.remove('ri-row-accepted');
+    }
   };
   window.onFieldEdit = function(key, val) {
-    fieldDecisions[key].value = val;
+    fieldDecisions[key].value  = val;
     fieldDecisions[key].accept = true;
-    document.getElementById('acc_' + key).classList.add('active');
-    document.getElementById('sk_'  + key).classList.remove('active');
+    var accBtn = document.getElementById('acc_' + key);
+    var skpBtn = document.getElementById('sk_'  + key);
+    var row    = document.querySelector('tr[data-field="' + key + '"]');
+    accBtn.className = 'ri-btn-accept accepted';
+    accBtn.innerHTML = CHECK_SVG + ' Accepted';
+    accBtn.disabled  = true;
+    skpBtn.className = 'ri-btn-skip';
+    if (row) row.classList.add('ri-row-accepted');
   };
   window.editField = function(key) {
     var disp = document.getElementById('disp_' + key);
     var inp  = document.getElementById('inp_'  + key);
+    var btn  = document.getElementById('edit_' + key);
     var editing = inp.style.display !== 'none';
     if (editing) {
-      // Commit
-      disp.textContent = inp.value;
+      // Commit edit
+      disp.innerHTML     = esc(inp.value);
       disp.style.display = '';
       inp.style.display  = 'none';
-      document.getElementById('edit_' + key).textContent = '✏';
+      btn.innerHTML      = PENCIL_SVG + ' Edit';
     } else {
       disp.style.display = 'none';
       inp.style.display  = '';
       inp.focus();
-      document.getElementById('edit_' + key).textContent = '✔';
+      btn.innerHTML = CHECK_SVG + ' Done';
     }
   };
 

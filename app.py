@@ -261,7 +261,7 @@ def get_db():
             db = g._database = _PGConn(conn)
         else:
             db = g._database = sqlite3.connect(DATABASE)
-            db.row_factory = sqlite3.Row
+            db.row_factory = lambda cur, row: dict(zip([c[0] for c in cur.description], row))
     return db
 
 

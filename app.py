@@ -228,7 +228,7 @@ RESUME_UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
 PHOTO_UPLOAD_FOLDER  = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads', 'photos')
 ALLOWED_RESUME_EXT = {'pdf', 'doc', 'docx'}
 ALLOWED_PHOTO_EXT  = {'jpg', 'jpeg', 'png', 'webp'}
-MAX_RESUME_SIZE = 5 * 1024 * 1024   # 5 MB
+MAX_RESUME_SIZE = 1 * 1024 * 1024   # 1 MB
 MAX_PHOTO_SIZE  = 2 * 1024 * 1024   # 2 MB
 
 
@@ -1407,7 +1407,7 @@ def candidate_signup():
                 return render_template('candidate_signup.html', user=None, all_skills=all_skills,
                                        form=request.form, sel_skills=skill_ids)
             if len(resume_file.read()) > MAX_RESUME_SIZE:
-                flash('Resume file must be under 5 MB.', 'error')
+                flash('Only PDF, DOC, and DOCX resumes up to 1 MB are allowed.', 'error')
                 return render_template('candidate_signup.html', user=None, all_skills=all_skills,
                                        form=request.form, sel_skills=skill_ids)
             resume_file.seek(0)
@@ -1734,13 +1734,13 @@ def upload_resume():
         return redirect(url_for('candidate_profile'))
     ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
     if ext not in ALLOWED_RESUME_EXT:
-        flash(f'Invalid file type ".{ext}". Only PDF, DOC, and DOCX are allowed.', 'error')
+        flash('Only PDF, DOC, and DOCX resumes up to 1 MB are allowed.', 'error')
         return redirect(url_for('candidate_profile'))
     file.seek(0, 2)
     size = file.tell()
     file.seek(0)
     if size > MAX_RESUME_SIZE:
-        flash('File exceeds the 5 MB limit. Please upload a smaller file.', 'error')
+        flash('Only PDF, DOC, and DOCX resumes up to 1 MB are allowed.', 'error')
         return redirect(url_for('candidate_profile'))
     if not validate_file_magic(file, ALLOWED_RESUME_EXT):
         flash('File content does not match the declared format.', 'error')

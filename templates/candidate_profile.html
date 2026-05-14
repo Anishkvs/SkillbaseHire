@@ -940,6 +940,7 @@ textarea.fc{resize:vertical;min-height:80px}
       <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
       Upload / Replace Resume
     </label>
+    <span style="font-size:.7rem;color:var(--text-muted);align-self:center">Supported formats: PDF, DOC, DOCX &nbsp;·&nbsp; Maximum size: 1 MB</span>
     {% if profile and profile.resume_filename %}
     <a href="/static/uploads/resumes/{{ profile.resume_filename }}" download class="btn btn-ghost btn-sm">
       <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -1727,6 +1728,7 @@ textarea.fc{resize:vertical;min-height:80px}
             <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             <p>Upload your resume to improve recruiter visibility.</p>
             <label for="resumeFileInput" class="btn btn-primary btn-sm" style="cursor:pointer">Upload Resume</label>
+            <p style="font-size:.7rem;color:var(--text-muted);margin-top:.5rem">Supported formats: PDF, DOC, DOCX &nbsp;·&nbsp; Maximum size: 1 MB</p>
           </div>
           {% endif %}
           <div id="resumeErr" style="display:none;margin-top:.5rem;font-size:.8125rem;color:var(--red);padding:.4375rem .625rem;background:var(--red-light);border-radius:var(--radius-xs)"></div>
@@ -1940,8 +1942,8 @@ function handleResume(input) {
   const errEl = document.getElementById('resumeErr');
   if (!file) return;
   const ext = file.name.split('.').pop().toLowerCase();
-  if (!allowed.includes(ext)) { errEl.style.display='block'; errEl.textContent=`Invalid file type ".${ext}". Only PDF, DOC, and DOCX are allowed.`; input.value=''; return; }
-  if (file.size > 5*1024*1024) { errEl.style.display='block'; errEl.textContent='File exceeds 5 MB limit.'; input.value=''; return; }
+  if (!allowed.includes(ext)) { errEl.style.display='block'; errEl.textContent='Only PDF, DOC, and DOCX resumes up to 1 MB are allowed.'; input.value=''; return; }
+  if (file.size > 1*1024*1024) { errEl.style.display='block'; errEl.textContent='Only PDF, DOC, and DOCX resumes up to 1 MB are allowed.'; input.value=''; return; }
   errEl.style.display='none';
   document.getElementById('resumeUploadForm').submit();
 }

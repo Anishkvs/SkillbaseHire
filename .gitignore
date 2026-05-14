@@ -1,8 +1,7 @@
 __pycache__/
 *.pyc
 .env
-.env.development
-.env.production
+.env.*
 venv/
 .venv/
 instance/
@@ -10,3 +9,4 @@ instance/
 .DS_Store
 .vscode/
 *.db
+uploads/

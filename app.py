@@ -1636,13 +1636,13 @@ def candidate_profile():
         'SELECT * FROM candidate_work_experience WHERE user_id=? ORDER BY start_date DESC, id DESC',
         [session['user_id']]).fetchall()
     educations = db.execute(
-        'SELECT * FROM candidate_education WHERE user_id=? ORDER BY COALESCE(end_year,9999) DESC, COALESCE(start_year,0) DESC',
+        'SELECT * FROM candidate_education WHERE user_id=? ORDER BY COALESCE(end_year,\'9999\') DESC, COALESCE(start_year,\'0\') DESC',
         [session['user_id']]).fetchall()
     certifications = db.execute(
-        'SELECT * FROM candidate_certifications WHERE user_id=? ORDER BY COALESCE(year,0) DESC, id DESC',
+        'SELECT * FROM candidate_certifications WHERE user_id=? ORDER BY COALESCE(year,\'0\') DESC, id DESC',
         [session['user_id']]).fetchall()
     projects = db.execute(
-        'SELECT * FROM candidate_projects WHERE user_id=? ORDER BY COALESCE(year,0) DESC, id DESC',
+        'SELECT * FROM candidate_projects WHERE user_id=? ORDER BY COALESCE(year,\'0\') DESC, id DESC',
         [session['user_id']]).fetchall()
 
     # Calculate total work experience
@@ -2766,13 +2766,13 @@ def candidate_detail(candidate_id):
         'SELECT * FROM candidate_work_experience WHERE user_id=? ORDER BY start_date DESC, id DESC',
         [candidate_id]).fetchall()
     educations = db.execute(
-        'SELECT * FROM candidate_education WHERE user_id=? ORDER BY COALESCE(end_year,9999) DESC, COALESCE(start_year,0) DESC',
+        'SELECT * FROM candidate_education WHERE user_id=? ORDER BY COALESCE(end_year,\'9999\') DESC, COALESCE(start_year,\'0\') DESC',
         [candidate_id]).fetchall()
     certifications = db.execute(
-        'SELECT * FROM candidate_certifications WHERE user_id=? ORDER BY COALESCE(year,0) DESC, id DESC',
+        'SELECT * FROM candidate_certifications WHERE user_id=? ORDER BY COALESCE(year,\'0\') DESC, id DESC',
         [candidate_id]).fetchall()
     projects = db.execute(
-        'SELECT * FROM candidate_projects WHERE user_id=? ORDER BY COALESCE(year,0) DESC, id DESC',
+        'SELECT * FROM candidate_projects WHERE user_id=? ORDER BY COALESCE(year,\'0\') DESC, id DESC',
         [candidate_id]).fetchall()
     profile_extra = db.execute(
         'SELECT resume_filename, profile_photo FROM candidate_profiles WHERE user_id=?',

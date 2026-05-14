@@ -3105,19 +3105,19 @@ def email_sent():
     pending_name  = session.get('pending_name', '')
     if not pending_email:
         return redirect(url_for('home'))
-    db = get_db()
-    row = db.execute(
-        'SELECT email_verification_sent_at FROM users WHERE email=?', [pending_email]
-    ).fetchone()
     sent_at_ts = 0
-    if row and row['email_verification_sent_at']:
-        try:
+    try:
+        db  = get_db()
+        row = db.execute(
+            'SELECT email_verification_sent_at FROM users WHERE email=?', [pending_email]
+        ).fetchone()
+        if row and row['email_verification_sent_at']:
             sent_dt = row['email_verification_sent_at']
             if isinstance(sent_dt, str):
                 sent_dt = datetime.strptime(sent_dt[:19], '%Y-%m-%d %H:%M:%S')
             sent_at_ts = int(sent_dt.timestamp())
-        except Exception:
-            pass
+    except Exception:
+        pass
     return render_template('email_sent.html', user=get_current_user(),
                            pending_email=pending_email, pending_name=pending_name,
                            sent_at_ts=sent_at_ts)
@@ -3186,8 +3186,11 @@ def resend_verification():
         dest = url_for('candidate_profile') if user['role'] == 'candidate' else url_for('recruiter_dashboard')
         return redirect(dest)
 
-    # 60-second cooldown check
-    sent_at = user['email_verification_sent_at']
+    # 60-second cooldown check (column may not exist if migration hasn't run yet)
+    try:
+        sent_at = user['email_verification_sent_at']
+    except (KeyError, IndexError):
+        sent_at = None
     if sent_at:
         try:
             if isinstance(sent_at, str):

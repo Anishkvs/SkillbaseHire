@@ -16,8 +16,8 @@ from datetime import datetime
 from functools import wraps
 
 # Read APP_ENV before loading any .env file so the system env var takes priority.
-# Set APP_ENV=production on DigitalOcean; leave it unset (or set to "development") locally.
-_app_env = os.environ.get('APP_ENV', 'development')
+# Set APP_ENV=production on DigitalOcean; set APP_ENV=development locally to force SQLite.
+_app_env = os.environ.get('APP_ENV', '')
 
 if _app_env == 'production':
     # On DigitalOcean, real secrets are injected by the platform, so override=False
@@ -60,13 +60,15 @@ limiter = Limiter(
 DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'skillbasehire.db')
 
 # ── PostgreSQL adapter ────────────────────────────────────────────────────────
-# When DATABASE_URL is set (staging/production) use psycopg2; otherwise SQLite.
+# Use PostgreSQL when DATABASE_URL is available and not explicitly in dev mode.
+# DigitalOcean injects DATABASE_URL automatically; set APP_ENV=development locally
+# (in your shell or .env.development) to force SQLite even if DATABASE_URL is set.
 _DATABASE_URL = os.environ.get('DATABASE_URL', '')
 if _DATABASE_URL.startswith('postgres://'):
     _DATABASE_URL = _DATABASE_URL.replace('postgres://', 'postgresql://', 1)
-# Only use PostgreSQL in production (APP_ENV=production) with a valid DATABASE_URL.
-# Development always uses SQLite so the local DB file is used without any PG setup.
-_USE_POSTGRES = _is_production and bool(_DATABASE_URL)
+_USE_POSTGRES = bool(_DATABASE_URL) and (_app_env != 'development')
+print(f'[STARTUP] APP_ENV={_app_env!r}  _is_production={_is_production}  '
+      f'_USE_POSTGRES={_USE_POSTGRES}  DB={"postgres" if _USE_POSTGRES else "sqlite"}')
 
 if _USE_POSTGRES:
     import psycopg2
@@ -213,6 +215,11 @@ def get_db():
 def close_connection(_exception):
     db = getattr(g, '_database', None)
     if db is not None:
+        if _exception and _USE_POSTGRES:
+            try:
+                db.rollback()
+            except Exception:
+                pass
         db.close()
 
 
@@ -2557,7 +2564,7 @@ def search_candidates():
                (SELECT COUNT(*) FROM user_skills WHERE user_id=u.id) AS total_skills,
                (SELECT GROUP_CONCAT(s.name||':'||us.verified, ',')
                 FROM user_skills us JOIN skills s ON us.skill_id=s.id
-                WHERE us.user_id=u.id ORDER BY us.verified DESC LIMIT 8) AS skills_data
+                WHERE us.user_id=u.id) AS skills_data
         FROM users u LEFT JOIN candidate_profiles cp ON u.id=cp.user_id
         WHERE u.role='candidate'
     '''

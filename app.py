@@ -1718,9 +1718,14 @@ def candidate_profile():
     certifications = db.execute(
         'SELECT * FROM candidate_certifications WHERE user_id=? ORDER BY COALESCE(year,\'0\') DESC, id DESC',
         [session['user_id']]).fetchall()
-    projects = db.execute(
-        'SELECT * FROM candidate_projects WHERE user_id=? ORDER BY COALESCE(year,\'0\') DESC, id DESC',
-        [session['user_id']]).fetchall()
+    try:
+        projects = db.execute(
+            'SELECT * FROM candidate_projects WHERE user_id=? ORDER BY COALESCE(year,\'0\') DESC, id DESC',
+            [session['user_id']]).fetchall()
+    except Exception:
+        projects = db.execute(
+            'SELECT * FROM candidate_projects WHERE user_id=? ORDER BY id DESC',
+            [session['user_id']]).fetchall()
 
     # Calculate total work experience
     now = datetime.now()
@@ -1747,15 +1752,26 @@ def candidate_profile():
     total_exp_years  = total_months // 12
     total_exp_months = total_months % 12
 
-    applications = db.execute('''
-        SELECT a.id, a.status, a.applied_at, a.updated_at,
-               j.title, j.job_type, j.recruiter_id,
-               rp.company AS company_name
-        FROM applications a
-        JOIN jobs j ON a.job_id = j.id
-        JOIN recruiter_profiles rp ON j.recruiter_id = rp.user_id
-        WHERE a.candidate_id=? ORDER BY a.applied_at DESC
-    ''', [session['user_id']]).fetchall()
+    try:
+        applications = db.execute('''
+            SELECT a.id, a.status, a.applied_at, a.updated_at,
+                   j.title, j.job_type, j.recruiter_id,
+                   rp.company AS company_name
+            FROM applications a
+            JOIN jobs j ON a.job_id = j.id
+            JOIN recruiter_profiles rp ON j.recruiter_id = rp.user_id
+            WHERE a.candidate_id=? ORDER BY a.applied_at DESC
+        ''', [session['user_id']]).fetchall()
+    except Exception:
+        applications = db.execute('''
+            SELECT a.id, a.status, a.applied_at,
+                   j.title, j.job_type, j.recruiter_id,
+                   rp.company AS company_name
+            FROM applications a
+            JOIN jobs j ON a.job_id = j.id
+            JOIN recruiter_profiles rp ON j.recruiter_id = rp.user_id
+            WHERE a.candidate_id=? ORDER BY a.applied_at DESC
+        ''', [session['user_id']]).fetchall()
 
     return render_template('candidate_profile.html',
                            user=get_current_user(), profile=profile, my_skills=my_skills,
@@ -2810,8 +2826,11 @@ def update_app_status(app_id):
         flash('Application not found.', 'error')
         return redirect(url_for('recruiter_dashboard'))
 
-    db.execute('UPDATE applications SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
-               [status, app_id])
+    try:
+        db.execute('UPDATE applications SET status=?, updated_at=CURRENT_TIMESTAMP WHERE id=?',
+                   [status, app_id])
+    except Exception:
+        db.execute('UPDATE applications SET status=? WHERE id=?', [status, app_id])
 
     # Create shortlisted notification only on first-time transition to shortlisted
     if status == 'shortlisted' and row['old_status'] != 'shortlisted':
@@ -3072,9 +3091,14 @@ def candidate_detail(candidate_id):
     certifications = db.execute(
         'SELECT * FROM candidate_certifications WHERE user_id=? ORDER BY COALESCE(year,\'0\') DESC, id DESC',
         [candidate_id]).fetchall()
-    projects = db.execute(
-        'SELECT * FROM candidate_projects WHERE user_id=? ORDER BY COALESCE(year,\'0\') DESC, id DESC',
-        [candidate_id]).fetchall()
+    try:
+        projects = db.execute(
+            'SELECT * FROM candidate_projects WHERE user_id=? ORDER BY COALESCE(year,\'0\') DESC, id DESC',
+            [candidate_id]).fetchall()
+    except Exception:
+        projects = db.execute(
+            'SELECT * FROM candidate_projects WHERE user_id=? ORDER BY id DESC',
+            [candidate_id]).fetchall()
     profile_extra = db.execute(
         'SELECT resume_filename, profile_photo FROM candidate_profiles WHERE user_id=?',
         [candidate_id]).fetchone()

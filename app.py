@@ -187,6 +187,35 @@ if _USE_POSTGRES:
         def close(self):
             _get_pg_pool().putconn(self._conn)
 
+    def _init_postgres_schema():
+        import init_db as _schema
+        try:
+            conn = _get_pg_pool().getconn()
+            try:
+                cur = conn.cursor()
+                for stmt in _schema.TABLE_STMTS:
+                    cur.execute(stmt)
+                for stmt in _schema.MIGRATION_STMTS:
+                    cur.execute(stmt)
+                for stmt in _schema.INDEX_STMTS:
+                    cur.execute(stmt)
+                cur.executemany(
+                    "INSERT INTO skills (name, category, description) VALUES (%s, %s, %s)"
+                    " ON CONFLICT (name) DO NOTHING",
+                    _schema.SKILLS_DATA,
+                )
+                conn.commit()
+                print('[STARTUP] PostgreSQL schema ready')
+            except Exception as e:
+                conn.rollback()
+                print(f'[STARTUP] Schema init error: {e}')
+            finally:
+                _get_pg_pool().putconn(conn)
+        except Exception as e:
+            print(f'[STARTUP] Could not connect to PostgreSQL: {e}')
+
+    _init_postgres_schema()
+
 PERSONAL_EMAIL_DOMAINS = {
     'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com',
     'rediffmail.com', 'protonmail.com', 'icloud.com',

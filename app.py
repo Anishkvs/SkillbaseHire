@@ -1656,6 +1656,11 @@ def candidate_dashboard():
 @candidate_required
 def candidate_profile():
     db = get_db()
+    if not get_current_user():
+        session.clear()
+        flash('Your session has expired. Please log in again.', 'error')
+        return redirect(url_for('candidate_login'))
+
     profile = db.execute('SELECT * FROM candidate_profiles WHERE user_id=?',
                          [session['user_id']]).fetchone()
 

@@ -3316,6 +3316,46 @@ function phVerifyOtp() {
 {% include 'notif_panel.html' %}
 <script src="/static/notif_panel.js"></script>
 <script>
+(function () {
+  var aboutForm = document.querySelector('#editAbout form');
+  if (!aboutForm) return;
+  aboutForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var scrollY = window.scrollY;
+    var textarea = aboutForm.querySelector('textarea[name="bio"]');
+    var newBio = textarea ? textarea.value.trim() : '';
+    var data = new FormData(aboutForm);
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    if (csrfMeta && !data.get('csrf_token')) data.set('csrf_token', csrfMeta.content);
+    fetch(aboutForm.action, { method: 'POST', body: data })
+      .then(function () {
+        // Update displayed bio without page reload
+        var bioEl = document.querySelector('#editAbout').closest('.card').querySelector('.about-text');
+        var emptyEl = document.querySelector('#editAbout').closest('.card').querySelector('.empty-state');
+        if (newBio) {
+          if (bioEl) {
+            bioEl.textContent = newBio;
+          } else {
+            var p = document.createElement('p');
+            p.className = 'about-text';
+            p.textContent = newBio;
+            var body = document.querySelector('#editAbout').closest('.card').querySelector('.card-body');
+            if (emptyEl) emptyEl.replaceWith(p);
+            else if (body) body.insertBefore(p, body.firstChild);
+          }
+        }
+        toggleEdit('editAbout');
+        requestAnimationFrame(function () { window.scrollTo(0, scrollY); });
+      })
+      .catch(function () {
+        // On network error fall back to normal form submit
+        aboutForm.removeEventListener('submit', arguments.callee);
+        aboutForm.submit();
+      });
+  });
+})();
+</script>
+<script>
   document.addEventListener('DOMContentLoaded', function () {
     new PhotoUpload({
       el:        'puc-candidate',

@@ -69,14 +69,17 @@ TABLE_STMTS = [
     # ── users ────────────────────────────────────────────────────────────────
     """
     CREATE TABLE IF NOT EXISTS users (
-        id                 SERIAL    PRIMARY KEY,
-        name               TEXT      NOT NULL,
-        email              TEXT      UNIQUE NOT NULL,
-        password_hash      TEXT      NOT NULL,
-        role               TEXT      NOT NULL CHECK (role IN ('candidate', 'recruiter')),
-        email_verified     INTEGER   DEFAULT 1,
-        verification_token TEXT,
-        created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        id                                SERIAL    PRIMARY KEY,
+        name                              TEXT      NOT NULL,
+        email                             TEXT      UNIQUE NOT NULL,
+        password_hash                     TEXT      NOT NULL,
+        role                              TEXT      NOT NULL CHECK (role IN ('candidate', 'recruiter')),
+        email_verified                    INTEGER   DEFAULT 0,
+        email_verified_at                 TIMESTAMP,
+        email_verification_token_hash     TEXT,
+        email_verification_expires_at     TIMESTAMP,
+        email_verification_sent_at        TIMESTAMP,
+        created_at                        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """,
 
@@ -283,9 +286,14 @@ TABLE_STMTS = [
 # already exists — completely safe to run any number of times.
 
 MIGRATION_STMTS = [
-    # users
-    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified     INTEGER DEFAULT 1",
-    "ALTER TABLE users ADD COLUMN IF NOT EXISTS verification_token TEXT",
+    # users — email verification columns
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified                INTEGER   DEFAULT 0",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verified_at             TIMESTAMP",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_token_hash TEXT",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_expires_at TIMESTAMP",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS email_verification_sent_at    TIMESTAMP",
+    # change default on existing column so new signups default to unverified
+    "ALTER TABLE users ALTER COLUMN email_verified SET DEFAULT 0",
     # candidate_profiles
     "ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS location            TEXT    DEFAULT ''",
     "ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS linkedin            TEXT    DEFAULT ''",
@@ -330,6 +338,7 @@ MIGRATION_STMTS = [
 INDEX_STMTS = [
     "CREATE INDEX IF NOT EXISTS idx_users_email             ON users(email)",
     "CREATE INDEX IF NOT EXISTS idx_users_role              ON users(role)",
+    "CREATE INDEX IF NOT EXISTS idx_users_token_hash        ON users(email_verification_token_hash)",
     "CREATE INDEX IF NOT EXISTS idx_candidate_profiles_uid  ON candidate_profiles(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_recruiter_profiles_uid  ON recruiter_profiles(user_id)",
     "CREATE INDEX IF NOT EXISTS idx_user_skills_user        ON user_skills(user_id)",

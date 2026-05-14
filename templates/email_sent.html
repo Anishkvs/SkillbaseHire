@@ -16,14 +16,14 @@
 
     <div class="email-sent-divider"></div>
 
-    <p style="font-size:.875rem;color:var(--text-muted);margin:0 0 1rem">Didn't receive it%s Check your spam folder or resend below.</p>
+    <p style="font-size:.875rem;color:var(--text-muted);margin:0 0 1rem">Didn't receive it? Check your spam folder or resend below.</p>
 
-    <form action="{{ url_for('resend_verification') }}" method="post">
-      <button type="submit" class="btn btn-outline btn-full">Resend Verification Email</button>
+    <form action="{{ url_for('resend_verification') }}" method="post" id="resendForm">
+      <button type="submit" class="btn btn-outline btn-full" id="resendBtn">Resend Verification Email</button>
     </form>
 
     <p class="email-sent-spam">
-      The link expires in 24 hours. If you used a spam folder, mark us as safe to ensure delivery.
+      The link expires in 24 hours. If the email went to spam, mark us as safe to ensure delivery.
     </p>
 
     <div style="margin-top:1.5rem">
@@ -32,4 +32,45 @@
 
   </div>
 </div>
+
+<script>
+(function(){
+  var btn = document.getElementById('resendBtn');
+  var form = document.getElementById('resendForm');
+  if (!btn || !form) return;
+
+  var sentAtTs = {{ sent_at_ts | default(0) }};
+  var TS_KEY = 'sbh_resend_ts';
+
+  function startCooldown(sentTs) {
+    var interval = setInterval(function() {
+      var now = Math.floor(Date.now() / 1000);
+      var diff = 60 - (now - sentTs);
+      if (diff > 0) {
+        btn.disabled = true;
+        btn.textContent = 'Resend in ' + diff + 's';
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'Resend Verification Email';
+        clearInterval(interval);
+        localStorage.removeItem(TS_KEY);
+      }
+    }, 500);
+  }
+
+  // Server-provided timestamp takes precedence; fall back to localStorage
+  var stored = parseInt(localStorage.getItem(TS_KEY) || '0', 10);
+  var best = Math.max(sentAtTs, stored);
+  var now = Math.floor(Date.now() / 1000);
+  if (best && (now - best) < 60) {
+    startCooldown(best);
+  }
+
+  form.addEventListener('submit', function() {
+    var ts = Math.floor(Date.now() / 1000);
+    localStorage.setItem(TS_KEY, ts);
+    startCooldown(ts);
+  });
+})();
+</script>
 {% endblock %}

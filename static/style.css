@@ -4275,6 +4275,17 @@ body.dark-exam ::-webkit-scrollbar-thumb { background: #30363D; border-radius: 3
 @media (max-width: 640px) {
   .verify-banner { flex-direction: column; align-items: flex-start; }
 }
+.verify-banner-body { flex: 1; min-width: 0; }
+.verify-banner-global { margin: 0; border-radius: 0; border-left: none; border-right: none; border-top: none; }
+.btn-amber {
+  background: #EA580C !important;
+  color: #fff !important;
+  border-color: #EA580C !important;
+}
+.btn-amber:hover {
+  background: #C2410C !important;
+  border-color: #C2410C !important;
+}
 
 /* Account status info row in profile cards */
 .acct-status-row {

@@ -229,7 +229,7 @@ PHOTO_UPLOAD_FOLDER  = os.path.join(os.path.dirname(os.path.abspath(__file__)), 
 ALLOWED_RESUME_EXT = {'pdf', 'doc', 'docx'}
 ALLOWED_PHOTO_EXT  = {'jpg', 'jpeg', 'png', 'webp'}
 MAX_RESUME_SIZE = 1 * 1024 * 1024   # 1 MB
-MAX_PHOTO_SIZE  = 2 * 1024 * 1024   # 2 MB
+MAX_PHOTO_SIZE  = 100 * 1024         # 100 KB
 
 
 def get_db():
@@ -1773,12 +1773,12 @@ def candidate_upload_photo():
         return ('No file', 400)
     ext = file.filename.rsplit('.', 1)[-1].lower()
     if ext not in ALLOWED_PHOTO_EXT:
-        return ('Invalid file type', 400)
+        return ('Only JPG, JPEG, PNG, and WEBP images up to 100 KB are allowed.', 400)
     if len(file.read()) > MAX_PHOTO_SIZE:
-        return ('File too large', 400)
+        return ('Only JPG, JPEG, PNG, and WEBP images up to 100 KB are allowed.', 400)
     file.seek(0)
     if not validate_file_magic(file, ALLOWED_PHOTO_EXT):
-        return ('Invalid image content', 400)
+        return ('Only JPG, JPEG, PNG, and WEBP images up to 100 KB are allowed.', 400)
     os.makedirs(PHOTO_UPLOAD_FOLDER, exist_ok=True)
     filename = f"candidate_{session['user_id']}.{ext}"
     old = db.execute('SELECT profile_photo FROM candidate_profiles WHERE user_id=?',
@@ -1805,12 +1805,12 @@ def recruiter_upload_photo():
         return ('No file', 400)
     ext = file.filename.rsplit('.', 1)[-1].lower()
     if ext not in ALLOWED_PHOTO_EXT:
-        return ('Invalid file type', 400)
+        return ('Only JPG, JPEG, PNG, and WEBP images up to 100 KB are allowed.', 400)
     if len(file.read()) > MAX_PHOTO_SIZE:
-        return ('File too large', 400)
+        return ('Only JPG, JPEG, PNG, and WEBP images up to 100 KB are allowed.', 400)
     file.seek(0)
     if not validate_file_magic(file, ALLOWED_PHOTO_EXT):
-        return ('Invalid image content', 400)
+        return ('Only JPG, JPEG, PNG, and WEBP images up to 100 KB are allowed.', 400)
     os.makedirs(PHOTO_UPLOAD_FOLDER, exist_ok=True)
     filename = f"recruiter_{session['user_id']}.{ext}"
     old = db.execute('SELECT profile_photo FROM recruiter_profiles WHERE user_id=?',

@@ -188,8 +188,9 @@ if _USE_POSTGRES:
             _get_pg_pool().putconn(self._conn)
 
     def _init_postgres_schema():
-        import init_db as _schema
+        import traceback as _tb
         try:
+            import init_db as _schema
             conn = _get_pg_pool().getconn()
             try:
                 cur = conn.cursor()
@@ -209,10 +210,12 @@ if _USE_POSTGRES:
             except Exception as e:
                 conn.rollback()
                 print(f'[STARTUP] Schema init error: {e}')
+                _tb.print_exc()
             finally:
                 _get_pg_pool().putconn(conn)
         except Exception as e:
             print(f'[STARTUP] Could not connect to PostgreSQL: {e}')
+            _tb.print_exc()
 
     _init_postgres_schema()
 
@@ -2957,6 +2960,12 @@ def logout():
 
 # ── Run ───────────────────────────────────────────────────────────────────────
 
+# Auto-initialize SQLite schema when running under gunicorn (not __main__)
+if not _USE_POSTGRES:
+    try:
+        init_db()
+    except Exception as _e:
+        print(f'[STARTUP] SQLite init error: {_e}')
+
 if __name__ == '__main__':
-    init_db()
     app.run(debug=True, host='127.0.0.1', port=5000)

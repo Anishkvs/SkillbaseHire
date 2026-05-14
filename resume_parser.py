@@ -177,11 +177,10 @@ def parse_resume(text: str) -> dict:
 # ── Text extractors ───────────────────────────────────────────────────────────
 
 def _extract_pdf(filepath: str) -> str:
-    from pdfminer.high_level import extract_text as _pdfmine
-    text = _pdfmine(filepath) or ''
-    # Normalise ligatures and whitespace
-    text = text.replace('\x0c', '\n')
-    return text
+    from pypdf import PdfReader
+    reader = PdfReader(filepath)
+    parts = [page.extract_text() or '' for page in reader.pages]
+    return '\n'.join(parts)
 
 
 def _extract_docx(filepath: str) -> str:

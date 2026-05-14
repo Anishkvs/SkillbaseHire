@@ -962,9 +962,9 @@ textarea.fc{resize:vertical;min-height:80px}
       <form method="post" action="{{ url_for('candidate_profile') }}">
         <div class="form-grid">
           <div class="fg"><label>Full Name *</label><input class="fc" type="text" name="name" value="{{ user.name }}" required></div>
-          <div class="fg"><label>Professional Headline</label><input class="fc" type="text" name="headline" value="{{ profile.headline if profile else '' }}" placeholder="e.g. QA Automation Engineer"></div>
-          <div class="fg"><label>Current / Target Role</label><input class="fc" type="text" name="job_title" value="{{ profile.job_title if profile else '' }}" placeholder="e.g. QA Automation Engineer"></div>
-          <div class="fg"><label>Location</label><input class="fc" type="text" name="location" value="{{ profile.location if profile else '' }}" placeholder="e.g. Kochi, Kerala"></div>
+          <div class="fg"><label>Professional Headline</label><input class="fc" type="text" name="headline" value="{{ profile.headline if profile else '' }}" placeholder="e.g. Senior Software Engineer"></div>
+          <div class="fg"><label>Current / Target Role</label><input class="fc" type="text" name="job_title" value="{{ profile.job_title if profile else '' }}" placeholder="e.g. Software Engineer"></div>
+          <div class="fg"><label>Location</label><input class="fc" type="text" name="location" value="{{ profile.location if profile else '' }}" placeholder="e.g. Mumbai, India"></div>
           <div class="fg"><label>Years of Experience</label><input class="fc" type="text" name="experience" value="{{ profile.experience if profile else '' }}" placeholder="e.g. 5 Years"></div>
           <div class="fg"><label>LinkedIn URL</label><input class="fc" type="url" name="linkedin" value="{{ profile.linkedin if profile else '' }}" placeholder="https://linkedin.com/in/..."></div>
           <div class="fg span-2"><label>About Me</label><textarea class="fc" name="bio" rows="4" placeholder="Describe your background, expertise, and goals...">{{ profile.bio if profile else '' }}</textarea></div>
@@ -1198,7 +1198,7 @@ textarea.fc{resize:vertical;min-height:80px}
           <form method="post" action="{{ url_for('add_experience') }}">
             <div class="form-grid">
               <div class="fg"><label>Company *</label><input class="fc" type="text" name="company" placeholder="e.g. Aspire Systems" required></div>
-              <div class="fg"><label>Designation *</label><input class="fc" type="text" name="designation" placeholder="e.g. QA Automation Engineer" required></div>
+              <div class="fg"><label>Designation *</label><input class="fc" type="text" name="designation" placeholder="e.g. Software Engineer" required></div>
               <!-- Add: Start Date -->
               <div class="fg">
                 <label>Start Date</label>

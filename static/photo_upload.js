@@ -140,7 +140,7 @@
       /* hint text (sibling, inserted after this.el in parent) */
       this._hintEl = document.createElement('p');
       this._hintEl.style.cssText = 'font-size:.7rem;color:#64748b;margin:.4rem 0 0;text-align:center;line-height:1.4;';
-      this._hintEl.textContent = 'JPG, PNG, WEBP · Max 100 KB · Recommended 400×400 px';
+      this._hintEl.textContent = '';
 
       /* error element (sibling, inserted after hint) */
       this._errorEl = document.createElement('p');

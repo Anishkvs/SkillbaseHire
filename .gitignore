@@ -1,7 +1,17 @@
 __pycache__/
 *.pyc
+
+# Real environment files — contain secrets, never commit
 .env
-.env.*
+.env.development
+.env.staging
+.env.production
+
+# Example/template files — safe to commit (no real secrets)
+# !.env.development.example
+# !.env.staging.example
+# !.env.production.example
+
 venv/
 .venv/
 instance/

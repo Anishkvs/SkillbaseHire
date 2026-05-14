@@ -15,21 +15,28 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 from functools import wraps
 
-# Read APP_ENV before loading any .env file so the system env var takes priority.
-# Set APP_ENV=production on DigitalOcean; set APP_ENV=development locally to force SQLite.
+# ── Environment bootstrap ─────────────────────────────────────────────────────
+# Three environments: development | staging | production
+#
+#   development  – local machine, SQLite, debug on
+#   staging      – DigitalOcean staging app, PostgreSQL staging DB, debug off
+#   production   – DigitalOcean production app, PostgreSQL prod DB, debug off
+#
+# Set APP_ENV in the platform dashboard (DigitalOcean) or in the appropriate
+# .env.* file. Platform variables always win (override=False below).
 _app_env = os.environ.get('APP_ENV', '')
 
 if _app_env == 'production':
-    # On DigitalOcean, real secrets are injected by the platform, so override=False
-    # ensures platform variables win over anything in the file.
     load_dotenv('.env.production', override=False)
+elif _app_env == 'staging':
+    load_dotenv('.env.staging', override=False)
 else:
     load_dotenv('.env.development')
 
-# Re-read after load_dotenv so APP_ENV=development inside .env.development takes effect.
-_app_env = os.environ.get('APP_ENV', '')
-# True only in production — controls HTTPS-only cookies, HSTS header, etc.
+# Re-read after load_dotenv so APP_ENV inside the file takes effect.
+_app_env       = os.environ.get('APP_ENV', '')
 _is_production = (_app_env == 'production')
+_is_staging    = (_app_env == 'staging')
 
 app = Flask(__name__)
 
@@ -69,7 +76,7 @@ _DATABASE_URL = os.environ.get('DATABASE_URL', '')
 if _DATABASE_URL.startswith('postgres://'):
     _DATABASE_URL = _DATABASE_URL.replace('postgres://', 'postgresql://', 1)
 _USE_POSTGRES = bool(_DATABASE_URL) and (_app_env != 'development')
-print(f'[STARTUP] APP_ENV={_app_env!r}  _is_production={_is_production}  '
+print(f'[STARTUP] APP_ENV={_app_env!r}  _is_production={_is_production}  _is_staging={_is_staging}  '
       f'_USE_POSTGRES={_USE_POSTGRES}  DB={"postgres" if _USE_POSTGRES else "sqlite"}')
 
 if _USE_POSTGRES:

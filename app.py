@@ -59,6 +59,130 @@ limiter = Limiter(
 
 DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'skillbasehire.db')
 
+# ── PostgreSQL adapter ────────────────────────────────────────────────────────
+# When DATABASE_URL is set (staging/production) use psycopg2; otherwise SQLite.
+_DATABASE_URL = os.environ.get('DATABASE_URL', '')
+if _DATABASE_URL.startswith('postgres://'):
+    _DATABASE_URL = _DATABASE_URL.replace('postgres://', 'postgresql://', 1)
+# Only use PostgreSQL in production (APP_ENV=production) with a valid DATABASE_URL.
+# Development always uses SQLite so the local DB file is used without any PG setup.
+_USE_POSTGRES = _is_production and bool(_DATABASE_URL)
+
+if _USE_POSTGRES:
+    import psycopg2
+    import psycopg2.extras
+    import psycopg2.pool as _pgpool
+    _pg_pool = None  # created lazily on first request
+
+    def _get_pg_pool():
+        global _pg_pool
+        if _pg_pool is None:
+            _pg_pool = _pgpool.SimpleConnectionPool(1, 10, _DATABASE_URL)
+        return _pg_pool
+
+    def _adapt_sql(sql):
+        """Translate SQLite-flavoured SQL to PostgreSQL."""
+        # Positional placeholder
+        sql = sql.replace('?', '%s')
+        # INSERT OR IGNORE → INSERT … ON CONFLICT DO NOTHING
+        if re.search(r'INSERT\s+OR\s+IGNORE', sql, re.IGNORECASE):
+            sql = re.sub(r'INSERT\s+OR\s+IGNORE\s+', 'INSERT ', sql, flags=re.IGNORECASE)
+            sql = sql.rstrip().rstrip(';') + ' ON CONFLICT DO NOTHING'
+        # GROUP_CONCAT(a.col||':'||b.col, sep) — mixed-type concat with integer column
+        sql = re.sub(
+            r"GROUP_CONCAT\(\s*(\w+\.\w+)\s*\|\|\s*':'\s*\|\|\s*(\w+\.\w+)\s*,\s*(',?')\)",
+            lambda m: (
+                f"STRING_AGG({m.group(1)}||':'||{m.group(2)}::TEXT, {m.group(3)})"
+            ),
+            sql, flags=re.IGNORECASE,
+        )
+        # GROUP_CONCAT(expr, sep) — simple column or expression
+        def _gc(m):
+            content = m.group(1)
+            sep_m = re.search(r",\s*('(?:[^']|'')*')\s*$", content)
+            if sep_m:
+                expr = content[:sep_m.start()].strip()
+                sep  = sep_m.group(1)
+            else:
+                expr, sep = content.strip(), "','"
+            return f"STRING_AGG(CAST({expr} AS TEXT), {sep})"
+        sql = re.sub(r'GROUP_CONCAT\(([^)]+)\)', _gc, sql, flags=re.IGNORECASE)
+        return sql
+
+    class _PGRow(dict):
+        """psycopg2 RealDictRow wrapper that supports integer positional access."""
+        def __getitem__(self, key):
+            if isinstance(key, int):
+                return list(self.values())[key]
+            return super().__getitem__(key)
+
+    class _PGCursor:
+        def __init__(self, cur, has_returning=False):
+            self._cur = cur
+            self._has_returning = has_returning
+            self._lastrowid = None
+            self._rowid_fetched = False
+
+        @property
+        def lastrowid(self):
+            if not self._rowid_fetched:
+                self._rowid_fetched = True
+                if self._has_returning:
+                    row = self._cur.fetchone()
+                    self._lastrowid = row['id'] if row else None
+            return self._lastrowid
+
+        def fetchone(self):
+            row = self._cur.fetchone()
+            return _PGRow(row) if row else None
+
+        def fetchall(self):
+            return [_PGRow(r) for r in (self._cur.fetchall() or [])]
+
+        def __iter__(self):
+            for row in self._cur:
+                yield _PGRow(row)
+
+    class _PGConn:
+        def __init__(self, conn):
+            self._conn = conn
+
+        def execute(self, sql, params=None):
+            pg_sql = _adapt_sql(sql)
+            has_returning = False
+            up = pg_sql.strip().upper()
+            # Add RETURNING id to bare INSERTs so .lastrowid works
+            if (up.startswith('INSERT') and
+                    'ON CONFLICT' not in up and
+                    'RETURNING' not in up):
+                pg_sql = pg_sql.rstrip().rstrip(';') + ' RETURNING id'
+                has_returning = True
+            cur = self._conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
+            cur.execute(pg_sql, params or ())
+            return _PGCursor(cur, has_returning=has_returning)
+
+        def executemany(self, sql, seq):
+            cur = self._conn.cursor()
+            cur.executemany(_adapt_sql(sql), seq)
+
+        def executescript(self, sql):
+            cur = self._conn.cursor()
+            for stmt in [s.strip() for s in sql.split(';') if s.strip()]:
+                try:
+                    cur.execute(stmt)
+                except Exception:
+                    self._conn.rollback()
+                    return
+
+        def commit(self):
+            self._conn.commit()
+
+        def rollback(self):
+            self._conn.rollback()
+
+        def close(self):
+            _get_pg_pool().putconn(self._conn)
+
 PERSONAL_EMAIL_DOMAINS = {
     'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com',
     'rediffmail.com', 'protonmail.com', 'icloud.com',
@@ -75,8 +199,13 @@ MAX_PHOTO_SIZE  = 2 * 1024 * 1024   # 2 MB
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
-        db = g._database = sqlite3.connect(DATABASE)
-        db.row_factory = sqlite3.Row
+        if _USE_POSTGRES:
+            conn = _get_pg_pool().getconn()
+            conn.autocommit = False
+            db = g._database = _PGConn(conn)
+        else:
+            db = g._database = sqlite3.connect(DATABASE)
+            db.row_factory = sqlite3.Row
     return db
 
 
@@ -575,14 +704,14 @@ def home():
                 WHERE js.job_id = j.id) AS skills_list
         FROM jobs j
         JOIN recruiter_profiles rp ON j.recruiter_id = rp.user_id
-        WHERE j.active = '1'
+        WHERE j.active = 1
         ORDER BY j.created_at DESC LIMIT 6
     ''').fetchall()
 
     stats = {
-        'jobs': db.execute('SELECT COUNT(*) FROM jobs WHERE active="1"').fetchone()[0],
+        'jobs': db.execute('SELECT COUNT(*) FROM jobs WHERE active=1').fetchone()[0],
         'candidates': db.execute("SELECT COUNT(*) FROM users WHERE role='candidate'").fetchone()[0],
-        'companies': db.execute("SELECT COUNT(DISTINCT company) FROM jobs WHERE active='1'").fetchone()[0],
+        'companies': db.execute("SELECT COUNT(DISTINCT company) FROM jobs WHERE active=1").fetchone()[0],
     }
     return render_template('index.html', jobs=recent_jobs, stats=stats, user=get_current_user())
 

@@ -5,6 +5,7 @@ from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from dotenv import load_dotenv
+import logging
 import sqlite3
 import os
 import re
@@ -40,6 +41,8 @@ _is_production = (_app_env == 'production')
 _is_staging    = (_app_env == 'staging')
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.INFO)
+app.logger.setLevel(logging.INFO)
 
 _secret_key = os.environ.get('SECRET_KEY', '')
 if not _secret_key:
@@ -1497,8 +1500,26 @@ def candidate_login():
         user = get_db().execute(
             "SELECT * FROM users WHERE email=? AND role='candidate'", [email]
         ).fetchone()
-        if user and check_password_hash(user['password_hash'], password):
-            cp = get_db().execute('SELECT profile_photo FROM candidate_profiles WHERE user_id=?', [user['id']]).fetchone()
+        app.logger.info(
+            '[LOGIN:candidate] email=%r user_found=%s role=%s '
+            'email_verified=%s has_password_hash=%s',
+            email,
+            user is not None,
+            user['role'] if user else 'N/A',
+            user.get('email_verified', 'N/A') if user else 'N/A',
+            bool(user.get('password_hash')) if user else False,
+        )
+        pw_ok = bool(user) and check_password_hash(user['password_hash'], password)
+        app.logger.info('[LOGIN:candidate] password_check=%s', pw_ok)
+        if pw_ok:
+            try:
+                cp = get_db().execute(
+                    'SELECT profile_photo FROM candidate_profiles WHERE user_id=?',
+                    [user['id']]).fetchone()
+            except Exception:
+                cp = get_db().execute(
+                    'SELECT * FROM candidate_profiles WHERE user_id=?',
+                    [user['id']]).fetchone()
             session.update({'user_id': user['id'], 'role': 'candidate', 'name': user['name'],
                             'profile_photo': cp['profile_photo'] if cp else None,
                             'email_verified': bool(user.get('email_verified', 0))})
@@ -2530,8 +2551,26 @@ def recruiter_login():
         user = get_db().execute(
             "SELECT * FROM users WHERE email=? AND role='recruiter'", [email]
         ).fetchone()
-        if user and check_password_hash(user['password_hash'], password):
-            rp = get_db().execute('SELECT profile_photo FROM recruiter_profiles WHERE user_id=?', [user['id']]).fetchone()
+        app.logger.info(
+            '[LOGIN:recruiter] email=%r user_found=%s role=%s '
+            'email_verified=%s has_password_hash=%s',
+            email,
+            user is not None,
+            user['role'] if user else 'N/A',
+            user.get('email_verified', 'N/A') if user else 'N/A',
+            bool(user.get('password_hash')) if user else False,
+        )
+        pw_ok = bool(user) and check_password_hash(user['password_hash'], password)
+        app.logger.info('[LOGIN:recruiter] password_check=%s', pw_ok)
+        if pw_ok:
+            try:
+                rp = get_db().execute(
+                    'SELECT profile_photo FROM recruiter_profiles WHERE user_id=?',
+                    [user['id']]).fetchone()
+            except Exception:
+                rp = get_db().execute(
+                    'SELECT * FROM recruiter_profiles WHERE user_id=?',
+                    [user['id']]).fetchone()
             session.update({'user_id': user['id'], 'role': 'recruiter', 'name': user['name'],
                             'profile_photo': rp['profile_photo'] if rp else None,
                             'email_verified': bool(user.get('email_verified', 0))})

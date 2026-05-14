@@ -1,945 +1,1033 @@
 {% extends "base.html" %}
 {% block title %}Find Jobs — SkillBaseHire{% endblock %}
-{% block content %}
+{% block head %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+{% endblock %}
+{% block content %}
+<div class="jb2">
+<style>
+.jb2{--c-bg:#F9FAFB;--c-surf:#fff;--c-ink:#111827;--c-ink2:#4B5563;--c-ink3:#6B7280;--c-line:#E5E7EB;--c-line2:#F3F4F6;--c-acc:#0F766E;--c-acc-i:#115E59;--c-acc-s:#D1FAE5;--c-ver:#0F766E;--c-ver-s:#D1FAE5;--c-ver-i:#064E3B;--c-par:#B45309;--c-par-s:#FEF3C7;--c-par-i:#78350F;--c-danger:#B91C1C;--sh-sm:0 1px 2px rgba(15,23,35,.04),0 0 0 1px rgba(15,23,35,.04);--sh-md:0 4px 14px -4px rgba(15,23,35,.08),0 0 0 1px rgba(15,23,35,.04);--sh-lg:0 18px 40px -12px rgba(15,23,35,.18),0 0 0 1px rgba(15,23,35,.05);--r:14px;background:var(--c-bg);font-family:"Inter",system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;min-height:60vh}
+.jb2-hero{max-width:1280px;margin:0 auto;padding:52px 28px 28px;text-align:center}
+.jb2-eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--c-ink2);background:var(--c-surf);border:1px solid var(--c-line);padding:6px 12px;border-radius:999px;box-shadow:var(--sh-sm)}
+.jb2-eyebrow .jb2-dot{width:6px;height:6px;border-radius:50%;background:var(--c-ver);box-shadow:0 0 0 4px rgba(15,118,110,.2)}
+.jb2-h1{font-size:clamp(30px,4.5vw,50px);line-height:1.08;letter-spacing:-.025em;margin:18px 0 12px;font-weight:600;color:var(--c-ink)}
+.jb2-accent{color:var(--c-acc-i);background-image:linear-gradient(180deg,var(--c-acc-i),#14B8A6);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.jb2-sub{color:var(--c-ink2);font-size:16px;max-width:540px;margin:0 auto}
+.jb2-search-card{margin:28px auto 0;max-width:880px;background:var(--c-surf);border:1px solid var(--c-line);border-radius:18px;box-shadow:var(--sh-md);padding:8px}
+.jb2-search-row{display:grid;grid-template-columns:1.4fr 1fr auto;gap:6px;align-items:stretch}
+.jb2-sf-wrap{position:relative}
+.jb2-sf-label{position:absolute;left:14px;top:8px;font-size:11px;color:var(--c-ink3);letter-spacing:.04em;text-transform:uppercase;font-weight:500;pointer-events:none}
+.jb2-sf{display:flex;align-items:flex-end;gap:10px;padding:18px 14px 6px;border-radius:12px;min-height:56px}
+.jb2-sf:hover{background:var(--c-line2)}
+.jb2-sf input{border:0;outline:0;background:transparent;font:inherit;color:var(--c-ink);width:100%;padding-bottom:6px;font-size:14px}
+.jb2-sf input::placeholder{color:var(--c-ink3)}
+.jb2-search-btn{appearance:none;border:0;cursor:pointer;font-family:inherit;font-weight:500;background:var(--c-ink);color:#F9FAFB;padding:0 22px;min-height:56px;font-size:15px;border-radius:12px;display:inline-flex;align-items:center;gap:8px;transition:background .15s;white-space:nowrap}
+.jb2-search-btn:hover{background:#000}
+.jb2-smart-suggest{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:10px 14px 6px;border-top:1px dashed var(--c-line);margin-top:4px}
+.jb2-ss-label{font-size:12px;color:var(--c-ink3)}
+.jb2-ss-chip{appearance:none;cursor:pointer;background:var(--c-surf);border:1px solid var(--c-line);color:var(--c-ink2);font:500 12px/1 "Inter",sans-serif;padding:6px 10px;border-radius:99px;transition:all .12s}
+.jb2-ss-chip:hover,.jb2-ss-chip.active{background:var(--c-ver-s);border-color:rgba(15,118,110,.3);color:var(--c-ver-i)}
+.jb2-hero-meta{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:center;margin-top:20px}
+.jb2-toggle-row{display:flex;align-items:center;gap:10px;padding:8px 14px;background:var(--c-surf);border:1px solid var(--c-line);border-radius:12px;font-size:13px;cursor:pointer;user-select:none}
+.jb2-toggle{width:30px;height:18px;border-radius:99px;background:var(--c-line);position:relative;flex:0 0 auto;transition:background .18s}
+.jb2-toggle::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;background:white;border-radius:50%;transition:transform .18s;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.jb2-toggle.on{background:var(--c-ver)}
+.jb2-toggle.on::after{transform:translateX(12px)}
+.jb2-loc-suggest{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--c-surf);border:1px solid var(--c-line);border-radius:12px;box-shadow:var(--sh-lg);padding:6px;display:none;z-index:30;max-height:280px;overflow-y:auto}
+.jb2-loc-suggest.open{display:block}
+.jb2-ac-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;font-size:14px;color:var(--c-ink);cursor:pointer}
+.jb2-ac-item:hover,.jb2-ac-item.active{background:var(--c-line2)}
+.jb2-layout{max-width:1280px;margin:28px auto 0;padding:0 28px 80px;display:grid;grid-template-columns:280px 1fr;gap:28px}
+.jb2-sidebar{position:sticky;top:84px;align-self:start;background:var(--c-surf);border:1px solid var(--c-line);border-radius:var(--r);box-shadow:var(--sh-sm);overflow:hidden}
+.jb2-sb-head{padding:16px 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--c-line2)}
+.jb2-sb-title{font-weight:600;font-size:14px;color:var(--c-ink)}
+.jb2-sb-clear{font-size:12px;color:var(--c-ink3);background:transparent;border:0;cursor:pointer}
+.jb2-sb-clear:hover{color:var(--c-ink)}
+.jb2-fg{padding:16px 18px;border-bottom:1px solid var(--c-line2)}
+.jb2-fg:last-of-type{border-bottom:0}
+.jb2-fg-title{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--c-ink3);font-weight:600;margin-bottom:12px}
+.jb2-sw-row{display:flex;align-items:flex-start;gap:12px;padding:14px;background:var(--c-ver-s);border-radius:10px;border:1px solid rgba(15,118,110,.22)}
+.jb2-sw-text{font-size:13px;color:var(--c-ink);line-height:1.4}
+.jb2-sw-text small{color:var(--c-ink2);display:block;margin-top:2px}
+.jb2-check-row{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--c-ink2);cursor:pointer;margin-bottom:8px}
+.jb2-check-row:last-child{margin-bottom:0}
+.jb2-check-row input{display:none}
+.jb2-box{width:16px;height:16px;border-radius:5px;border:1.5px solid var(--c-line);background:var(--c-surf);display:grid;place-items:center;flex:0 0 auto;transition:all .12s}
+.jb2-check-row input:checked+.jb2-box{background:var(--c-ink);border-color:var(--c-ink)}
+.jb2-check-row input:checked+.jb2-box::after{content:"";width:8px;height:4px;border-left:1.5px solid white;border-bottom:1.5px solid white;transform:rotate(-45deg) translate(1px,-1px)}
+.jb2-sal-display{font-size:13px;color:var(--c-ink2);margin-bottom:8px;font-family:"JetBrains Mono",monospace}
+.jb2-sal-wrap{padding:8px 0}
+.jb2-sal-track{position:relative;height:6px;background:var(--c-line);border-radius:99px;cursor:pointer}
+.jb2-sal-fill{position:absolute;left:0;right:0;top:0;bottom:0;background:var(--c-ink);border-radius:99px}
+.jb2-sal-thumb{position:absolute;width:20px;height:20px;background:white;border-radius:50%;border:2px solid var(--c-ink);top:50%;transform:translate(-50%,-50%);box-shadow:0 2px 6px rgba(15,23,35,.18);cursor:grab;touch-action:none;z-index:2;transition:transform .15s,box-shadow .15s}
+.jb2-sal-thumb:hover{transform:translate(-50%,-50%) scale(1.12)}
+.jb2-sal-dragging{transform:translate(-50%,-50%) scale(1.18)!important;box-shadow:0 0 0 6px rgba(17,24,39,.12),0 2px 6px rgba(15,23,35,.2)!important;cursor:grabbing!important}
+.jb2-sal-bounds{display:flex;justify-content:space-between;font-size:11px;color:var(--c-ink3);font-family:"JetBrains Mono",monospace;margin-top:6px}
+.jb2-sk-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.jb2-sk-chip{display:inline-flex;align-items:center;gap:6px;background:var(--c-line2);border:1px solid var(--c-line);border-radius:99px;padding:4px 10px;font-size:12px;color:var(--c-ink)}
+.jb2-sk-chip-rm{background:none;border:none;cursor:pointer;color:var(--c-ink3);padding:0;font-size:14px;line-height:1}
+.jb2-sk-chip-rm:hover{color:var(--c-ink)}
+.jb2-sk-input-wrap{position:relative}
+.jb2-sk-input{width:100%;padding:8px 10px;font:inherit;font-size:13px;border:1px solid var(--c-line);border-radius:8px;background:var(--c-surf);color:var(--c-ink);outline:0}
+.jb2-sk-input:focus{border-color:var(--c-ink)}
+.jb2-sk-drop{display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);background:var(--c-surf);border:1px solid var(--c-line);border-radius:10px;box-shadow:var(--sh-lg);z-index:30;padding:4px}
+.jb2-sk-drop.open{display:block}
+.jb2-sk-drop-item{padding:8px 10px;border-radius:6px;font-size:13px;color:var(--c-ink);cursor:pointer}
+.jb2-sk-drop-item:hover,.jb2-sk-drop-item.sk-active{background:var(--c-line2)}
+.jb2-sk-drop-item-add{color:var(--c-acc)}
+.jb2-sb-actions{padding:14px 18px;display:flex;gap:8px;border-top:1px solid var(--c-line2)}
+.jb2-btn{appearance:none;border:0;cursor:pointer;font-family:inherit;font-weight:500;display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:10px;transition:all .12s;font-size:13px}
+.jb2-btn:active{transform:translateY(1px)}
+.jb2-btn-primary{background:var(--c-ink);color:#F9FAFB;padding:8px 16px}
+.jb2-btn-primary:hover{background:#000}
+.jb2-btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.jb2-btn-outline{background:var(--c-surf);color:var(--c-ink);border:1px solid var(--c-line);padding:7px 14px}
+.jb2-btn-outline:hover{background:var(--c-line2)}
+.jb2-btn-ghost{background:transparent;color:var(--c-ink);padding:8px 14px}
+.jb2-btn-ghost:hover{background:var(--c-line2)}
+.jb2-btn-applied{background:var(--c-ver-s);color:var(--c-ver-i);padding:8px 16px;cursor:not-allowed}
+.jb2-btn-full{width:100%;min-height:40px}
+.jb2-results{min-width:0}
+.jb2-results-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.jb2-results-left{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.jb2-count{font-size:14px;color:var(--c-ink2)}
+.jb2-count b{color:var(--c-ink);font-weight:600}
+.jb2-sort-wrap{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--c-ink2)}
+.jb2-sort{border:1px solid var(--c-line);background:var(--c-surf);border-radius:8px;padding:6px 10px;font-family:inherit;font-size:13px;cursor:pointer}
+.jb2-filter-btn{display:none;appearance:none;border:1px solid var(--c-line);cursor:pointer;background:var(--c-surf);color:var(--c-ink);padding:6px 12px;border-radius:8px;font:inherit;font-size:13px;align-items:center;gap:6px}
+.jb2-filter-btn:hover{background:var(--c-line2)}
+.jb2-active-tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.jb2-active-tag{display:inline-flex;align-items:center;gap:6px;background:var(--c-surf);border:1px solid var(--c-line);padding:4px 8px 4px 10px;border-radius:99px;font-size:12px;color:var(--c-ink2)}
+.jb2-active-tag button{background:var(--c-line2);border:none;cursor:pointer;width:14px;height:14px;border-radius:50%;display:grid;place-items:center;color:var(--c-ink3);font-size:10px;padding:0}
+.jb2-active-tag button:hover{background:var(--c-ink);color:white}
+.jb2-jobs{display:flex;flex-direction:column;gap:14px}
+.jb2-card{background:var(--c-surf);border:1px solid var(--c-line);border-radius:var(--r);padding:20px;box-shadow:var(--sh-sm);cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;position:relative}
+.jb2-card:hover{transform:translateY(-3px);box-shadow:var(--sh-lg);border-color:#D1D5DB}
+.jb2-card-top-match{border-color:rgba(15,118,110,.35)!important;box-shadow:0 0 0 1px rgba(15,118,110,.25),var(--sh-sm)!important}
+.jb2-card-top-match:hover{box-shadow:0 0 0 1px rgba(15,118,110,.35),var(--sh-lg)!important}
+.jb2-top-badge{position:absolute;top:-10px;left:18px;background:linear-gradient(135deg,var(--c-ver),#14B8A6);color:white;font-size:11px;font-weight:600;padding:4px 10px;border-radius:99px;letter-spacing:.02em;display:inline-flex;align-items:center;gap:5px;box-shadow:0 2px 6px rgba(15,118,110,.35);z-index:1}
+.jb2-card-row{display:flex;gap:14px;align-items:flex-start}
+.jb2-co-mark{width:48px;height:48px;border-radius:12px;display:grid;place-items:center;font-weight:600;font-size:16px;flex:0 0 auto;border:1px solid var(--c-line);letter-spacing:-.02em}
+.jb2-card-body{flex:1;min-width:0}
+.jb2-job-title{font-size:16px;font-weight:600;letter-spacing:-.01em;margin:0 0 4px;color:var(--c-ink)}
+.jb2-job-meta{font-size:13px;color:var(--c-ink2);display:flex;flex-wrap:wrap;gap:4px 8px}
+.jb2-sep{color:var(--c-ink3)}
+.jb2-job-meta2{font-size:12px;color:var(--c-ink3);margin-top:3px;font-family:"JetBrains Mono",monospace}
+.jb2-match{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:5px;margin-left:4px}
+.jb2-ring{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;position:relative;background:conic-gradient(var(--col,var(--c-ver)) calc(var(--pct,0)*1%),var(--c-line) 0)}
+.jb2-ring::before{content:"";position:absolute;inset:4px;background:var(--c-surf);border-radius:50%}
+.jb2-ring-val{position:relative;font-weight:700;font-size:13px;color:var(--c-ink);font-variant-numeric:tabular-nums;line-height:1;text-align:center}
+.jb2-ring-val small{font-size:9px;color:var(--c-ink3);display:block;margin-top:2px;font-weight:500}
+.jb2-match-label{font-size:9px;letter-spacing:.05em;text-transform:uppercase;font-weight:600;color:var(--c-ink3)}
+.jb2-bookmark{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:transparent;border:0;cursor:pointer;color:var(--c-ink3);flex:0 0 auto;transition:all .18s}
+.jb2-bookmark .jb2-bm-fill{display:none}
+.jb2-bookmark.jb2-bm-on .jb2-bm-out{display:none}
+.jb2-bookmark.jb2-bm-on .jb2-bm-fill{display:block;color:var(--c-acc)}
+.jb2-bookmark:hover{background:var(--c-line2);color:var(--c-ink)}
+.jb2-bookmark.jb2-bm-on{color:var(--c-acc)}
+.jb2-signals{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.jb2-signal{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:500;padding:3px 9px;border-radius:99px;border:1px solid transparent}
+.jb2-sig-active{color:var(--c-ver-i);background:var(--c-ver-s);border-color:rgba(15,118,110,.22)}
+.jb2-sig-fast{color:var(--c-par-i);background:var(--c-par-s);border-color:rgba(180,83,9,.3)}
+.jb2-sig-vrec{color:var(--c-acc-i);background:var(--c-acc-s);border-color:rgba(15,118,110,.22)}
+.jb2-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.jb2-tag{font-family:"JetBrains Mono",monospace;font-size:11px;font-weight:500;padding:4px 9px;border-radius:6px;border:1px solid var(--c-line);background:var(--c-bg);color:var(--c-ink2);display:inline-flex;align-items:center;gap:5px}
+.jb2-tag-v{background:var(--c-ver-s);border-color:rgba(15,118,110,.35);color:var(--c-ver-i);font-weight:600}
+.jb2-tag-m{background:#F3F4F6;border:1px dashed #CBD5E1;color:#475569}
+.jb2-tcheck{width:10px;height:10px;border-radius:50%;background:var(--c-ver);color:white;display:grid;place-items:center;font-size:7px}
+.jb2-desc{margin-top:12px;padding-top:12px;border-top:1px solid var(--c-line2);font-size:13.5px;color:var(--c-ink2);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.jb2-card-foot{margin-top:14px;padding-top:12px;border-top:1px dashed var(--c-line);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.jb2-badges{display:flex;gap:6px;flex-wrap:wrap}
+.jb2-badge{font-size:12px;font-weight:500;padding:4px 10px;border-radius:99px;display:inline-flex;align-items:center;gap:5px;border:1px solid transparent}
+.jb2-badge-v{background:var(--c-ver-s);color:var(--c-ver-i);border-color:rgba(15,118,110,.3)}
+.jb2-badge-remote{background:var(--c-acc-s);color:var(--c-acc-i)}
+.jb2-badge-type{background:var(--c-line2);color:var(--c-ink2)}
+.jb2-bdot{width:6px;height:6px;border-radius:50%;background:currentColor}
+.jb2-card-actions{display:flex;align-items:center;gap:8px}
+.jb2-posted{font-size:12px;color:var(--c-ink3)}
+.jb2-empty{background:var(--c-surf);border:1px dashed var(--c-line);border-radius:var(--r);padding:60px 30px;text-align:center;box-shadow:var(--sh-sm)}
+.jb2-empty-ico{width:56px;height:56px;border-radius:50%;background:var(--c-bg);border:1px solid var(--c-line);margin:0 auto 16px;display:grid;place-items:center;color:var(--c-ink3)}
+.jb2-empty h4{margin:0 0 6px;font-size:18px;font-weight:600;color:var(--c-ink)}
+.jb2-empty p{color:var(--c-ink2);margin:0 0 18px;font-size:14px}
+.jb2-empty-actions{display:flex;gap:8px;justify-content:center}
+.jb2-detail-back{position:fixed;inset:0;background:rgba(15,23,35,.42);backdrop-filter:blur(4px);z-index:60;display:none}
+.jb2-detail-back.open{display:block}
+.jb2-detail{position:fixed;inset:0 0 0 auto;width:min(720px,100%);background:var(--c-surf);border-left:1px solid var(--c-line);overflow-y:auto;z-index:61;transform:translateX(100%);transition:transform .25s ease}
+.jb2-detail.open{transform:translateX(0)}
+.jb2-dp-head{padding:20px 28px;border-bottom:1px solid var(--c-line2);display:flex;align-items:flex-start;gap:14px;position:sticky;top:0;background:var(--c-surf);z-index:2}
+.jb2-dp-close{width:36px;height:36px;border-radius:10px;border:1px solid var(--c-line);background:var(--c-surf);cursor:pointer;display:grid;place-items:center;color:var(--c-ink2);flex:0 0 auto;margin-left:auto}
+.jb2-dp-close:hover{background:var(--c-line2);color:var(--c-ink)}
+.jb2-dp-body{padding:24px 28px 120px}
+.jb2-dp-body h2{font-size:22px;font-weight:600;letter-spacing:-.02em;margin:0 0 5px;color:var(--c-ink)}
+.jb2-dp-body h3{font-size:12px;font-weight:600;color:var(--c-ink3);text-transform:uppercase;letter-spacing:.05em;margin:24px 0 10px}
+.jb2-dp-body p{color:var(--c-ink2);font-size:14px;line-height:1.65;margin:0 0 8px}
+.jb2-dp-body ul{padding-left:18px;color:var(--c-ink2);font-size:14px;line-height:1.7;margin:0}
+.jb2-dp-meta{font-size:13px;color:var(--c-ink2);display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:4px}
+.jb2-meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}
+.jb2-meta-card{border:1px solid var(--c-line);border-radius:12px;padding:14px}
+.jb2-meta-card .k{font-size:11px;color:var(--c-ink3);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.jb2-meta-card .v{font-size:16px;font-weight:600;margin-top:4px;letter-spacing:-.01em;color:var(--c-ink)}
+.jb2-meta-card .v small{color:var(--c-ink3);font-weight:500;font-size:12px}
+.jb2-match-banner{margin-top:18px;padding:16px 18px;border-radius:14px;background:linear-gradient(180deg,var(--c-ver-s),rgba(209,250,229,.4));border:1px solid rgba(15,118,110,.25);display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+.jb2-match-banner .jb2-ring{width:64px;height:64px}
+.jb2-match-banner .jb2-ring-val{font-size:16px}
+.jb2-match-banner h4{margin:0;font-size:15px;font-weight:600;color:var(--c-ink)}
+.jb2-match-banner p{margin:4px 0 0;font-size:13px;color:var(--c-ink2)}
+.jb2-dp-skill-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.jb2-dp-skill-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border:1px solid var(--c-line);border-radius:10px;font-size:13px;color:var(--c-ink)}
+.jb2-dp-skill-row.sv{background:var(--c-ver-s);border-color:rgba(15,118,110,.22)}
+.jb2-dp-skill-row.sp{background:var(--c-par-s);border-color:rgba(180,83,9,.3)}
+.jb2-dp-skill-row .status{font-size:11px;font-weight:500;color:var(--c-ink3);font-family:"JetBrains Mono",monospace}
+.jb2-dp-skill-row.sv .status{color:var(--c-ver-i)}
+.jb2-dp-skill-row.sp .status{color:var(--c-par-i)}
+.jb2-perks{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.jb2-perk{padding:6px 12px;border-radius:99px;background:var(--c-line2);border:1px solid var(--c-line);font-size:13px;color:var(--c-ink2)}
+.jb2-dp-cta{position:sticky;bottom:0;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-top:1px solid var(--c-line);padding:14px 28px;display:flex;align-items:center;gap:12px}
+.jb2-dp-salary{font-size:14px;font-weight:500;margin-right:auto;color:var(--c-ink)}
+.jb2-dp-salary small{color:var(--c-ink3);font-weight:400}
+.jb2-recruiter{margin-top:12px;display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--c-line);border-radius:12px}
+.jb2-rec-av{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#d1fae5,#a7f3d0);display:grid;place-items:center;font-size:14px;font-weight:600;color:var(--c-ver-i);flex:0 0 auto}
+.jb2-rec-who{font-size:14px;font-weight:500;color:var(--c-ink)}
+.jb2-rec-role{font-size:12px;color:var(--c-ink3)}
+.jb2-dp-bm{appearance:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;padding:0 16px;min-height:40px;border:1px solid var(--c-line);border-radius:10px;background:var(--c-surf);color:var(--c-ink);font:500 14px/1 "Inter",sans-serif;transition:all .15s;flex:0 0 auto}
+.jb2-dp-bm:hover{background:var(--c-line2)}
+.jb2-dp-bm.saved{color:var(--c-acc);border-color:rgba(15,118,110,.3)}
+.jb2-modal-back{position:fixed;inset:0;background:rgba(15,23,35,.5);backdrop-filter:blur(6px);z-index:80;display:none;align-items:center;justify-content:center;padding:24px;overflow-y:auto}
+.jb2-modal-back.open{display:flex}
+.jb2-modal{width:min(640px,100%);max-height:90vh;background:var(--c-surf);border-radius:18px;box-shadow:var(--sh-lg);overflow-y:auto;animation:jb2pop .2s ease}
+@keyframes jb2pop{from{transform:scale(.97);opacity:0}to{transform:none;opacity:1}}
+.jb2-modal-head{padding:22px 26px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.jb2-modal-job{display:flex;align-items:center;gap:12px}
+.jb2-md-mark{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;font-weight:600;font-size:15px;flex:0 0 auto;border:1px solid var(--c-line)}
+.jb2-md-title{font-size:16px;font-weight:600;color:var(--c-ink)}
+.jb2-md-company{font-size:13px;color:var(--c-ink2);margin-top:2px}
+.jb2-close-modal{appearance:none;border:0;cursor:pointer;width:32px;height:32px;border-radius:8px;background:transparent;color:var(--c-ink3);display:grid;place-items:center}
+.jb2-close-modal:hover{background:var(--c-line2);color:var(--c-ink)}
+.jb2-modal-body{padding:20px 26px 26px}
+.jb2-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.jb2-mf{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.jb2-mf:last-child{margin-bottom:0}
+.jb2-mf label{font-size:12px;font-weight:500;color:var(--c-ink2);display:flex;align-items:center;justify-content:space-between}
+.jb2-mf input,.jb2-mf textarea{font:inherit;font-size:14px;padding:10px 12px;border:1px solid var(--c-line);border-radius:10px;background:var(--c-surf);color:var(--c-ink);outline:0;transition:border-color .12s,box-shadow .12s;resize:vertical}
+.jb2-mf input:focus,.jb2-mf textarea:focus{border-color:var(--c-ink);box-shadow:0 0 0 3px rgba(17,24,39,.1)}
+.jb2-mf input[readonly]{background:var(--c-line2);color:var(--c-ink2)}
+.jb2-modal-skills{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.jb2-upload-zone{border:1.5px dashed var(--c-line);border-radius:12px;padding:18px;text-align:center;color:var(--c-ink2);font-size:13.5px;cursor:pointer;transition:all .15s}
+.jb2-upload-zone:hover{border-color:var(--c-ink3);background:var(--c-line2)}
+.jb2-upload-text{display:block;font-weight:600;color:var(--c-ink);margin-top:8px}
+.jb2-upload-hint{display:block;font-size:11.5px;color:var(--c-ink3);margin-top:4px}
+.jb2-upload-chosen{display:block;font-size:12.5px;color:var(--c-ver-i);margin-top:6px}
+.jb2-upload-chosen-replace{display:none;font-size:12.5px;color:var(--c-ver-i);margin-top:6px}
+.jb2-resume-onfile{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1px solid rgba(15,118,110,.3);background:var(--c-ver-s)}
+.jb2-resume-onfile-left{display:flex;align-items:center;gap:10px;flex:1}
+.jb2-resume-onfile-icon{width:36px;height:36px;border-radius:8px;background:var(--c-ver);color:white;display:grid;place-items:center;flex:0 0 auto}
+.jb2-resume-onfile-name{font-size:13.5px;font-weight:500;color:var(--c-ink)}
+.jb2-resume-onfile-status{font-size:11.5px;color:var(--c-ink2)}
+.jb2-resume-replace-btn{font-size:12px;font-weight:500;color:var(--c-acc-i);cursor:pointer;background:none;border:none;padding:0;text-decoration:underline}
+.jb2-exam-nudge{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--c-par-s);border:1px solid rgba(180,83,9,.3);font-size:13px}
+.jb2-exam-mandatory{background:#FEE2E2!important;border-color:rgba(185,28,28,.3)!important}
+.jb2-exam-nudge-label{display:flex;align-items:center;gap:6px;color:var(--c-par-i);font-weight:500;margin-bottom:8px}
+.jb2-exam-mandatory .jb2-exam-nudge-label{color:var(--c-danger)}
+.jb2-exam-skill-links{display:flex;flex-wrap:wrap;gap:6px}
+.jb2-exam-skill-link{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:99px;background:var(--c-par-i);color:white;font-size:12px;font-weight:500;text-decoration:none}
+.jb2-exam-skill-link:hover{opacity:.9;text-decoration:none}
+.jb2-exam-skill-plain{padding:4px 10px;border-radius:99px;background:var(--c-line2);color:var(--c-ink2);font-size:12px}
+.jb2-submit-blocked{margin-top:12px;padding:10px 14px;border-radius:10px;background:var(--c-line2);color:var(--c-ink2);font-size:13px;display:flex;align-items:center;gap:8px}
+.jb2-optional{font-size:11px;color:var(--c-ink3);font-weight:400}
+.jb2-success{text-align:center;padding:60px 30px 40px}
+.jb2-success .seal{width:72px;height:72px;border-radius:50%;background:var(--c-ver-s);color:var(--c-ver);margin:0 auto 20px;display:grid;place-items:center;position:relative}
+.jb2-success .seal::after{content:"";position:absolute;inset:-8px;border-radius:50%;border:1px solid rgba(15,118,110,.3);animation:jb2pulse 1.6s ease-out infinite}
+@keyframes jb2pulse{0%{transform:scale(.95);opacity:1}100%{transform:scale(1.25);opacity:0}}
+.jb2-success h4{font-size:22px;margin:0 0 8px;font-weight:600;color:var(--c-ink)}
+.jb2-success p{color:var(--c-ink2);font-size:14px;margin:0 auto;max-width:360px}
+.jb2-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--c-ink);color:white;padding:10px 18px;border-radius:10px;font-size:13.5px;font-weight:500;display:flex;align-items:center;gap:10px;box-shadow:var(--sh-lg);opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;z-index:90}
+.jb2-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.jb2-toast .tseal{width:18px;height:18px;border-radius:50%;background:var(--c-ver);display:grid;place-items:center}
+.jb2-drawer-back{position:fixed;inset:0;background:rgba(15,23,35,.5);backdrop-filter:blur(4px);z-index:70;opacity:0;pointer-events:none;transition:opacity .2s}
+.jb2-drawer-back.open{opacity:1;pointer-events:auto}
+.jb2-drawer{position:fixed;left:0;right:0;bottom:0;max-height:86vh;background:var(--c-surf);border-top-left-radius:18px;border-top-right-radius:18px;box-shadow:var(--sh-lg);z-index:71;transform:translateY(100%);transition:transform .28s cubic-bezier(.32,.72,.34,1);display:flex;flex-direction:column}
+.jb2-drawer.open{transform:translateY(0)}
+.jb2-drawer-head{padding:14px 18px;border-bottom:1px solid var(--c-line2);display:flex;align-items:center;justify-content:space-between}
+.jb2-drawer-head span{font-weight:600;font-size:16px;color:var(--c-ink)}
+.jb2-drawer-head button{width:32px;height:32px;border-radius:8px;border:0;background:transparent;cursor:pointer;color:var(--c-ink3);display:grid;place-items:center}
+.jb2-drawer-head button:hover{background:var(--c-line2);color:var(--c-ink)}
+.jb2-drawer-body{flex:1;overflow-y:auto;padding:4px 0}
+.jb2-drawer-foot{padding:12px 16px;border-top:1px solid var(--c-line2);display:flex;gap:8px;background:var(--c-surf)}
+@media(max-width:1024px){.jb2-layout{grid-template-columns:240px 1fr;gap:20px}}
+@media(max-width:760px){
+  .jb2-hero{padding:32px 16px 16px}
+  .jb2-h1{font-size:28px}
+  .jb2-layout{grid-template-columns:1fr;padding:0 16px 80px;margin-top:0}
+  .jb2-sidebar{display:none}
+  .jb2-search-row{grid-template-columns:1fr;gap:4px}
+  .jb2-search-btn{width:100%;min-height:50px}
+  .jb2-filter-btn{display:inline-flex!important}
+  .jb2-dp-body,.jb2-dp-head,.jb2-dp-cta{padding-left:18px;padding-right:18px}
+  .jb2-detail{width:100%}
+  .jb2-meta-grid{grid-template-columns:1fr}
+  .jb2-dp-skill-grid{grid-template-columns:1fr}
+  .jb2-modal-grid{grid-template-columns:1fr}
+  .jb2-card-foot{flex-direction:column;align-items:flex-start}
+}
+</style>
 
-<!-- ── Hero ── -->
-<section class="jb-hero">
-  <div class="container">
-    <div class="jb-hero-inner">
-      <h1 class="jb-hero-title">Find Your <span class="jb-hero-accent">Perfect Role</span></h1>
-      <p class="jb-hero-sub">Match your verified skills to opportunities that value what you know.</p>
-      <div class="jb-search-card">
-        <div class="jb-search-row">
-          <div class="jb-search-field">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-            <input type="text" id="searchInput" placeholder="Job title, skill, or company" onkeydown="if(event.key==='Enter')applyFilters()">
-          </div>
-          <div class="jb-search-field jb-loc-field">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <input type="text" id="locationInput" placeholder="Location or Remote" autocomplete="off"
-              oninput="showLocationAC(this.value)" onkeydown="navLocationAC(event)" onblur="setTimeout(()=>closeAC(),150)">
-            <div class="jb-autocomplete" id="locationAC"></div>
-          </div>
-          <button class="btn btn-primary jb-search-btn" onclick="applyFilters()">Search Jobs</button>
+<!-- HERO -->
+<section class="jb2-hero">
+  <span class="jb2-eyebrow">
+    <span class="jb2-dot"></span>
+    <span>Browse positions that match your verified skills</span>
+  </span>
+  <h1 class="jb2-h1">Find your next role<br>with <span class="jb2-accent">verified skills</span></h1>
+  <p class="jb2-sub">Apply to jobs where recruiters see your skill certifications. Get noticed faster — no more skill screening.</p>
+
+  <div class="jb2-search-card" role="search">
+    <div class="jb2-search-row">
+      <div class="jb2-sf-wrap">
+        <span class="jb2-sf-label">Search</span>
+        <div class="jb2-sf">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="color:#6B7280;flex-shrink:0"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="searchInput" placeholder="Job title, skill, or company" onkeydown="if(event.key==='Enter')applyFilters()">
         </div>
-        <div class="jb-chips-row">
-          <span class="jb-chips-label">Popular:</span>
-          <div class="jb-chips" id="heroChips">
-            <button class="jb-chip" data-skill="React" onclick="toggleHeroChip(this)">React</button>
-            <button class="jb-chip" data-skill="Python" onclick="toggleHeroChip(this)">Python</button>
-            <button class="jb-chip" data-skill="TypeScript" onclick="toggleHeroChip(this)">TypeScript</button>
-            <button class="jb-chip" data-skill="Node.js" onclick="toggleHeroChip(this)">Node.js</button>
-            <button class="jb-chip" data-skill="AWS" onclick="toggleHeroChip(this)">AWS</button>
-            <button class="jb-chip" data-skill="Machine Learning" onclick="toggleHeroChip(this)">ML</button>
-            <button class="jb-chip" data-skill="SQL" onclick="toggleHeroChip(this)">SQL</button>
-          </div>
-          <label class="jb-vtoggle">
-            <input type="checkbox" id="heroVerified" onchange="syncVerified('hero')">
-            <span>Verified matches only</span>
+      </div>
+      <div class="jb2-sf-wrap" style="position:relative">
+        <span class="jb2-sf-label">Location</span>
+        <div class="jb2-sf">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" style="color:#6B7280;flex-shrink:0"><path d="M12 22s7-7.6 7-13a7 7 0 0 0-14 0c0 5.4 7 13 7 13Z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          <input id="locationInput" autocomplete="off" placeholder="City, region, or Remote"
+            oninput="showLocationAC(this.value)" onkeydown="navLocationAC(event)" onblur="setTimeout(()=>closeAC(),150)">
+        </div>
+        <div class="jb2-loc-suggest" id="locationAC"></div>
+      </div>
+      <button class="jb2-search-btn" onclick="applyFilters()">
+        Search Jobs
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14m-5-5 5 5-5 5"/></svg>
+      </button>
+    </div>
+    <div class="jb2-smart-suggest">
+      <span class="jb2-ss-label">Popular:</span>
+      <button class="jb2-ss-chip" data-skill="React" onclick="toggleHeroChip(this)">React</button>
+      <button class="jb2-ss-chip" data-skill="Python" onclick="toggleHeroChip(this)">Python</button>
+      <button class="jb2-ss-chip" data-skill="TypeScript" onclick="toggleHeroChip(this)">TypeScript</button>
+      <button class="jb2-ss-chip" data-skill="Node.js" onclick="toggleHeroChip(this)">Node.js</button>
+      <button class="jb2-ss-chip" data-skill="AWS" onclick="toggleHeroChip(this)">AWS</button>
+      <button class="jb2-ss-chip" data-skill="Machine Learning" onclick="toggleHeroChip(this)">ML</button>
+      <button class="jb2-ss-chip" data-skill="SQL" onclick="toggleHeroChip(this)">SQL</button>
+    </div>
+  </div>
+
+  <div class="jb2-hero-meta">
+    <label class="jb2-toggle-row" style="cursor:pointer">
+      <span class="jb2-toggle" id="heroToggleVis"></span>
+      <input type="checkbox" id="heroVerified" style="display:none" onchange="syncVerified('hero')">
+      <span>Verified matches only</span>
+    </label>
+  </div>
+</section>
+
+<!-- MAIN LAYOUT -->
+<div class="jb2-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="jb2-sidebar">
+    <div class="jb2-sb-head">
+      <span class="jb2-sb-title">Filter Jobs</span>
+      <button class="jb2-sb-clear" onclick="resetFilters()">Clear all</button>
+    </div>
+
+    <div class="jb2-fg">
+      <div class="jb2-sw-row">
+        <span class="jb2-toggle" id="vtSidebar" style="margin-top:2px;flex-shrink:0"></span>
+        <div class="jb2-sw-text">
+          <label style="cursor:pointer;display:block">
+            <input type="checkbox" id="sideVerified" style="display:none" onchange="syncVerified('side')">
+            Only show verified-skill matches
+            <small>Ranked by your verified badges</small>
           </label>
         </div>
       </div>
     </div>
-  </div>
-</section>
 
-<!-- ── Two-column layout ── -->
-<div class="container jb-layout">
-
-  <!-- Sidebar -->
-  <aside class="jb-sidebar" id="sidebar">
-    <div class="jb-sidebar-head">
-      <span>Filters</span>
-      <button class="jb-reset" onclick="resetFilters()">Reset all</button>
-    </div>
-
-    <div class="jb-fg">
-      <div class="jb-switch-row">
-        <span>Verified matches only</span>
-        <label class="jb-sw">
-          <input type="checkbox" id="sideVerified" onchange="syncVerified('side')">
-          <span class="jb-sw-track"></span>
-        </label>
-      </div>
-    </div>
-
-    <div class="jb-fg">
-      <div class="jb-fg-title">Required Skills</div>
-      <div class="jb-sk-chips" id="skillChips"></div>
-      <div class="jb-sk-input-wrap">
-        <input type="text" class="jb-sk-input" id="skillInput"
+    <div class="jb2-fg">
+      <div class="jb2-fg-title">Required Skills</div>
+      <div class="jb2-sk-chips" id="skillChips"></div>
+      <div class="jb2-sk-input-wrap">
+        <input type="text" class="jb2-sk-input" id="skillInput"
                placeholder="Type a skill…" autocomplete="off"
                oninput="onSkillInput(this.value)"
                onkeydown="onSkillKeydown(event)"
-               onblur="setTimeout(closeSkillDrop, 150)">
-        <div class="jb-sk-drop" id="skillDrop"></div>
+               onblur="setTimeout(closeSkillDrop,150)">
+        <div class="jb2-sk-drop" id="skillDrop"></div>
       </div>
     </div>
 
-    <div class="jb-fg">
-      <div class="jb-fg-title">Experience (Years)</div>
-      <div class="jb-sal-display"><span id="expMinL">0</span>&ndash;<span id="expMaxL">30</span> yrs</div>
-      <div class="jb-sal-wrap">
-        <div class="jb-sal-track" id="expTrack">
-          <div class="jb-sal-fill" id="expFill"></div>
-          <div class="jb-sal-thumb" id="expTL" tabindex="0" role="slider" aria-label="Minimum experience">
-            <span class="jb-sal-tip" id="expTipL">0 yrs</span>
-          </div>
-          <div class="jb-sal-thumb" id="expTR" tabindex="0" role="slider" aria-label="Maximum experience">
-            <span class="jb-sal-tip" id="expTipR">30 yrs</span>
-          </div>
+    <div class="jb2-fg">
+      <div class="jb2-fg-title">Experience (Years)</div>
+      <div class="jb2-sal-display"><span id="expMinL">0</span>–<span id="expMaxL">30</span> yrs</div>
+      <div class="jb2-sal-wrap">
+        <div class="jb2-sal-track" id="expTrack">
+          <div class="jb2-sal-fill" id="expFill"></div>
+          <div class="jb2-sal-thumb" id="expTL" tabindex="0" role="slider" aria-label="Min experience"></div>
+          <div class="jb2-sal-thumb" id="expTR" tabindex="0" role="slider" aria-label="Max experience"></div>
         </div>
       </div>
-      <div class="jb-sal-bounds"><span>0 yrs</span><span>30 yrs</span></div>
+      <div class="jb2-sal-bounds"><span>0 yrs</span><span>30 yrs</span></div>
     </div>
 
-    <div class="jb-fg">
-      <div class="jb-fg-title">Salary (₹L/yr)</div>
-      <div class="jb-sal-display">₹<span id="salMinL">0</span>L &ndash; ₹<span id="salMaxL">50</span>L</div>
-      <div class="jb-sal-wrap">
-        <div class="jb-sal-track" id="salTrack">
-          <div class="jb-sal-fill" id="salFill"></div>
-          <div class="jb-sal-thumb" id="salTL" tabindex="0" role="slider" aria-label="Minimum salary">
-            <span class="jb-sal-tip" id="salTipL">₹0L</span>
-          </div>
-          <div class="jb-sal-thumb" id="salTR" tabindex="0" role="slider" aria-label="Maximum salary">
-            <span class="jb-sal-tip" id="salTipR">₹50L</span>
-          </div>
+    <div class="jb2-fg">
+      <div class="jb2-fg-title">Salary (₹L/yr)</div>
+      <div class="jb2-sal-display">₹<span id="salMinL">0</span>L – ₹<span id="salMaxL">50</span>L</div>
+      <div class="jb2-sal-wrap">
+        <div class="jb2-sal-track" id="salTrack">
+          <div class="jb2-sal-fill" id="salFill"></div>
+          <div class="jb2-sal-thumb" id="salTL" tabindex="0" role="slider" aria-label="Min salary"></div>
+          <div class="jb2-sal-thumb" id="salTR" tabindex="0" role="slider" aria-label="Max salary"></div>
         </div>
       </div>
-      <div class="jb-sal-bounds"><span>₹0L</span><span>₹50L</span></div>
+      <div class="jb2-sal-bounds"><span>₹0L</span><span>₹50L</span></div>
     </div>
 
-    <div class="jb-fg" style="border-bottom:none;margin-bottom:.5rem">
-      <div class="jb-fg-title">Job Type</div>
+    <div class="jb2-fg">
+      <div class="jb2-fg-title">Job Type</div>
       <div id="typeCheckList">
-        <label class="jb-check"><input type="checkbox" value="Full-time" onchange="applyFilters()"><span>Full-time</span></label>
-        <label class="jb-check"><input type="checkbox" value="Part-time" onchange="applyFilters()"><span>Part-time</span></label>
-        <label class="jb-check"><input type="checkbox" value="Contract" onchange="applyFilters()"><span>Contract</span></label>
-        <label class="jb-check"><input type="checkbox" value="Internship" onchange="applyFilters()"><span>Internship</span></label>
-        <label class="jb-check"><input type="checkbox" value="Freelance" onchange="applyFilters()"><span>Freelance</span></label>
+        <label class="jb2-check-row"><input type="checkbox" value="Full-time" onchange="applyFilters()"><span class="jb2-box"></span><span>Full-time</span></label>
+        <label class="jb2-check-row"><input type="checkbox" value="Part-time" onchange="applyFilters()"><span class="jb2-box"></span><span>Part-time</span></label>
+        <label class="jb2-check-row"><input type="checkbox" value="Contract" onchange="applyFilters()"><span class="jb2-box"></span><span>Contract</span></label>
+        <label class="jb2-check-row"><input type="checkbox" value="Internship" onchange="applyFilters()"><span class="jb2-box"></span><span>Internship</span></label>
+        <label class="jb2-check-row"><input type="checkbox" value="Freelance" onchange="applyFilters()"><span class="jb2-box"></span><span>Freelance</span></label>
       </div>
     </div>
 
-    <button class="btn btn-primary" style="width:100%" onclick="applyFilters()">Apply Filters</button>
+    <div class="jb2-sb-actions">
+      <button class="jb2-btn jb2-btn-ghost jb2-btn-full" onclick="resetFilters()">Reset</button>
+      <button class="jb2-btn jb2-btn-primary jb2-btn-full" onclick="applyFilters()">Apply</button>
+    </div>
   </aside>
 
-  <!-- Results -->
-  <div class="jb-results">
-    <div class="jb-results-bar">
-      <div class="jb-results-left">
-        <span class="jb-count" id="resultsCount">Loading…</span>
-        <div class="jb-active-tags" id="activeTags"></div>
-      </div>
-      <div class="jb-results-right">
-        <button class="jb-filter-btn" id="filterToggleBtn" onclick="openFilterDrawer()">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+  <!-- RESULTS -->
+  <div class="jb2-results">
+    <div class="jb2-results-bar">
+      <div class="jb2-results-left">
+        <span class="jb2-count" id="resultsCount">Loading…</span>
+        <button class="jb2-filter-btn" onclick="openFilterDrawer()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
           Filters
         </button>
-        <select class="jb-sort" id="sortSel" onchange="applyFilters()">
+      </div>
+      <div class="jb2-sort-wrap">
+        Sort by
+        <select class="jb2-sort" id="sortSel" onchange="applyFilters()">
           <option value="match">Best Match</option>
           <option value="recent">Most Recent</option>
           <option value="salary">Salary: High → Low</option>
         </select>
       </div>
     </div>
-    <div class="jb-jobs-list" id="jobsList"></div>
-    <div class="jb-empty" id="emptyState" style="display:none">
-      <div class="jb-empty-icon">🔍</div>
-      <h3>No matching jobs found</h3>
+    <div class="jb2-active-tags" id="activeTags"></div>
+    <div class="jb2-jobs" id="jobsList"></div>
+    <div class="jb2-empty" id="emptyState" style="display:none">
+      <div class="jb2-empty-ico">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/><path d="M8 11h6"/></svg>
+      </div>
+      <h4>No matching jobs found</h4>
       <p>Try adjusting your search terms or clearing some filters.</p>
-      <button class="btn btn-primary" onclick="resetFilters()">Clear All Filters</button>
+      <div class="jb2-empty-actions">
+        <button class="jb2-btn jb2-btn-outline" onclick="resetFilters()">Clear Filters</button>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- ── Detail Panel ── -->
-<div class="jb-overlay" id="detailOverlay" onclick="closeDetail()"></div>
-<aside class="jb-detail" id="detailPanel">
-  <div style="padding:1rem 1rem 0;display:flex;justify-content:flex-end">
-    <button class="jb-detail-close" onclick="closeDetail()">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
-    </button>
-  </div>
-  <div class="jb-detail-body" id="detailBody"></div>
+<!-- DETAIL PANEL -->
+<div class="jb2-detail-back" id="detailOverlay" onclick="closeDetail()"></div>
+<aside class="jb2-detail" id="detailPanel">
+  <div id="detailBody"></div>
 </aside>
 
-<!-- ── Apply Modal ── -->
-<div class="jb-modal-back" id="applyBack" onclick="closeApply(event)">
-  <div class="jb-modal" id="applyBox" onclick="event.stopPropagation()">
+<!-- APPLY MODAL -->
+<div class="jb2-modal-back" id="applyBack" onclick="closeApply(event)">
+  <div class="jb2-modal" id="applyBox" onclick="event.stopPropagation()">
     <div id="applyContent"></div>
-    <div class="jb-apply-success" id="applySuccess" style="display:none">
-      <div class="jb-success-icon">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    <div class="jb2-success" id="applySuccess" style="display:none">
+      <div class="seal">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12l4 4L19 6"/></svg>
       </div>
-      <h3>Application Sent!</h3>
-      <p>Application submitted successfully! Good luck!</p>
-      <button class="btn btn-primary" onclick="closeApply(null,true);showToast('Application submitted successfully!')">Done</button>
+      <h4>Application Submitted!</h4>
+      <p>Your application was sent. The recruiter will be in touch. Good luck!</p>
+      <button class="jb2-btn jb2-btn-primary" style="margin-top:20px;padding:10px 28px" onclick="closeApply(null,true);showToast('Application submitted!')">Done</button>
     </div>
   </div>
 </div>
 
-<!-- ── Toast ── -->
-<div class="jb-toast" id="saveToast">
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-  <span id="toastMsg">Job saved!</span>
+<!-- TOAST -->
+<div class="jb2-toast" id="saveToast">
+  <span class="tseal"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6"><path d="M5 12l4 4L19 6"/></svg></span>
+  <span id="toastMsg">Saved</span>
 </div>
 
-<!-- ── Mobile Filter Drawer ── -->
-<div class="jb-drawer-back" id="drawerBack" onclick="closeFilterDrawer()"></div>
-<div class="jb-drawer" id="filterDrawer">
-  <div class="jb-drawer-head">
+<!-- MOBILE DRAWER -->
+<div class="jb2-drawer-back" id="drawerBack" onclick="closeFilterDrawer()"></div>
+<div class="jb2-drawer" id="filterDrawer">
+  <div class="jb2-drawer-head">
     <span>Filters</span>
     <button onclick="closeFilterDrawer()">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
     </button>
   </div>
-  <div class="jb-drawer-body" id="drawerBody"></div>
+  <div class="jb2-drawer-body" id="drawerBody"></div>
+  <div class="jb2-drawer-foot">
+    <button class="jb2-btn jb2-btn-outline" style="flex:1" onclick="resetFilters();closeFilterDrawer()">Reset</button>
+    <button class="jb2-btn jb2-btn-primary" style="flex:1.5;min-height:46px" onclick="closeFilterDrawer()">Show Jobs</button>
+  </div>
 </div>
 
 <script>
 const JOBS = {{ jobs_data | tojson }};
 const RESUME_FILENAME = {{ resume_filename | tojson }};
 
-/* ── State ── */
 const state = {
   search:'', location:'', verified:false,
   skills:[], types:[], heroSkills:[],
   expMin:0, expMax:30, salMin:0, salMax:50, sort:'match'
 };
 const LOCS = ["Remote","Bangalore, India","Hyderabad, India","Chennai, India","Mumbai, India","Pune, India","Delhi, India","Noida, India","Gurgaon, India","Kolkata, India","Ahmedabad, India","Kochi, India"];
-const SIG_COLORS = {
-  green:{bg:'#DCFCE7',text:'#166534'}, blue:{bg:'#DBEAFE',text:'#1E40AF'},
-  purple:{bg:'#EDE9FE',text:'#5B21B6'}, orange:{bg:'#FFF7ED',text:'#9A3412'},
-  teal:{bg:'#CCFBF1',text:'#134E4A'}
-};
 const ALL_SKILLS = [...new Set(JOBS.flatMap(j=>j.reqSkills))].sort();
-let acIdx = -1, skillAcIdx = -1;
-let expSlider, salSlider, currentDetailId = null, currentApplyId = null;
+let acIdx=-1, skillAcIdx=-1;
+let expSlider, salSlider, currentDetailId=null, currentApplyId=null;
 
-/* ── Init ── */
-function init() {
-  expSlider = initRange('expTrack','expFill','expTL','expTR',0,30,1,'expMinL','expMaxL',
-    (lo,hi)=>{state.expMin=lo;state.expMax=hi;},
-    {tipLId:'expTipL',tipRId:'expTipR',suffix:' yrs'});
-  salSlider = initRange('salTrack','salFill','salTL','salTR',0,50,1,'salMinL','salMaxL',
-    (lo,hi)=>{state.salMin=lo;state.salMax=hi;},
-    {tipLId:'salTipL',tipRId:'salTipR',prefix:'₹',suffix:'L'});
-  applyFilters();
-  buildDrawer();
-}
+/* ── helpers ── */
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function escAttr(s){return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function hiliteSkill(str,q){const i=str.toLowerCase().indexOf(q.toLowerCase());if(i<0)return escHtml(str);return escHtml(str.slice(0,i))+'<mark>'+escHtml(str.slice(i,i+q.length))+'</mark>'+escHtml(str.slice(i+q.length))}
 
-/* ── Skill chips filter ── */
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function escAttr(s) { return String(s).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-
-function hiliteSkill(str, q) {
-  const i = str.toLowerCase().indexOf(q.toLowerCase());
-  if (i < 0) return escHtml(str);
-  return escHtml(str.slice(0,i)) +
-    '<mark>' + escHtml(str.slice(i, i+q.length)) + '</mark>' +
-    escHtml(str.slice(i+q.length));
-}
-
-function _showSkillDrop(val, dropId) {
-  skillAcIdx = -1;
-  const drop = document.getElementById(dropId);
-  const q = val.trim();
-  if (q.length < 2) { _closeSkillDropId(dropId); return; }
-
-  const matches = ALL_SKILLS
-    .filter(s => s.toLowerCase().includes(q.toLowerCase()) && !state.skills.includes(s))
-    .slice(0, 8);
-
-  const rows = matches.map(s => ({label: hiliteSkill(s, q), val: s, add: false}));
-  const alreadySelected = state.skills.some(s => s.toLowerCase() === q.toLowerCase());
-  const inList = ALL_SKILLS.some(s => s.toLowerCase() === q.toLowerCase());
-  if (!alreadySelected && !inList) {
-    rows.push({label: `+ Add <strong>${escHtml(q)}</strong>`, val: q, add: true});
-  }
-
-  if (!rows.length) { _closeSkillDropId(dropId); return; }
-
-  drop.innerHTML = rows.map(r =>
-    `<div class="jb-sk-drop-item${r.add?' jb-sk-drop-item-add':''}" data-skill="${escAttr(r.val)}">${r.label}</div>`
-  ).join('');
+/* ── Skill-drop shared ── */
+function _showSkillDrop(val,dropId){
+  skillAcIdx=-1;
+  const drop=document.getElementById(dropId);
+  const q=val.trim();
+  if(q.length<2){_closeSkillDropId(dropId);return;}
+  const matches=ALL_SKILLS.filter(s=>s.toLowerCase().includes(q.toLowerCase())&&!state.skills.includes(s)).slice(0,8);
+  const rows=matches.map(s=>({label:hiliteSkill(s,q),val:s,add:false}));
+  const alreadySelected=state.skills.some(s=>s.toLowerCase()===q.toLowerCase());
+  const inList=ALL_SKILLS.some(s=>s.toLowerCase()===q.toLowerCase());
+  if(!alreadySelected&&!inList)rows.push({label:`+ Add <strong>${escHtml(q)}</strong>`,val:q,add:true});
+  if(!rows.length){_closeSkillDropId(dropId);return;}
+  drop.innerHTML=rows.map(r=>`<div class="jb2-sk-drop-item${r.add?' jb2-sk-drop-item-add':''}" data-skill="${escAttr(r.val)}">${r.label}</div>`).join('');
   drop.classList.add('open');
-  drop.querySelectorAll('.jb-sk-drop-item').forEach(el => {
-    el.addEventListener('mousedown', ev => { ev.preventDefault(); addSkill(el.dataset.skill); });
-  });
+  drop.querySelectorAll('.jb2-sk-drop-item').forEach(el=>{el.addEventListener('mousedown',ev=>{ev.preventDefault();addSkill(el.dataset.skill);});});
 }
-
-function _handleSkillKeydown(ev, inputId, dropId) {
-  const drop = document.getElementById(dropId);
-  const items = [...drop.querySelectorAll('.jb-sk-drop-item')];
-  if (!drop.classList.contains('open')) {
-    if (ev.key==='Enter') {
-      const v = document.getElementById(inputId).value.trim();
-      if (v.length >= 1) { ev.preventDefault(); addSkill(v); }
-    }
-    return;
-  }
-  if (ev.key==='ArrowDown') {
-    ev.preventDefault();
-    skillAcIdx = Math.min(skillAcIdx+1, items.length-1);
-    items.forEach((el,i)=>el.classList.toggle('sk-active', i===skillAcIdx));
-  } else if (ev.key==='ArrowUp') {
-    ev.preventDefault();
-    skillAcIdx = Math.max(skillAcIdx-1, 0);
-    items.forEach((el,i)=>el.classList.toggle('sk-active', i===skillAcIdx));
-  } else if (ev.key==='Enter') {
-    ev.preventDefault();
-    if (skillAcIdx >= 0 && items[skillAcIdx]) {
-      addSkill(items[skillAcIdx].dataset.skill);
-    } else {
-      const v = document.getElementById(inputId).value.trim();
-      if (v.length >= 1) addSkill(v);
-    }
-  } else if (ev.key==='Escape') {
-    _closeSkillDropId(dropId);
-  }
+function _handleSkillKeydown(ev,inputId,dropId){
+  const drop=document.getElementById(dropId);
+  const items=[...drop.querySelectorAll('.jb2-sk-drop-item')];
+  if(!drop.classList.contains('open')){if(ev.key==='Enter'){const v=document.getElementById(inputId).value.trim();if(v.length>=1){ev.preventDefault();addSkill(v);}}return;}
+  if(ev.key==='ArrowDown'){ev.preventDefault();skillAcIdx=Math.min(skillAcIdx+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('sk-active',i===skillAcIdx));}
+  else if(ev.key==='ArrowUp'){ev.preventDefault();skillAcIdx=Math.max(skillAcIdx-1,0);items.forEach((el,i)=>el.classList.toggle('sk-active',i===skillAcIdx));}
+  else if(ev.key==='Enter'){ev.preventDefault();if(skillAcIdx>=0&&items[skillAcIdx])addSkill(items[skillAcIdx].dataset.skill);else{const v=document.getElementById(inputId).value.trim();if(v.length>=1)addSkill(v);}}
+  else if(ev.key==='Escape')_closeSkillDropId(dropId);
 }
-
-function _closeSkillDropId(dropId) {
-  const drop = document.getElementById(dropId);
-  if (drop) { drop.classList.remove('open'); drop.innerHTML = ''; }
-  skillAcIdx = -1;
-}
-
-/* Sidebar wrappers */
-function onSkillInput(val)   { _showSkillDrop(val, 'skillDrop'); }
-function onSkillKeydown(ev)  { _handleSkillKeydown(ev, 'skillInput', 'skillDrop'); }
-
-function addSkill(skill) {
-  if (!skill) return;
-  const normalized = ALL_SKILLS.find(s => s.toLowerCase() === skill.toLowerCase()) || skill;
-  if (state.skills.some(s => s.toLowerCase() === normalized.toLowerCase())) return;
+function _closeSkillDropId(dropId){const drop=document.getElementById(dropId);if(drop){drop.classList.remove('open');drop.innerHTML='';}skillAcIdx=-1;}
+function onSkillInput(val){_showSkillDrop(val,'skillDrop');}
+function onSkillKeydown(ev){_handleSkillKeydown(ev,'skillInput','skillDrop');}
+function closeSkillDrop(){_closeSkillDropId('skillDrop');}
+function addSkill(skill){
+  if(!skill)return;
+  const normalized=ALL_SKILLS.find(s=>s.toLowerCase()===skill.toLowerCase())||skill;
+  if(state.skills.some(s=>s.toLowerCase()===normalized.toLowerCase()))return;
   state.skills.push(normalized);
-  document.getElementById('skillInput').value = '';
+  document.getElementById('skillInput').value='';
   closeSkillDrop();
   renderSkillChips();
   applyFilters();
 }
-
-function removeSkill(skill) {
-  state.skills = state.skills.filter(s => s !== skill);
-  renderSkillChips();
-  applyFilters();
-}
-
-function renderSkillChips() {
-  ['skillChips','dSkillChips'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.innerHTML = state.skills.map(s =>
-      `<span class="jb-sk-chip">
-        <span>${escHtml(s)}</span>
-        <button class="jb-sk-chip-rm" type="button" data-skill="${escAttr(s)}" aria-label="Remove ${escHtml(s)}">×</button>
-      </span>`
-    ).join('');
-    el.querySelectorAll('.jb-sk-chip-rm').forEach(btn => {
-      btn.addEventListener('click', () => removeSkill(btn.dataset.skill));
-    });
+function removeSkill(skill){state.skills=state.skills.filter(s=>s!==skill);renderSkillChips();applyFilters();}
+function renderSkillChips(){
+  ['skillChips','dSkillChips'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    el.innerHTML=state.skills.map(s=>`<span class="jb2-sk-chip"><span>${escHtml(s)}</span><button class="jb2-sk-chip-rm" type="button" data-skill="${escAttr(s)}" aria-label="Remove">×</button></span>`).join('');
+    el.querySelectorAll('.jb2-sk-chip-rm').forEach(btn=>{btn.addEventListener('click',()=>removeSkill(btn.dataset.skill));});
   });
 }
 
-function closeSkillDrop() { _closeSkillDropId('skillDrop'); }
-
 /* ── Render ── */
-function matchRing(pct) {
-  const c = pct>=90?'#10B981':pct>=70?'#0F766E':pct>=50?'#F59E0B':'#EF4444';
-  return `<div class="jb-ring-wrap">
-    <svg class="jb-ring" viewBox="0 0 36 36">
-      <circle cx="18" cy="18" r="15.9" fill="none" stroke="#E5E7EB" stroke-width="2.8"/>
-      <circle cx="18" cy="18" r="15.9" fill="none" stroke="${c}" stroke-width="2.8"
-        stroke-dasharray="${pct} ${100-pct}" stroke-dashoffset="25" stroke-linecap="round"/>
-    </svg>
-    <span class="jb-ring-pct" style="color:${c}">${pct}%</span>
+function matchRing(pct,size){
+  size=size||52;
+  const col=pct>=90?'var(--c-ver)':pct>=70?'var(--c-acc)':pct>=50?'var(--c-par)':'#EF4444';
+  return `<div class="jb2-match">
+    <div class="jb2-ring" style="width:${size}px;height:${size}px;--pct:${pct};--col:${col}">
+      <span class="jb2-ring-val">${pct}%<small>match</small></span>
+    </div>
   </div>`;
 }
-
-function signalPill(s) {
-  const c = SIG_COLORS[s.color]||SIG_COLORS.blue;
-  return `<span class="jb-signal" style="background:${c.bg};color:${c.text}">${s.label}</span>`;
+function signalPill(s){
+  const clsMap={green:'jb2-sig-active',teal:'jb2-sig-active',blue:'jb2-sig-vrec',purple:'jb2-sig-vrec',orange:'jb2-sig-fast'};
+  return `<span class="jb2-signal ${clsMap[s.color]||'jb2-sig-active'}">${escHtml(s.label)}</span>`;
 }
-
-function skillTags(job) {
-  return job.reqSkills.map(s=>
-    job.verifiedIn.includes(s)
-      ? `<span class="jb-skill-v">✓ ${s}</span>`
-      : `<span class="jb-skill-m">+ ${s}</span>`
+function skillTags(job){
+  return job.reqSkills.map(s=>job.verifiedIn.includes(s)
+    ?`<span class="jb2-tag jb2-tag-v"><span class="jb2-tcheck">✓</span>${escHtml(s)}</span>`
+    :`<span class="jb2-tag jb2-tag-m">${escHtml(s)}</span>`
   ).join('');
 }
-
-function renderCard(job) {
-  const bg = job.color+'22';
-  return `<div class="jb-card" id="card-${job.id}">
-    <div class="jb-card-top">
-      <div class="jb-company-mark" style="background:${bg};color:${job.color}">${job.mark}</div>
-      <div class="jb-card-main">
-        <div class="jb-card-title-row">
-          <h3 class="jb-card-title">${job.title}</h3>
-          <button class="jb-bookmark${job.saved?' saved':''}" onclick="toggleSave(${job.id},event)" title="${job.saved?'Unsave':'Save'}">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="${job.saved?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
-          </button>
-        </div>
-        <div class="jb-card-meta">${job.company} · ${job.location} · <span class="jb-type-badge">${job.type}</span></div>
-        <div class="jb-card-meta2">${job.expRange[0]}–${job.expRange[1]} yrs · ₹${job.salRange[0]}L–₹${job.salRange[1]}L/yr</div>
+function renderCard(job){
+  const pct=job.match;const isTop=pct>=90;
+  const col=pct>=90?'var(--c-ver)':pct>=70?'var(--c-acc)':pct>=50?'var(--c-par)':'#EF4444';
+  return `<div class="jb2-card${isTop?' jb2-card-top-match':''}" id="card-${job.id}" onclick="openDetail(${job.id})">
+    ${isTop?`<div class="jb2-top-badge"><svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> Top Match</div>`:''}
+    <div class="jb2-card-row">
+      <div class="jb2-co-mark" style="background:${job.color}22;color:${job.color}">${escHtml(job.mark)}</div>
+      <div class="jb2-card-body">
+        <h3 class="jb2-job-title">${escHtml(job.title)}</h3>
+        <div class="jb2-job-meta">${escHtml(job.company)}<span class="jb2-sep"> · </span>${escHtml(job.location)}<span class="jb2-sep"> · </span>${escHtml(job.type)}</div>
+        <div class="jb2-job-meta2">${job.expRange[0]}–${job.expRange[1]} yrs &nbsp;·&nbsp; ₹${job.salRange[0]}L–₹${job.salRange[1]}L/yr</div>
       </div>
-      ${matchRing(job.match)}
+      <div class="jb2-match" style="cursor:default">
+        <div class="jb2-ring" style="--pct:${pct};--col:${col}">
+          <span class="jb2-ring-val">${pct}%<small>match</small></span>
+        </div>
+      </div>
+      <button class="jb2-bookmark${job.saved?' jb2-bm-on':''}" onclick="toggleSave(${job.id},event)" title="${job.saved?'Unsave':'Save'}">
+        <svg class="jb2-bm-out" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+        <svg class="jb2-bm-fill" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+      </button>
     </div>
-    <div class="jb-signals">${job.signals.map(signalPill).join('')}</div>
-    <div class="jb-skills-row">${skillTags(job)}</div>
-    <div class="jb-card-foot">
-      <span class="jb-posted">${job.posted}</span>
-      <div class="jb-card-actions">
-        <button class="btn btn-outline btn-sm" onclick="openDetail(${job.id})">View Details</button>
+    <div class="jb2-signals">${job.signals.map(signalPill).join('')}</div>
+    <div class="jb2-tags">${skillTags(job)}</div>
+    <div class="jb2-desc">${escHtml(job.desc)}</div>
+    <div class="jb2-card-foot">
+      <div class="jb2-badges">
+        ${job.verifiedIn.length>0?`<span class="jb2-badge jb2-badge-v"><span class="jb2-bdot"></span>${job.verifiedIn.length} verified</span>`:''}
+        ${job.location.toLowerCase().includes('remote')?`<span class="jb2-badge jb2-badge-remote">Remote</span>`:''}
+        <span class="jb2-badge jb2-badge-type">${escHtml(job.type)}</span>
+      </div>
+      <div class="jb2-card-actions">
+        <span class="jb2-posted">${escHtml(job.posted)}</span>
+        <button class="jb2-btn jb2-btn-outline" onclick="event.stopPropagation();openDetail(${job.id})">Details</button>
         ${job.applied
-          ? `<button class="btn btn-sm btn-applied" disabled>✓ Applied</button>`
-          : `<button class="btn btn-primary btn-sm" id="apply-btn-${job.id}" onclick="openApply(${job.id})">Apply</button>`}
+          ?`<button class="jb2-btn jb2-btn-applied" disabled>✓ Applied</button>`
+          :`<button class="jb2-btn jb2-btn-primary" id="apply-btn-${job.id}" onclick="event.stopPropagation();openApply(${job.id})">Apply</button>`}
       </div>
     </div>
   </div>`;
 }
-
-function renderJobList(jobs) {
-  const list = document.getElementById('jobsList');
-  const empty = document.getElementById('emptyState');
-  if (!jobs.length) { list.innerHTML=''; empty.style.display=''; return; }
+function renderJobList(jobs){
+  const list=document.getElementById('jobsList');
+  const empty=document.getElementById('emptyState');
+  if(!jobs.length){list.innerHTML='';empty.style.display='';return;}
   empty.style.display='none';
-  list.innerHTML = jobs.map(renderCard).join('');
+  list.innerHTML=jobs.map(renderCard).join('');
 }
 
 /* ── Filters ── */
-function applyFilters() {
-  state.search = document.getElementById('searchInput').value.toLowerCase().trim();
-  state.location = document.getElementById('locationInput').value.toLowerCase().trim();
-  state.verified = document.getElementById('sideVerified').checked;
-  state.sort = document.getElementById('sortSel').value;
-  state.types = [...document.querySelectorAll('#typeCheckList input:checked')].map(i=>i.value);
-
-  let filtered = JOBS.filter(job => {
-    if (state.search) {
-      const hay = (job.title+' '+job.company+' '+job.reqSkills.join(' ')).toLowerCase();
-      if (!hay.includes(state.search)) return false;
-    }
-    if (state.heroSkills.length) {
-      if (!state.heroSkills.some(s=>job.reqSkills.some(r=>r.toLowerCase().includes(s.toLowerCase())))) return false;
-    }
-    if (state.location) {
-      if (!job.location.toLowerCase().includes(state.location)) return false;
-    }
-    if (state.verified && job.verifiedIn.length===0) return false;
-    if (state.skills.length && !state.skills.some(s=>job.reqSkills.some(r=>r.toLowerCase()===s.toLowerCase()))) return false;
-    if (job.expRange[0] > state.expMax || job.expRange[1] < state.expMin) return false;
-    if (job.salRange[0] > state.salMax || job.salRange[1] < state.salMin) return false;
-    if (state.types.length && !state.types.includes(job.type)) return false;
+function applyFilters(){
+  state.search=document.getElementById('searchInput').value.toLowerCase().trim();
+  state.location=document.getElementById('locationInput').value.toLowerCase().trim();
+  state.verified=document.getElementById('sideVerified').checked;
+  state.sort=document.getElementById('sortSel').value;
+  state.types=[...document.querySelectorAll('#typeCheckList input:checked')].map(i=>i.value);
+  let filtered=JOBS.filter(job=>{
+    if(state.search){const hay=(job.title+' '+job.company+' '+job.reqSkills.join(' ')).toLowerCase();if(!hay.includes(state.search))return false;}
+    if(state.heroSkills.length){if(!state.heroSkills.some(s=>job.reqSkills.some(r=>r.toLowerCase().includes(s.toLowerCase()))))return false;}
+    if(state.location){if(!job.location.toLowerCase().includes(state.location))return false;}
+    if(state.verified&&job.verifiedIn.length===0)return false;
+    if(state.skills.length&&!state.skills.some(s=>job.reqSkills.some(r=>r.toLowerCase()===s.toLowerCase())))return false;
+    if(job.expRange[0]>state.expMax||job.expRange[1]<state.expMin)return false;
+    if(job.salRange[0]>state.salMax||job.salRange[1]<state.salMin)return false;
+    if(state.types.length&&!state.types.includes(job.type))return false;
     return true;
   });
-
-  if (state.sort==='match') filtered.sort((a,b)=>b.match-a.match);
-  else if (state.sort==='recent') filtered.sort((a,b)=>a.postedSort-b.postedSort);
-  else if (state.sort==='salary') filtered.sort((a,b)=>b.salRange[1]-a.salRange[1]);
-
+  if(state.sort==='match')filtered.sort((a,b)=>b.match-a.match);
+  else if(state.sort==='recent')filtered.sort((a,b)=>a.postedSort-b.postedSort);
+  else if(state.sort==='salary')filtered.sort((a,b)=>b.salRange[1]-a.salRange[1]);
   renderJobList(filtered);
   updateCount(filtered.length);
   updateActiveTags();
 }
-
-function resetFilters() {
+function resetFilters(){
   document.getElementById('searchInput').value='';
   document.getElementById('locationInput').value='';
   document.getElementById('sideVerified').checked=false;
   document.getElementById('heroVerified').checked=false;
-  state.skills = []; renderSkillChips();
+  syncToggleVis('vtSidebar',false);syncToggleVis('heroToggleVis',false);
+  state.skills=[];renderSkillChips();
   document.querySelectorAll('#typeCheckList input').forEach(i=>i.checked=false);
-  document.querySelectorAll('.jb-chip.active').forEach(b=>{b.classList.remove('active');});
+  document.querySelectorAll('.jb2-ss-chip.active').forEach(b=>b.classList.remove('active'));
   state.heroSkills=[];
-  expSlider.reset(); salSlider.reset();
+  expSlider.reset();salSlider.reset();
   applyFilters();
 }
-
-function updateCount(n) {
-  document.getElementById('resultsCount').textContent = n+' job'+(n!==1?'s':'');
-}
-
-function updateActiveTags() {
-  const tags = [];
-  if (state.search) tags.push({label:`"${state.search}"`,key:'search'});
-  if (state.heroSkills.length) state.heroSkills.forEach(s=>tags.push({label:s,key:'hero:'+s}));
-  if (state.verified) tags.push({label:'Verified only',key:'verified'});
+function updateCount(n){document.getElementById('resultsCount').innerHTML=`<b>${n}</b> job${n!==1?'s':''}`;}
+function updateActiveTags(){
+  const tags=[];
+  if(state.search)tags.push({label:`"${state.search}"`,key:'search'});
+  if(state.location)tags.push({label:state.location,key:'location'});
+  if(state.heroSkills.length)state.heroSkills.forEach(s=>tags.push({label:s,key:'hero:'+s}));
+  if(state.verified)tags.push({label:'Verified only',key:'verified'});
   state.skills.forEach(s=>tags.push({label:s,key:'skill:'+s}));
   state.types.forEach(t=>tags.push({label:t,key:'type:'+t}));
-  if (state.expMin>0||state.expMax<30) tags.push({label:`${state.expMin}–${state.expMax} yrs`,key:'exp'});
-  if (state.salMin>0||state.salMax<50) tags.push({label:`₹${state.salMin}L–₹${state.salMax}L`,key:'sal'});
-
-  document.getElementById('activeTags').innerHTML = tags.map(t=>
-    `<span class="jb-active-tag">${t.label}
-      <button onclick="removeTag('${t.key}')">×</button>
-    </span>`
-  ).join('');
+  if(state.expMin>0||state.expMax<30)tags.push({label:`${state.expMin}–${state.expMax} yrs`,key:'exp'});
+  if(state.salMin>0||state.salMax<50)tags.push({label:`₹${state.salMin}L–₹${state.salMax}L`,key:'sal'});
+  document.getElementById('activeTags').innerHTML=tags.map(t=>`<span class="jb2-active-tag">${escHtml(t.label)}<button onclick="removeTag('${escAttr(t.key)}')">×</button></span>`).join('');
 }
-
-function removeTag(key) {
-  if (key==='search'){document.getElementById('searchInput').value='';}
-  else if (key==='verified'){document.getElementById('sideVerified').checked=false;document.getElementById('heroVerified').checked=false;}
-  else if (key==='exp'){expSlider.reset();}
-  else if (key==='sal'){salSlider.reset();}
-  else if (key.startsWith('hero:')){
-    const s=key.slice(5);
-    state.heroSkills=state.heroSkills.filter(x=>x!==s);
-    document.querySelectorAll('.jb-chip').forEach(b=>{if(b.dataset.skill===s)b.classList.remove('active');});
-  }
-  else if (key.startsWith('skill:')){
-    state.skills = state.skills.filter(s=>s!==key.slice(6));
-    renderSkillChips();
-  }
-  else if (key.startsWith('type:')){
-    const t=key.slice(5);
-    document.querySelectorAll('#typeCheckList input').forEach(i=>{if(i.value===t)i.checked=false;});
-  }
+function removeTag(key){
+  if(key==='search')document.getElementById('searchInput').value='';
+  else if(key==='location'){document.getElementById('locationInput').value='';closeAC();}
+  else if(key==='verified'){document.getElementById('sideVerified').checked=false;document.getElementById('heroVerified').checked=false;syncToggleVis('vtSidebar',false);syncToggleVis('heroToggleVis',false);}
+  else if(key==='exp')expSlider.reset();
+  else if(key==='sal')salSlider.reset();
+  else if(key.startsWith('hero:')){const s=key.slice(5);state.heroSkills=state.heroSkills.filter(x=>x!==s);document.querySelectorAll('.jb2-ss-chip').forEach(b=>{if(b.dataset.skill===s)b.classList.remove('active');});}
+  else if(key.startsWith('skill:')){state.skills=state.skills.filter(s=>s!==key.slice(6));renderSkillChips();}
+  else if(key.startsWith('type:')){const t=key.slice(5);document.querySelectorAll('#typeCheckList input').forEach(i=>{if(i.value===t)i.checked=false;});}
   applyFilters();
 }
 
 /* ── Hero chips ── */
-function toggleHeroChip(btn) {
-  const skill = btn.dataset.skill;
-  btn.classList.toggle('active');
-  if (btn.classList.contains('active')) { if(!state.heroSkills.includes(skill)) state.heroSkills.push(skill); }
-  else { state.heroSkills = state.heroSkills.filter(s=>s!==skill); }
+function toggleHeroChip(btn){
+  const skill=btn.dataset.skill;btn.classList.toggle('active');
+  if(btn.classList.contains('active')){if(!state.heroSkills.includes(skill))state.heroSkills.push(skill);}
+  else{state.heroSkills=state.heroSkills.filter(s=>s!==skill);}
   applyFilters();
 }
 
 /* ── Verified sync ── */
-function syncVerified(source) {
-  const val = source==='hero'
-    ? document.getElementById('heroVerified').checked
-    : document.getElementById('sideVerified').checked;
-  document.getElementById('heroVerified').checked = val;
-  document.getElementById('sideVerified').checked = val;
-  state.verified = val;
-  applyFilters();
+function syncToggleVis(id,val){const el=document.getElementById(id);if(el)el.classList.toggle('on',val);}
+function syncVerified(source){
+  const val=source==='hero'?document.getElementById('heroVerified').checked:document.getElementById('sideVerified').checked;
+  document.getElementById('heroVerified').checked=val;
+  document.getElementById('sideVerified').checked=val;
+  syncToggleVis('heroToggleVis',val);
+  syncToggleVis('vtSidebar',val);
+  state.verified=val;applyFilters();
 }
 
 /* ── Location autocomplete ── */
-function showLocationAC(val) {
-  acIdx=-1;
-  const ac=document.getElementById('locationAC');
+function showLocationAC(val){
+  acIdx=-1;const ac=document.getElementById('locationAC');
   if(!val.trim()){ac.classList.remove('open');ac.innerHTML='';return;}
   const matches=LOCS.filter(l=>l.toLowerCase().includes(val.toLowerCase())).slice(0,6);
   if(!matches.length){ac.classList.remove('open');ac.innerHTML='';return;}
-  ac.innerHTML=matches.map((l,i)=>`<div class="jb-ac-item" onmousedown="selectLoc('${l}')" data-idx="${i}">${l}</div>`).join('');
+  ac.innerHTML=matches.map((l,i)=>`<div class="jb2-ac-item" onmousedown="selectLoc('${escAttr(l)}')" data-idx="${i}">${escHtml(l)}</div>`).join('');
   ac.classList.add('open');
 }
-function navLocationAC(ev) {
-  const ac=document.getElementById('locationAC');
-  const items=[...ac.querySelectorAll('.jb-ac-item')];
-  if(!items.length) return;
+function navLocationAC(ev){
+  const ac=document.getElementById('locationAC');const items=[...ac.querySelectorAll('.jb2-ac-item')];
+  if(!items.length){if(ev.key==='Enter')applyFilters();return;}
   if(ev.key==='ArrowDown'){ev.preventDefault();acIdx=Math.min(acIdx+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('active',i===acIdx));}
   else if(ev.key==='ArrowUp'){ev.preventDefault();acIdx=Math.max(acIdx-1,0);items.forEach((el,i)=>el.classList.toggle('active',i===acIdx));}
   else if(ev.key==='Enter'&&acIdx>=0){selectLoc(items[acIdx].textContent);ev.preventDefault();}
-  else if(ev.key==='Escape'){closeAC();}
-  else if(ev.key==='Enter'){applyFilters();}
+  else if(ev.key==='Escape')closeAC();
+  else if(ev.key==='Enter')applyFilters();
 }
-function selectLoc(val) {
-  document.getElementById('locationInput').value=val;
-  closeAC();
-  applyFilters();
-}
-function closeAC() {
-  const ac=document.getElementById('locationAC');
-  ac.classList.remove('open'); ac.innerHTML=''; acIdx=-1;
-}
+function selectLoc(val){document.getElementById('locationInput').value=val;closeAC();applyFilters();}
+function closeAC(){const ac=document.getElementById('locationAC');ac.classList.remove('open');ac.innerHTML='';acIdx=-1;}
 
 /* ── Dual-range slider ── */
-function initRange(trackId,fillId,tlId,trId,minVal,maxVal,step,minLabelId,maxLabelId,onChange,opts) {
+function initRange(trackId,fillId,tlId,trId,minVal,maxVal,step,minLabelId,maxLabelId,onChange){
   const track=document.getElementById(trackId),fill=document.getElementById(fillId);
   const tl=document.getElementById(tlId),tr=document.getElementById(trId);
-  let low=minVal, high=maxVal;
-  const range=maxVal-minVal;
-  const pre=(opts&&opts.prefix)||'', suf=(opts&&opts.suffix)||'';
-
-  function updateUI() {
-    const lp=(low-minVal)/range*100, rp=(high-minVal)/range*100;
-    fill.style.left=lp+'%'; fill.style.width=(rp-lp)+'%';
-    tl.style.left=lp+'%'; tr.style.left=rp+'%';
+  let low=minVal,high=maxVal;const range=maxVal-minVal;
+  function updateUI(){
+    const lp=(low-minVal)/range*100,rp=(high-minVal)/range*100;
+    fill.style.left=lp+'%';fill.style.width=(rp-lp)+'%';
+    tl.style.left=lp+'%';tr.style.left=rp+'%';
     document.getElementById(minLabelId).textContent=low;
     document.getElementById(maxLabelId).textContent=high;
-    if(opts&&opts.tipLId) document.getElementById(opts.tipLId).textContent=pre+low+suf;
-    if(opts&&opts.tipRId) document.getElementById(opts.tipRId).textContent=pre+high+suf;
     onChange(low,high);
   }
-
-  function startDrag(thumb,e) {
-    e.preventDefault();
-    thumb.classList.add('jb-sal-dragging');
-    const rect=track.getBoundingClientRect();
-    const isLeft=thumb===tl;
-    function move(ev) {
+  function startDrag(thumb,e){
+    e.preventDefault();thumb.classList.add('jb2-sal-dragging');
+    const rect=track.getBoundingClientRect();const isLeft=thumb===tl;
+    function move(ev){
       const cx=ev.touches?ev.touches[0].clientX:ev.clientX;
       let pct=Math.max(0,Math.min(1,(cx-rect.left)/rect.width));
       let val=Math.round((minVal+pct*range)/step)*step;
-      if(isLeft){low=Math.max(minVal,Math.min(val,high-step));}
-      else{high=Math.min(maxVal,Math.max(val,low+step));}
+      if(isLeft)low=Math.max(minVal,Math.min(val,high-step));
+      else high=Math.min(maxVal,Math.max(val,low+step));
       updateUI();
     }
     function up(){
-      thumb.classList.remove('jb-sal-dragging');
-      document.removeEventListener('mousemove',move);
-      document.removeEventListener('mouseup',up);
-      document.removeEventListener('touchmove',move);
-      document.removeEventListener('touchend',up);
+      thumb.classList.remove('jb2-sal-dragging');
+      document.removeEventListener('mousemove',move);document.removeEventListener('mouseup',up);
+      document.removeEventListener('touchmove',move);document.removeEventListener('touchend',up);
       applyFilters();
     }
-    document.addEventListener('mousemove',move);
-    document.addEventListener('mouseup',up);
-    document.addEventListener('touchmove',move,{passive:false});
-    document.addEventListener('touchend',up);
+    document.addEventListener('mousemove',move);document.addEventListener('mouseup',up);
+    document.addEventListener('touchmove',move,{passive:false});document.addEventListener('touchend',up);
   }
-
-  tl.addEventListener('mousedown',e=>startDrag(tl,e));
-  tr.addEventListener('mousedown',e=>startDrag(tr,e));
-  tl.addEventListener('touchstart',e=>startDrag(tl,e),{passive:false});
-  tr.addEventListener('touchstart',e=>startDrag(tr,e),{passive:false});
+  tl.addEventListener('mousedown',e=>startDrag(tl,e));tr.addEventListener('mousedown',e=>startDrag(tr,e));
+  tl.addEventListener('touchstart',e=>startDrag(tl,e),{passive:false});tr.addEventListener('touchstart',e=>startDrag(tr,e),{passive:false});
   updateUI();
-  return {
-    getValue:()=>({low,high}),
-    reset:()=>{low=minVal;high=maxVal;updateUI();}
-  };
+  return{getValue:()=>({low,high}),reset:()=>{low=minVal;high=maxVal;updateUI();}};
 }
 
-/* ── Save / Bookmark ── */
-function toggleSave(id, ev) {
+/* ── Save ── */
+function toggleSave(id,ev){
   ev.stopPropagation();
-  const job=JOBS.find(j=>j.id===id);
-  if(!job) return;
+  const job=JOBS.find(j=>j.id===id);if(!job)return;
   job.saved=!job.saved;
   const card=document.getElementById('card-'+id);
   if(card){
-    const btn=card.querySelector('.jb-bookmark');
-    btn.classList.toggle('saved',job.saved);
-    btn.querySelector('svg').setAttribute('fill',job.saved?'currentColor':'none');
-    btn.title=job.saved?'Unsave':'Save';
+    const btn=card.querySelector('.jb2-bookmark');
+    if(btn){btn.classList.toggle('jb2-bm-on',job.saved);btn.title=job.saved?'Unsave':'Save';}
   }
-  if(currentDetailId===id) {
-    const dp=document.getElementById('detailBody');
-    const bk=dp.querySelector('.jb-bookmark-lg');
-    if(bk){bk.classList.toggle('saved',job.saved);bk.innerHTML=bookmarkLgInner(job);}
+  if(currentDetailId===id){
+    const bk=document.querySelector('#detailBody .jb2-dp-bm');
+    if(bk){bk.classList.toggle('saved',job.saved);bk.innerHTML=dpBmInner(job);}
   }
-  showToast(job.saved?'Job saved!':'Job removed from saved.');
+  showToast(job.saved?'Job saved!':'Removed from saved.');
 }
-
-function bookmarkLgInner(job) {
-  return `<svg width="18" height="18" viewBox="0 0 24 24" fill="${job.saved?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>${job.saved?'Saved':'Save'}`;
+function dpBmInner(job){
+  return `<svg width="16" height="16" viewBox="0 0 24 24" fill="${job.saved?'currentColor':'none'}" stroke="currentColor" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>${job.saved?'Saved':'Save'}`;
 }
-
-function showToast(msg) {
+function showToast(msg){
   const t=document.getElementById('saveToast');
   document.getElementById('toastMsg').textContent=msg;
-  t.classList.add('show');
-  clearTimeout(t._t);
+  t.classList.add('show');clearTimeout(t._t);
   t._t=setTimeout(()=>t.classList.remove('show'),2800);
 }
 
-/* ── Detail Panel ── */
-function openDetail(id) {
-  const job=JOBS.find(j=>j.id===id);
-  if(!job) return;
+/* ── Detail panel ── */
+function openDetail(id){
+  const job=JOBS.find(j=>j.id===id);if(!job)return;
   currentDetailId=id;
-  const bg=job.color+'22';
+  const pct=job.match;
+  const col=pct>=90?'var(--c-ver)':pct>=70?'var(--c-acc)':pct>=50?'var(--c-par)':'#EF4444';
   document.getElementById('detailBody').innerHTML=`
-    <div class="jb-dp-hero">
-      <div class="jb-dp-mark" style="background:${bg};color:${job.color}">${job.mark}</div>
+    <div class="jb2-dp-head">
+      <div class="jb2-co-mark" style="background:${job.color}22;color:${job.color};width:44px;height:44px">${escHtml(job.mark)}</div>
       <div style="flex:1;min-width:0">
-        <h2 class="jb-dp-title">${job.title}</h2>
-        <div class="jb-dp-meta">${job.company} · ${job.location}</div>
-        <div class="jb-dp-meta2">${job.type} · ${job.expRange[0]}–${job.expRange[1]} yrs · ₹${job.salRange[0]}L–₹${job.salRange[1]}L</div>
+        <h2 class="jb2-dp-body" style="padding:0;margin:0;font-size:20px;font-weight:600;letter-spacing:-.02em;color:var(--c-ink)">${escHtml(job.title)}</h2>
+        <div class="jb2-dp-meta">${escHtml(job.company)} · ${escHtml(job.location)} · ${escHtml(job.type)}</div>
       </div>
-      ${matchRing(job.match)}
+      <button class="jb2-dp-close" onclick="closeDetail()" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
     </div>
-    <div class="jb-dp-signals">${job.signals.map(signalPill).join('')}</div>
-
-    <div class="jb-dp-section">
-      <h4>About the Role</h4>
-      <p>${job.desc}</p>
-    </div>
-    <div class="jb-dp-section">
-      <h4>Requirements</h4>
-      <ul class="jb-dp-list">${job.requirements.map(r=>`<li>${r}</li>`).join('')}</ul>
-    </div>
-    <div class="jb-dp-section">
-      <h4>Your Skill Match</h4>
-      <div class="jb-dp-skills">
+    <div class="jb2-dp-body">
+      <div class="jb2-match-banner">
+        <div class="jb2-ring" style="width:64px;height:64px;--pct:${pct};--col:${col}">
+          <span class="jb2-ring-val" style="font-size:16px">${pct}%<small>match</small></span>
+        </div>
+        <div>
+          <h4>${pct>=90?'Top Match':pct>=70?'Strong Match':'Partial Match'}</h4>
+          <p>${job.verifiedIn.length} of ${job.reqSkills.length} required skills verified · ${job.reqSkills.length-job.verifiedIn.length} to go</p>
+        </div>
+      </div>
+      <div class="jb2-meta-grid">
+        <div class="jb2-meta-card"><div class="k">Salary</div><div class="v">₹${job.salRange[0]}L–${job.salRange[1]}L<small>/yr</small></div></div>
+        <div class="jb2-meta-card"><div class="k">Experience</div><div class="v">${job.expRange[0]}–${job.expRange[1]}<small> yrs</small></div></div>
+        <div class="jb2-meta-card"><div class="k">Job Type</div><div class="v" style="font-size:14px">${escHtml(job.type)}</div></div>
+      </div>
+      <div class="jb2-signals" style="margin-top:14px">${job.signals.map(signalPill).join('')}</div>
+      <h3>About the Role</h3>
+      <p>${escHtml(job.desc)}</p>
+      <h3>Requirements</h3>
+      <ul>${job.requirements.map(r=>`<li>${escHtml(r)}</li>`).join('')}</ul>
+      <h3>Your Skill Match</h3>
+      <div class="jb2-dp-skill-grid">
         ${job.reqSkills.map(s=>job.verifiedIn.includes(s)
-          ?`<span class="jb-skill-v">✓ ${s}</span>`
-          :`<span class="jb-skill-m">+ ${s}</span>`).join('')}
+          ?`<div class="jb2-dp-skill-row sv"><span>${escHtml(s)}</span><span class="status">verified ✓</span></div>`
+          :`<div class="jb2-dp-skill-row"><span>${escHtml(s)}</span><span class="status">missing</span></div>`
+        ).join('')}
       </div>
+      ${job.perks&&job.perks.length?`<h3>Perks &amp; Benefits</h3><div class="jb2-perks">${job.perks.map(p=>`<span class="jb2-perk">${escHtml(p)}</span>`).join('')}</div>`:''}
     </div>
-    <div class="jb-dp-section">
-      <h4>Perks &amp; Benefits</h4>
-      <div class="jb-dp-perks">${job.perks.map(p=>`<span class="jb-perk">${p}</span>`).join('')}</div>
-    </div>
-    <div class="jb-dp-actions">
+    <div class="jb2-dp-cta">
+      <div class="jb2-dp-salary">₹${job.salRange[0]}L–₹${job.salRange[1]}L <small>/yr</small></div>
       ${job.applied
-        ? `<button class="btn btn-applied" style="flex:1;padding:.75rem 0" disabled>✓ Applied</button>`
-        : `<button class="btn btn-primary" id="detail-apply-btn-${job.id}" style="flex:1;padding:.75rem 0" onclick="openApply(${job.id})">Apply Now</button>`}
-      <button class="jb-bookmark-lg${job.saved?' saved':''}" onclick="toggleSave(${job.id},event)">${bookmarkLgInner(job)}</button>
+        ?`<button class="jb2-btn jb2-btn-applied" disabled>✓ Applied</button>`
+        :`<button class="jb2-btn jb2-btn-primary" id="detail-apply-btn-${job.id}" style="min-height:44px;padding:0 24px;font-size:15px" onclick="openApply(${job.id})">Apply Now</button>`}
+      <button class="jb2-dp-bm${job.saved?' saved':''}" onclick="toggleSave(${job.id},event)">${dpBmInner(job)}</button>
     </div>`;
   document.getElementById('detailOverlay').classList.add('open');
   document.getElementById('detailPanel').classList.add('open');
   document.body.style.overflow='hidden';
 }
-
-function closeDetail() {
+function closeDetail(){
   document.getElementById('detailOverlay').classList.remove('open');
   document.getElementById('detailPanel').classList.remove('open');
-  document.body.style.overflow='';
-  currentDetailId=null;
+  document.body.style.overflow='';currentDetailId=null;
 }
 
-/* ── Apply Modal ── */
-function markApplied(id) {
-  const job = JOBS.find(j => j.id === id);
-  if (job) job.applied = true;
-  // Card button
-  const cardBtn = document.getElementById('apply-btn-' + id);
-  if (cardBtn) {
-    cardBtn.className = 'btn btn-sm btn-applied';
-    cardBtn.disabled = true;
-    cardBtn.textContent = '✓ Applied';
-    cardBtn.onclick = null;
-    cardBtn.id = '';
-  }
-  // Detail panel button
-  const detailBtn = document.getElementById('detail-apply-btn-' + id);
-  if (detailBtn) {
-    detailBtn.className = 'btn btn-applied';
-    detailBtn.disabled = true;
-    detailBtn.textContent = '✓ Applied';
-    detailBtn.onclick = null;
-    detailBtn.id = '';
-  }
+/* ── Apply modal ── */
+function markApplied(id){
+  const job=JOBS.find(j=>j.id===id);if(job)job.applied=true;
+  const cardBtn=document.getElementById('apply-btn-'+id);
+  if(cardBtn){cardBtn.className='jb2-btn jb2-btn-applied';cardBtn.disabled=true;cardBtn.textContent='✓ Applied';cardBtn.onclick=null;cardBtn.id='';}
+  const detailBtn=document.getElementById('detail-apply-btn-'+id);
+  if(detailBtn){detailBtn.className='jb2-btn jb2-btn-applied';detailBtn.disabled=true;detailBtn.textContent='✓ Applied';detailBtn.onclick=null;detailBtn.id='';}
 }
-
-function openApply(id) {
-  const job=JOBS.find(j=>j.id===id);
-  if(!job) return;
-  if(job.applied) { showToast('You have already applied for this job.'); return; }
+function openApply(id){
+  const job=JOBS.find(j=>j.id===id);if(!job)return;
+  if(job.applied){showToast('You have already applied for this job.');return;}
   currentApplyId=id;
-  const bg=job.color+'22';
   document.getElementById('applyContent').innerHTML=`
-    <div class="jb-modal-head">
-      <div class="jb-modal-job">
-        <div class="jb-md-mark" style="background:${bg};color:${job.color}">${job.mark}</div>
-        <div>
-          <div class="jb-md-title">Apply to ${job.title}</div>
-          <div class="jb-md-company">${job.company} · ${job.location}</div>
-        </div>
+    <div class="jb2-modal-head">
+      <div class="jb2-modal-job">
+        <div class="jb2-md-mark" style="background:${job.color}22;color:${job.color}">${escHtml(job.mark)}</div>
+        <div><div class="jb2-md-title">Apply — ${escHtml(job.title)}</div><div class="jb2-md-company">${escHtml(job.company)} · ${escHtml(job.location)}</div></div>
       </div>
-      <button class="jb-close-modal" onclick="closeApply()">
+      <button class="jb2-close-modal" onclick="closeApply()">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <div class="jb-modal-body">
-      <div class="jb-modal-grid">
-        <div class="jb-mf"><label>Full Name</label><input class="form-control" value="{{ user.name if user else '' }}" readonly></div>
-        <div class="jb-mf"><label>Email</label><input class="form-control" value="{{ user.email if user else '' }}" readonly></div>
+    <div class="jb2-modal-body">
+      <div class="jb2-modal-grid">
+        <div class="jb2-mf"><label>Full Name</label><input value="{{ user.name if user else '' }}" readonly></div>
+        <div class="jb2-mf"><label>Email</label><input value="{{ user.email if user else '' }}" readonly></div>
       </div>
-      <div class="jb-mf" style="margin-top:.875rem">
-        <label style="display:flex;align-items:center;gap:.5rem">
-          Verified Skills
+      <div class="jb2-mf" style="margin-top:.875rem">
+        <label>Verified Skills
           ${job.skillTestMandatory?`<span style="font-size:.6875rem;font-weight:700;padding:2px 8px;border-radius:99px;background:#FEF9C3;color:#92400E;border:1px solid #FCD34D">⚠ Test Required</span>`:''}
         </label>
-        <div class="jb-modal-skills">
+        <div class="jb2-modal-skills">
           ${job.verifiedIn.length
-            ? job.verifiedIn.map(s=>`<span class="jb-skill-v">✓ ${s}</span>`).join('')
-            : `<span class="jb-no-skills" style="font-size:.8125rem;color:var(--text-muted)">None verified yet</span>`}
+            ?job.verifiedIn.map(s=>`<span class="jb2-tag jb2-tag-v"><span class="jb2-tcheck">✓</span>${escHtml(s)}</span>`).join('')
+            :`<span style="font-size:.8125rem;color:var(--c-ink3)">None verified yet</span>`}
         </div>
-        ${job.missingIn.length ? `
-        <div class="jb-exam-nudge${job.skillTestMandatory?' jb-exam-mandatory':''}">
-          <div class="jb-exam-nudge-label">
+        ${job.missingIn&&job.missingIn.length?`
+        <div class="jb2-exam-nudge${job.skillTestMandatory?' jb2-exam-mandatory':''}">
+          <div class="jb2-exam-nudge-label">
             ${job.skillTestMandatory
-              ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                Recruiter requires skill tests — take an exam to qualify:`
-              : `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                Boost your match by taking exams for missing skills:`}
+              ?`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Recruiter requires skill tests:`
+              :`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Boost your match:`}
           </div>
-          <div class="jb-exam-skill-links">
-            ${job.missingIn.map(s => s.id
-              ? `<a href="/skills/verify/${s.id}/instructions" class="jb-exam-skill-link" target="_blank">
-                  ${escHtml(s.name)}
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-                </a>`
-              : `<span class="jb-exam-skill-plain">${escHtml(s.name)}</span>`
+          <div class="jb2-exam-skill-links">
+            ${job.missingIn.map(s=>s.id
+              ?`<a href="/skills/verify/${s.id}/instructions" class="jb2-exam-skill-link" target="_blank">${escHtml(s.name)}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></a>`
+              :`<span class="jb2-exam-skill-plain">${escHtml(s.name)}</span>`
             ).join('')}
           </div>
-        </div>` : ''}
+        </div>`:'' }
       </div>
-      <div class="jb-mf" style="margin-top:.875rem">
+      <div class="jb2-mf" style="margin-top:.875rem">
         <label>Resume / CV</label>
-        ${RESUME_FILENAME ? `
-        <div class="jb-resume-onfile" id="resumeOnFile${job.id}">
-          <div class="jb-resume-onfile-left">
-            <div class="jb-resume-onfile-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            </div>
-            <div>
-              <div class="jb-resume-onfile-name">${escHtml(RESUME_FILENAME)}</div>
-              <div class="jb-resume-onfile-status">Resume on file · will be sent with application</div>
-            </div>
+        ${RESUME_FILENAME?`
+        <div class="jb2-resume-onfile" id="resumeOnFile${job.id}">
+          <div class="jb2-resume-onfile-left">
+            <div class="jb2-resume-onfile-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+            <div><div class="jb2-resume-onfile-name">${escHtml(RESUME_FILENAME)}</div><div class="jb2-resume-onfile-status">Resume on file · sent with application</div></div>
           </div>
-          <label class="jb-resume-replace-btn" for="rf${job.id}" title="Upload a different resume">
-            Replace
-            <input type="file" id="rf${job.id}" accept=".pdf,.doc,.docx" style="display:none" onchange="setResumeName(this,'rc${job.id}')">
-          </label>
+          <label class="jb2-resume-replace-btn" for="rf${job.id}">Replace<input type="file" id="rf${job.id}" accept=".pdf,.doc,.docx" style="display:none" onchange="setResumeName(this,'rc${job.id}')"></label>
         </div>
-        <div class="jb-upload-chosen-replace" id="rc${job.id}"></div>
-        ` : `
-        <div class="jb-upload-zone" onclick="document.getElementById('rf${job.id}').click()">
+        <div class="jb2-upload-chosen-replace" id="rc${job.id}"></div>`
+        :`<div class="jb2-upload-zone" onclick="document.getElementById('rf${job.id}').click()">
           <input type="file" id="rf${job.id}" accept=".pdf,.doc,.docx" style="display:none" onchange="setResumeName(this,'rc${job.id}')">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-          <span class="jb-upload-text">Click to upload or drag &amp; drop</span>
-          <span class="jb-upload-hint">PDF, DOC, DOCX up to 5MB</span>
-          <span class="jb-upload-chosen" id="rc${job.id}"></span>
-        </div>
-        `}
+          <span class="jb2-upload-text">Click to upload or drag &amp; drop</span>
+          <span class="jb2-upload-hint">PDF, DOC, DOCX up to 5 MB</span>
+          <span class="jb2-upload-chosen" id="rc${job.id}"></span>
+        </div>`}
       </div>
-      <div class="jb-mf" style="margin-top:.875rem">
-        <label>Cover Message <span class="jb-optional">(optional)</span></label>
-        <textarea class="form-control" rows="4" placeholder="Why are you excited about this role?"></textarea>
+      <div class="jb2-mf" style="margin-top:.875rem">
+        <label>Cover Message <span class="jb2-optional">(optional)</span></label>
+        <textarea rows="4" placeholder="Why are you excited about this role?"></textarea>
       </div>
-      ${job.skillTestMandatory && job.missingIn.length > 0
-        ? `<div class="jb-submit-blocked">
-             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-             Complete the required skill tests above to unlock this application
-           </div>
-           <button class="btn btn-primary" style="width:100%;margin-top:.75rem;padding:.75rem 0" disabled>Submit Application</button>`
-        : `<button class="btn btn-primary" style="width:100%;margin-top:1.25rem;padding:.75rem 0" onclick="submitApply()">Submit Application</button>`
-      }
+      ${job.skillTestMandatory&&job.missingIn&&job.missingIn.length
+        ?`<div class="jb2-submit-blocked"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Complete required skill tests to unlock this application</div>
+           <button class="jb2-btn jb2-btn-primary" style="width:100%;margin-top:.75rem;min-height:46px" disabled>Submit Application</button>`
+        :`<button class="jb2-btn jb2-btn-primary" style="width:100%;margin-top:1.25rem;min-height:46px;font-size:15px" onclick="submitApply()">Submit Application</button>`}
     </div>`;
   document.getElementById('applySuccess').style.display='none';
   document.getElementById('applyContent').style.display='';
   document.getElementById('applyBack').classList.add('open');
   document.body.style.overflow='hidden';
 }
-
-function setResumeName(input, labelId) {
-  if (!input.files.length) return;
-  const fname = input.files[0].name;
-  const el = document.getElementById(labelId);
-  if (!el) return;
-  // "replace" flow — show new filename below the on-file row
-  el.textContent = '↑ New file selected: ' + fname;
-  el.style.display = 'block';
-  // also swap the on-file row to reflect the new choice
-  const onFileRow = el.previousElementSibling;
-  if (onFileRow && onFileRow.classList.contains('jb-resume-onfile')) {
-    const nameEl = onFileRow.querySelector('.jb-resume-onfile-name');
-    const statusEl = onFileRow.querySelector('.jb-resume-onfile-status');
-    if (nameEl) nameEl.textContent = fname;
-    if (statusEl) statusEl.textContent = 'New file selected · will replace resume on file';
+function setResumeName(input,labelId){
+  if(!input.files.length)return;
+  const fname=input.files[0].name;
+  const el=document.getElementById(labelId);if(!el)return;
+  el.textContent='↑ New file selected: '+fname;el.style.display='block';
+  const onFileRow=el.previousElementSibling;
+  if(onFileRow&&onFileRow.classList.contains('jb2-resume-onfile')){
+    const nameEl=onFileRow.querySelector('.jb2-resume-onfile-name');
+    const statusEl=onFileRow.querySelector('.jb2-resume-onfile-status');
+    if(nameEl)nameEl.textContent=fname;
+    if(statusEl)statusEl.textContent='New file selected · will replace resume on file';
   }
 }
-
-function submitApply() {
-  const jobId = currentApplyId;
-  if (!jobId) return;
-  const cover = document.querySelector('#applyBox textarea');
-  const form = new FormData();
-  form.append('cover_letter', cover ? cover.value : '');
-  const btn = document.querySelector('#applyBox .btn-primary');
-  if (btn) { btn.disabled=true; btn.textContent='Submitting…'; }
-  fetch(`/jobs/${jobId}/apply`, {method:'POST', body:form})
-    .then(r => r.json())
-    .then(data => {
-      if (data.ok) {
-        markApplied(jobId);
-        document.getElementById('applyContent').style.display='none';
-        document.getElementById('applySuccess').style.display='';
-      } else if (data.error === 'already_applied') {
-        markApplied(jobId);
-        closeApply(null, true);
-        showToast('You have already applied for this job.');
-      } else {
-        if (btn) { btn.disabled=false; btn.textContent='Submit Application'; }
-        showToast('Could not submit. Please log in as a candidate.');
-      }
+function submitApply(){
+  const jobId=currentApplyId;if(!jobId)return;
+  const cover=document.querySelector('#applyBox textarea');
+  const form=new FormData();
+  form.append('cover_letter',cover?cover.value:'');
+  const btn=document.querySelector('#applyBox .jb2-btn-primary:not([disabled])');
+  if(btn){btn.disabled=true;btn.textContent='Submitting…';}
+  fetch(`/jobs/${jobId}/apply`,{method:'POST',body:form})
+    .then(r=>r.json())
+    .then(data=>{
+      if(data.ok){markApplied(jobId);document.getElementById('applyContent').style.display='none';document.getElementById('applySuccess').style.display='';}
+      else if(data.error==='already_applied'){markApplied(jobId);closeApply(null,true);showToast('Already applied for this job.');}
+      else{if(btn){btn.disabled=false;btn.textContent='Submit Application';}showToast('Could not submit. Please log in as a candidate.');}
     })
-    .catch(() => {
-      if (btn) { btn.disabled=false; btn.textContent='Submit Application'; }
-      showToast('Could not submit. Please log in as a candidate.');
-    });
+    .catch(()=>{if(btn){btn.disabled=false;btn.textContent='Submit Application';}showToast('Could not submit. Please log in as a candidate.');});
 }
-
-function closeApply(ev, done) {
-  if(ev && ev.target!==document.getElementById('applyBack') && !done) return;
+function closeApply(ev,done){
+  if(ev&&ev.target!==document.getElementById('applyBack')&&!done)return;
   document.getElementById('applyBack').classList.remove('open');
-  document.body.style.overflow='';
-  currentApplyId=null;
+  document.body.style.overflow='';currentApplyId=null;
 }
 
-/* ── Mobile Filter Drawer ── */
-function buildDrawer() {
-  document.getElementById('drawerBody').innerHTML = `
-    <div class="jb-fg">
-      <div class="jb-switch-row">
-        <span>Verified matches only</span>
-        <label class="jb-sw"><input type="checkbox" id="dVerified" onchange="syncDrawerVerified()"><span class="jb-sw-track"></span></label>
+/* ── Mobile drawer ── */
+function buildDrawer(){
+  document.getElementById('drawerBody').innerHTML=`
+    <div class="jb2-fg">
+      <div class="jb2-sw-row">
+        <span class="jb2-toggle" id="dToggleVis"></span>
+        <div class="jb2-sw-text"><label style="cursor:pointer;display:block"><input type="checkbox" id="dVerified" style="display:none" onchange="syncDrawerVerified()">Verified matches only</label></div>
       </div>
     </div>
-    <div class="jb-fg">
-      <div class="jb-fg-title">Job Type</div>
+    <div class="jb2-fg">
+      <div class="jb2-fg-title">Job Type</div>
       <div id="dTypeList">
-        ${['Full-time','Part-time','Contract','Internship','Freelance'].map(t=>
-          `<label class="jb-check"><input type="checkbox" value="${t}" class="dtype-cb"><span>${t}</span></label>`
-        ).join('')}
+        ${['Full-time','Part-time','Contract','Internship','Freelance'].map(t=>`<label class="jb2-check-row"><input type="checkbox" value="${t}" class="dtype-cb"><span class="jb2-box"></span><span>${t}</span></label>`).join('')}
       </div>
     </div>
-    <div class="jb-fg" style="border-bottom:none">
-      <div class="jb-fg-title">Required Skills</div>
-      <div class="jb-sk-chips" id="dSkillChips"></div>
-      <div class="jb-sk-input-wrap">
-        <input type="text" class="jb-sk-input" id="dSkillInput" placeholder="Type a skill…" autocomplete="off">
-        <div class="jb-sk-drop" id="dSkillDrop"></div>
+    <div class="jb2-fg" style="border-bottom:none">
+      <div class="jb2-fg-title">Required Skills</div>
+      <div class="jb2-sk-chips" id="dSkillChips"></div>
+      <div class="jb2-sk-input-wrap">
+        <input type="text" class="jb2-sk-input" id="dSkillInput" placeholder="Type a skill…" autocomplete="off">
+        <div class="jb2-sk-drop" id="dSkillDrop"></div>
       </div>
     </div>`;
-
-  const di = document.getElementById('dSkillInput');
-  di.addEventListener('input',  ()  => _showSkillDrop(di.value, 'dSkillDrop'));
-  di.addEventListener('keydown', ev => _handleSkillKeydown(ev, 'dSkillInput', 'dSkillDrop'));
-  di.addEventListener('blur',   ()  => setTimeout(() => _closeSkillDropId('dSkillDrop'), 150));
+  const di=document.getElementById('dSkillInput');
+  di.addEventListener('input',()=>_showSkillDrop(di.value,'dSkillDrop'));
+  di.addEventListener('keydown',ev=>_handleSkillKeydown(ev,'dSkillInput','dSkillDrop'));
+  di.addEventListener('blur',()=>setTimeout(()=>_closeSkillDropId('dSkillDrop'),150));
   renderSkillChips();
 }
-function syncDrawerVerified() {
+function syncDrawerVerified(){
   const val=document.getElementById('dVerified').checked;
+  syncToggleVis('dToggleVis',val);
   document.getElementById('sideVerified').checked=val;
   document.getElementById('heroVerified').checked=val;
-  state.verified=val;
-  applyFilters();
+  syncToggleVis('vtSidebar',val);syncToggleVis('heroToggleVis',val);
+  state.verified=val;applyFilters();
 }
-function openFilterDrawer() {
+function openFilterDrawer(){
   document.getElementById('dVerified').checked=state.verified;
+  syncToggleVis('dToggleVis',state.verified);
+  document.querySelectorAll('.dtype-cb').forEach(cb=>{cb.checked=state.types.includes(cb.value);});
   renderSkillChips();
   document.getElementById('filterDrawer').classList.add('open');
   document.getElementById('drawerBack').classList.add('open');
 }
-function closeFilterDrawer() {
+function closeFilterDrawer(){
   const dTypes=[...document.querySelectorAll('.dtype-cb:checked')].map(i=>i.value);
-  dTypes.forEach(t=>{
-    document.querySelectorAll('#typeCheckList input').forEach(i=>{if(i.value===t)i.checked=true;});
-  });
-  _closeSkillDropId('dSkillDrop');
-  applyFilters();
+  dTypes.forEach(t=>{document.querySelectorAll('#typeCheckList input').forEach(i=>{if(i.value===t)i.checked=true;});});
+  _closeSkillDropId('dSkillDrop');applyFilters();
   document.getElementById('filterDrawer').classList.remove('open');
   document.getElementById('drawerBack').classList.remove('open');
 }
 
-document.addEventListener('DOMContentLoaded', init);
-document.addEventListener('keydown', ev=>{
-  if(ev.key==='Escape'){closeDetail();closeApply(null,true);}
-});
+/* ── Init ── */
+function init(){
+  expSlider=initRange('expTrack','expFill','expTL','expTR',0,30,1,'expMinL','expMaxL',(lo,hi)=>{state.expMin=lo;state.expMax=hi;});
+  salSlider=initRange('salTrack','salFill','salTL','salTR',0,50,1,'salMinL','salMaxL',(lo,hi)=>{state.salMin=lo;state.salMax=hi;});
+  applyFilters();buildDrawer();
+}
+document.addEventListener('DOMContentLoaded',init);
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape'){closeDetail();closeApply(null,true);}});
 </script>
+</div>
 {% endblock %}

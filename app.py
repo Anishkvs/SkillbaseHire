@@ -93,7 +93,9 @@ def set_security_headers(response):
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
-    response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+    # camera=(self) and microphone=(self) — allow same-origin pages (exam proctoring)
+    # to request camera/mic access while blocking any embedded third-party iframes.
+    response.headers['Permissions-Policy'] = 'geolocation=(), camera=(self), microphone=(self)'
     if _is_production:  # HSTS only makes sense over HTTPS in production
         response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
     return response
@@ -265,6 +267,22 @@ def init_db():
                 FOREIGN KEY (candidate_id) REFERENCES users(id),
                 FOREIGN KEY (job_id) REFERENCES jobs(id),
                 FOREIGN KEY (application_id) REFERENCES applications(id)
+            );
+            CREATE TABLE IF NOT EXISTS skill_questions (
+                id             INTEGER PRIMARY KEY AUTOINCREMENT,
+                skill_id       INTEGER NOT NULL,
+                question_text  TEXT NOT NULL,
+                option_a       TEXT NOT NULL,
+                option_b       TEXT NOT NULL,
+                option_c       TEXT NOT NULL,
+                option_d       TEXT NOT NULL,
+                correct_option TEXT NOT NULL CHECK(correct_option IN ('A','B','C','D')),
+                marks          INTEGER DEFAULT 1,
+                difficulty     TEXT DEFAULT 'Medium' CHECK(difficulty IN ('Easy','Medium','Hard')),
+                created_by     INTEGER,
+                created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (skill_id) REFERENCES skills(id),
+                FOREIGN KEY (created_by) REFERENCES users(id)
             );
         ''')
 
@@ -896,6 +914,13 @@ SKILL_META = {
 DEFAULT_META = {'duration': 25, 'questions': 4, 'passing': 66, 'attempts': 3, 'level': 'Intermediate'}
 
 
+def _db_q_to_quiz(row):
+    """Convert a skill_questions DB row to QUIZ_BANK format."""
+    options = [row['option_a'], row['option_b'], row['option_c'], row['option_d']]
+    answer = ord(row['correct_option'].upper()) - ord('A')
+    return {'q': row['question_text'], 'options': options, 'answer': answer}
+
+
 @app.route('/skills/verify/<int:skill_id>/instructions')
 @candidate_required
 def exam_instructions(skill_id):
@@ -904,7 +929,12 @@ def exam_instructions(skill_id):
     if not skill:
         flash('Skill not found.', 'error')
         return redirect(url_for('skills_page'))
-    meta = SKILL_META.get(skill['name'], DEFAULT_META)
+    meta = dict(SKILL_META.get(skill['name'], DEFAULT_META))
+    db_q_count = db.execute(
+        'SELECT COUNT(*) FROM skill_questions WHERE skill_id=?', [skill_id]
+    ).fetchone()[0]
+    if db_q_count:
+        meta['questions'] = db_q_count
     existing = db.execute(
         'SELECT score, verified FROM user_skills WHERE user_id=? AND skill_id=?',
         [session['user_id'], skill_id]
@@ -922,8 +952,16 @@ def verify_skill(skill_id):
         flash('Skill not found.', 'error')
         return redirect(url_for('skills_page'))
 
-    questions = QUIZ_BANK.get(skill['name'], DEFAULT_QUESTIONS(skill['name']))
-    meta = SKILL_META.get(skill['name'], DEFAULT_META)
+    db_rows = db.execute(
+        'SELECT * FROM skill_questions WHERE skill_id=? ORDER BY id', [skill_id]
+    ).fetchall()
+    if db_rows:
+        questions = [_db_q_to_quiz(r) for r in db_rows]
+        meta = dict(SKILL_META.get(skill['name'], DEFAULT_META))
+        meta['questions'] = len(questions)
+    else:
+        questions = QUIZ_BANK.get(skill['name'], DEFAULT_QUESTIONS(skill['name']))
+        meta = SKILL_META.get(skill['name'], DEFAULT_META)
 
     if request.method == 'POST':
         integrity_ended = request.form.get('integrity_ended') == '1'
@@ -1009,7 +1047,12 @@ def exam_result(skill_id):
                         [session['user_id'], skill_id]).fetchone()
         if not skill or not us:
             return redirect(url_for('skills_page'))
-        meta = SKILL_META.get(skill['name'], DEFAULT_META)
+        meta = dict(SKILL_META.get(skill['name'], DEFAULT_META))
+        db_q_count = db.execute(
+            'SELECT COUNT(*) FROM skill_questions WHERE skill_id=?', [skill_id]
+        ).fetchone()[0]
+        if db_q_count:
+            meta['questions'] = db_q_count
         tt_secs = us['time_taken_secs']
         time_taken_str = f'{tt_secs // 60}:{tt_secs % 60:02d}' if tt_secs else None
         result = {
@@ -1041,6 +1084,92 @@ def exam_ended(skill_id):
             'fs_exit_count': 3,
         }
     return render_template('exam_ended.html', data=data, user=get_current_user())
+
+
+# ── Recruiter: Skill Question Management ─────────────────────────────────────
+
+@app.route('/recruiter/questions')
+@recruiter_required
+def manage_questions():
+    db = get_db()
+    skills = db.execute(
+        '''SELECT s.id, s.name, s.category,
+                  COUNT(sq.id) as question_count
+           FROM skills s
+           LEFT JOIN skill_questions sq ON s.id = sq.skill_id
+           GROUP BY s.id
+           ORDER BY s.category, s.name'''
+    ).fetchall()
+    return render_template('manage_questions.html', skills=skills,
+                           skill=None, questions=None,
+                           user=get_current_user(), profile=_get_recruiter_profile())
+
+
+@app.route('/recruiter/questions/<int:skill_id>', methods=['GET', 'POST'])
+@recruiter_required
+def manage_skill_questions(skill_id):
+    db = get_db()
+    skill = db.execute('SELECT * FROM skills WHERE id=?', [skill_id]).fetchone()
+    if not skill:
+        flash('Skill not found.', 'error')
+        return redirect(url_for('manage_questions'))
+
+    if request.method == 'POST':
+        action = request.form.get('action')
+        if action == 'add':
+            q_text = request.form.get('question_text', '').strip()
+            opt_a  = request.form.get('option_a', '').strip()
+            opt_b  = request.form.get('option_b', '').strip()
+            opt_c  = request.form.get('option_c', '').strip()
+            opt_d  = request.form.get('option_d', '').strip()
+            correct = request.form.get('correct_option', '').upper()
+            marks   = request.form.get('marks', 1, type=int)
+            diff    = request.form.get('difficulty', 'Medium')
+            if not all([q_text, opt_a, opt_b, opt_c, opt_d]) or correct not in ('A', 'B', 'C', 'D'):
+                flash('All fields are required and correct answer must be A, B, C, or D.', 'error')
+            elif diff not in ('Easy', 'Medium', 'Hard'):
+                flash('Difficulty must be Easy, Medium, or Hard.', 'error')
+            else:
+                db.execute(
+                    '''INSERT INTO skill_questions
+                       (skill_id, question_text, option_a, option_b, option_c, option_d,
+                        correct_option, marks, difficulty, created_by)
+                       VALUES (?,?,?,?,?,?,?,?,?,?)''',
+                    [skill_id, q_text, opt_a, opt_b, opt_c, opt_d,
+                     correct, marks, diff, session['user_id']]
+                )
+                db.commit()
+                flash('Question added successfully.', 'success')
+        elif action == 'delete':
+            q_id = request.form.get('question_id', type=int)
+            if q_id:
+                db.execute('DELETE FROM skill_questions WHERE id=? AND skill_id=?',
+                           [q_id, skill_id])
+                db.commit()
+                flash('Question deleted.', 'success')
+        return redirect(url_for('manage_skill_questions', skill_id=skill_id))
+
+    questions = db.execute(
+        'SELECT * FROM skill_questions WHERE skill_id=? ORDER BY id', [skill_id]
+    ).fetchall()
+    skills = db.execute(
+        '''SELECT s.id, s.name, s.category,
+                  COUNT(sq.id) as question_count
+           FROM skills s
+           LEFT JOIN skill_questions sq ON s.id = sq.skill_id
+           GROUP BY s.id
+           ORDER BY s.category, s.name'''
+    ).fetchall()
+    return render_template('manage_questions.html', skill=skill, questions=questions,
+                           skills=skills, user=get_current_user(),
+                           profile=_get_recruiter_profile())
+
+
+def _get_recruiter_profile():
+    db = get_db()
+    return db.execute(
+        'SELECT * FROM recruiter_profiles WHERE user_id=?', [session['user_id']]
+    ).fetchone()
 
 
 # ── Registration type selector ────────────────────────────────────────────────
@@ -1983,6 +2112,19 @@ def recruiter_dashboard():
         WHERE j.recruiter_id=? AND a.status='applied'
     ''', [session['user_id']]).fetchone()[0]
 
+    under_review_count = db.execute('''
+        SELECT COUNT(*) FROM applications a JOIN jobs j ON a.job_id=j.id
+        WHERE j.recruiter_id=? AND a.status='reviewing'
+    ''', [session['user_id']]).fetchone()[0]
+
+    shortlisted_count = db.execute('''
+        SELECT COUNT(*) FROM applications a JOIN jobs j ON a.job_id=j.id
+        WHERE j.recruiter_id=? AND a.status='shortlisted'
+    ''', [session['user_id']]).fetchone()[0]
+
+    under_review_pct = round((under_review_count / total_apps * 100)) if total_apps else 0
+    shortlisted_pct  = round((shortlisted_count  / total_apps * 100)) if total_apps else 0
+
     stats = {
         'total_jobs': len(my_jobs),
         'active_jobs': sum(1 for j in my_jobs if j['active']),
@@ -1991,7 +2133,12 @@ def recruiter_dashboard():
     }
     return render_template('recruiter_dashboard.html',
                            user=get_current_user(), profile=profile,
-                           my_jobs=my_jobs, recent_apps=recent_apps, stats=stats)
+                           my_jobs=my_jobs, recent_apps=recent_apps, stats=stats,
+                           total_apps=total_apps,
+                           under_review_count=under_review_count,
+                           shortlisted_count=shortlisted_count,
+                           under_review_pct=under_review_pct,
+                           shortlisted_pct=shortlisted_pct)
 
 
 @app.route('/recruiter/post-job', methods=['GET', 'POST'])

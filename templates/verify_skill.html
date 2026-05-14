@@ -73,7 +73,7 @@
 
         <div class="ec-check-item" id="camCheck">
           <div class="ec-check-status ec-pending" id="camStatus">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>
           </div>
           <div class="ec-check-icon">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
@@ -86,7 +86,7 @@
 
         <div class="ec-check-item" id="faceCheck">
           <div class="ec-check-status ec-pending" id="faceStatus">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>
           </div>
           <div class="ec-check-icon">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg>
@@ -123,7 +123,7 @@
 
         <div class="ec-check-item" id="micCheck">
           <div class="ec-check-status ec-pending" id="micStatus">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>
           </div>
           <div class="ec-check-icon">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M19 10v2a7 7 0 01-14 0v-2"/></svg>
@@ -136,7 +136,7 @@
 
         <div class="ec-check-item" id="screenCheck">
           <div class="ec-check-status ec-pending" id="screenStatus">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>
           </div>
           <div class="ec-check-icon">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
@@ -196,13 +196,6 @@
       <button class="ea-submit-hdr-btn" id="submitHdrBtn" onclick="confirmSubmit()">Submit Assessment</button>
     </div>
   </header>
-
-  <!-- Tab switch warning -->
-  <div class="ea-warn-bar" id="warnBar" style="display:none">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    <span id="warnMsg">Warning: Tab switching detected!</span>
-    <button onclick="document.getElementById('warnBar').style.display='none'">×</button>
-  </div>
 
   <!-- Main layout -->
   <div class="ea-layout">
@@ -395,63 +388,236 @@ let timerSec = DURATION_SEC;
 let timerInterval;
 let startTime;
 let camStream = null;
+let camReady  = false;   // true only when video stream is live and playing
 let examActive = false;  // true only during active MCQ exam (enables keyboard blocking)
 
 /* ══ ENVIRONMENT CHECK ══ */
 async function runEnvCheck() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    showCamError('Camera API unavailable. Please use Chrome or Firefox and ensure the page is served over HTTPS or localhost.');
+    setCheckStatus('cam', false, 'Camera API not available in this browser');
+    setCheckStatus('mic', false, 'Not available');
+    setCheckStatus('screen', false, 'Not available');
+    setCheckStatus('face', false, 'Not available');
+    return;
+  }
+
+  // Pre-check: if permission is already denied, show the guide without calling getUserMedia
+  if (navigator.permissions) {
+    try {
+      const perm = await navigator.permissions.query({name: 'camera'});
+      if (perm.state === 'denied') {
+        setCheckStatus('cam',    false, 'Camera access denied — allow in browser settings then retry');
+        setCheckStatus('mic',    false, 'Microphone access denied');
+        setCheckStatus('screen', false, 'Cannot proceed without camera access');
+        setCheckStatus('face',   false, 'Camera required for face detection');
+        showCamDenied();
+        return;
+      }
+      if (perm.state === 'prompt') {
+        // Permission dialog is about to appear — update placeholder text
+        const t = document.getElementById('camPlaceholderText');
+        if (t) t.textContent = 'Please allow camera access to continue…';
+      }
+    } catch (_) { /* permissions API not supported — fall through to getUserMedia */ }
+  }
+
   try {
     camStream = await navigator.mediaDevices.getUserMedia({video: true, audio: true});
-    // Camera granted
+
     const video = document.getElementById('camVideo');
     video.srcObject = camStream;
-    video.style.display = 'block';
-    document.getElementById('camPlaceholder').style.display = 'none';
-    setCheckStatus('cam', true, 'Camera detected and accessible');
-    // Show exam cam feed later
-    const examFeed = document.getElementById('examCamFeed');
-    examFeed.srcObject = camStream;
-    // Mic granted (same stream)
-    setCheckStatus('mic', true, 'Microphone detected and accessible');
-    // Screen recording (just UI)
-    setTimeout(() => {
-      setCheckStatus('screen', true, 'Screen recording permission granted');
-    }, 800);
-    // Face detection (simulated)
-    setTimeout(() => {
-      setCheckStatus('face', true, 'Face detected in camera view');
-      // Enable proceed
-      const btn = document.getElementById('proceedBtn');
-      btn.disabled = false;
-      document.getElementById('proceedText').textContent = 'Proceed to Exam →';
-    }, 1800);
+    video.play().catch(() => {}); // explicit play — belt-and-suspenders alongside autoplay attr
+
+    // Wait for the video to actually start rendering frames
+    video.addEventListener('loadedmetadata', () => {
+      video.play().catch(() => {}); // ensure playing after metadata is ready
+      video.style.display = 'block';
+      document.getElementById('camPlaceholder').style.display = 'none';
+      setCheckStatus('cam', true, 'Camera detected and accessible');
+
+      // Pre-connect exam feed
+      const examFeed = document.getElementById('examCamFeed');
+      examFeed.srcObject = camStream;
+      examFeed.play().catch(() => {});
+
+      // Mic granted via same combined stream
+      setCheckStatus('mic', true, 'Microphone detected and accessible');
+
+      setTimeout(() => setCheckStatus('screen', true, 'Screen recording permission granted'), 600);
+
+      setTimeout(() => {
+        setCheckStatus('face', true, 'Face detected in camera view');
+        enableProceed();
+      }, 1400);
+    }, {once: true});
+
+    // If loadedmetadata takes too long (stream stalled) treat as disconnected
+    const stallTimer = setTimeout(() => {
+      if (!camReady) handleCamDisconnected();
+    }, 8000);
+    video.addEventListener('loadedmetadata', () => clearTimeout(stallTimer), {once: true});
+
+    // Monitor for camera being physically unplugged or revoked mid-session
+    camStream.getVideoTracks().forEach(t => t.addEventListener('ended', handleCamDisconnected));
+
   } catch (e) {
-    const denied = e.name === 'NotAllowedError';
-    setCheckStatus('cam', false, denied ? 'Camera access denied — please allow in browser settings' : 'Camera not found');
-    setCheckStatus('mic', false, denied ? 'Microphone access denied' : 'Microphone not found');
-    document.getElementById('camPlaceholderText').textContent = 'Camera access required';
-    // Still allow proceed for demo
-    setTimeout(() => {
-      setCheckStatus('screen', true, 'Screen recording permission granted');
-      setCheckStatus('face', false, 'Camera required for face detection');
-      const btn = document.getElementById('proceedBtn');
-      btn.disabled = false;
-      document.getElementById('proceedText').textContent = 'Continue Anyway →';
-    }, 1000);
+    camStream = null;
+    const denied   = e.name === 'NotAllowedError'  || e.name === 'PermissionDeniedError';
+    const notFound = e.name === 'NotFoundError'     || e.name === 'DevicesNotFoundError';
+    const inUse    = e.name === 'NotReadableError'  || e.name === 'TrackStartError';
+
+    let errMsg  = 'Camera access is required to continue the skill verification exam.';
+    let camDesc = 'Unknown camera error — click Retry';
+
+    if (denied) {
+      camDesc = 'Camera access denied — allow camera in browser settings then retry';
+      setCheckStatus('cam',    false, camDesc);
+      setCheckStatus('mic',    false, 'Microphone access denied');
+      setCheckStatus('screen', false, 'Cannot proceed without camera access');
+      setCheckStatus('face',   false, 'Camera required for face detection');
+      showCamDenied();
+    } else {
+      if (notFound) {
+        errMsg  = 'No camera found. Please connect a webcam and retry.';
+        camDesc = 'No camera device found';
+      } else if (inUse) {
+        errMsg  = 'Camera is in use by another application. Close it and retry.';
+        camDesc = 'Camera is in use by another app';
+      }
+      setCheckStatus('cam',    false, camDesc);
+      setCheckStatus('mic',    false, 'Microphone not available');
+      setCheckStatus('screen', false, 'Cannot proceed without camera access');
+      setCheckStatus('face',   false, 'Camera required for face detection');
+      showCamError(errMsg);
+    }
+    // Proceed button remains disabled
   }
 }
+
+function enableProceed() {
+  camReady = true;
+  const btn = document.getElementById('proceedBtn');
+  btn.disabled = false;
+  document.getElementById('proceedText').textContent = 'Proceed to Exam →';
+}
+
+function handleCamDisconnected() {
+  camReady  = false;
+  camStream = null;
+  const btn = document.getElementById('proceedBtn');
+  btn.disabled = true;
+  document.getElementById('proceedText').textContent = 'Camera disconnected…';
+
+  const video = document.getElementById('camVideo');
+  video.srcObject = null;
+  video.style.display = 'none';
+
+  setCheckStatus('cam',  false, 'Camera disconnected — reconnect your webcam and retry');
+  setCheckStatus('mic',  false, 'Audio monitoring paused');
+  setCheckStatus('face', false, 'Camera required for face detection');
+  showCamError('Your webcam was disconnected. Please reconnect it and click Retry.');
+}
+
+function showCamError(msg) {
+  const ph = document.getElementById('camPlaceholder');
+  ph.style.display = '';
+  ph.innerHTML =
+    '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="1.5">' +
+      '<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>' +
+      '<line x1="1" y1="1" x2="23" y2="23" stroke="#DC2626" stroke-width="2"/>' +
+    '</svg>' +
+    '<span style="color:#DC2626;font-size:.8125rem;font-weight:600;display:block;margin:.625rem 0 .25rem;line-height:1.45">' + msg + '</span>' +
+    '<button type="button" onclick="retryCamera()" style="margin-top:.75rem;padding:.5rem 1.5rem;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:.8125rem;font-weight:600;cursor:pointer;font-family:inherit">Retry Camera</button>';
+}
+
+function showCamDenied() {
+  const ph = document.getElementById('camPlaceholder');
+  ph.style.display = '';
+  ph.innerHTML =
+    '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="1.5">' +
+      '<path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>' +
+      '<line x1="1" y1="1" x2="23" y2="23" stroke="#DC2626" stroke-width="2"/>' +
+    '</svg>' +
+    '<span style="color:#DC2626;font-size:.875rem;font-weight:600;display:block;margin:.5rem 0 .25rem">Camera access was blocked.</span>' +
+    '<div style="margin:.25rem 0 .75rem;padding:.75rem 1rem;background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.15);border-radius:10px;text-align:left;font-size:.8rem;color:#374151;line-height:1.6;max-width:360px">' +
+      '<strong style="display:block;margin-bottom:.4rem;color:#111827;font-size:.8125rem">How to enable your camera:</strong>' +
+      '<div style="display:flex;gap:.5rem;margin-bottom:.25rem"><span style="color:#2563EB;font-weight:700;min-width:1rem">1.</span><span>Click the <strong>🔒 lock icon</strong> in the browser address bar (top of window)</span></div>' +
+      '<div style="display:flex;gap:.5rem;margin-bottom:.25rem"><span style="color:#2563EB;font-weight:700;min-width:1rem">2.</span><span>Find <strong>Camera</strong> and change it to <strong>Allow</strong></span></div>' +
+      '<div style="display:flex;gap:.5rem"><span style="color:#2563EB;font-weight:700;min-width:1rem">3.</span><span>Click <strong>Retry Camera</strong> — the page will re-check automatically</span></div>' +
+    '</div>' +
+    '<button type="button" onclick="retryCamera()" style="padding:.5rem 1.5rem;background:#2563EB;color:#fff;border:none;border-radius:8px;font-size:.8125rem;font-weight:600;cursor:pointer;font-family:inherit">Retry Camera</button>';
+  watchCamPermission();
+}
+
+function watchCamPermission() {
+  if (!navigator.permissions) return;
+  navigator.permissions.query({name: 'camera'}).then(status => {
+    if (status.state === 'granted') { retryCamera(); return; }
+    status.addEventListener('change', () => {
+      if (status.state === 'granted') retryCamera();
+    }, {once: true});
+  }).catch(() => {});
+}
+
+function retryCamera() {
+  // Stop any lingering tracks before re-requesting
+  if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  camReady = false;
+
+  // Reset video element
+  const video = document.getElementById('camVideo');
+  video.srcObject = null;
+  video.style.display = 'none';
+
+  // Reset placeholder text
+  const ph = document.getElementById('camPlaceholder');
+  ph.style.display = '';
+  ph.innerHTML =
+    '<svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#6B7280" stroke-width="1.5"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>' +
+    '<span id="camPlaceholderText">Requesting camera access…</span>';
+
+  // Reset all check items to pending
+  setCheckStatus('cam',    null, 'Requesting permission…');
+  setCheckStatus('mic',    null, 'Requesting permission…');
+  setCheckStatus('screen', null, 'Permission will be requested…');
+  setCheckStatus('face',   null, 'Waiting for camera…');
+
+  // Reset proceed button
+  const btn = document.getElementById('proceedBtn');
+  btn.disabled = true;
+  document.getElementById('proceedText').textContent = 'Waiting for verification…';
+
+  runEnvCheck();
+}
+
+const CHECK_ICONS = {
+  ok:      '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>',
+  fail:    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+  pending: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/></svg>'
+};
 
 function setCheckStatus(type, ok, desc) {
   const statusEl = document.getElementById(type + 'Status');
   const descEl   = document.getElementById(type + 'Desc');
   const itemEl   = document.getElementById(type + 'Check');
-  if (ok) {
-    statusEl.className = 'ec-check-status ec-ok';
+  if (!statusEl || !itemEl) return;
+  if (ok === null) {
+    statusEl.className  = 'ec-check-status ec-pending';
+    statusEl.innerHTML  = CHECK_ICONS.pending;
+    itemEl.classList.remove('ec-check-ok', 'ec-check-fail');
+  } else if (ok) {
+    statusEl.className  = 'ec-check-status ec-ok';
+    statusEl.innerHTML  = CHECK_ICONS.ok;
+    itemEl.classList.remove('ec-check-fail');
     itemEl.classList.add('ec-check-ok');
   } else {
-    statusEl.className = 'ec-check-status ec-fail';
+    statusEl.className  = 'ec-check-status ec-fail';
+    statusEl.innerHTML  = CHECK_ICONS.fail;
+    itemEl.classList.remove('ec-check-ok');
     itemEl.classList.add('ec-check-fail');
   }
-  if (descEl) descEl.textContent = desc;
+  if (descEl && desc !== undefined) descEl.textContent = desc;
 }
 
 function handleIdUpload(input) {
@@ -499,8 +665,8 @@ function startTimer() {
     const txt = `${m}:${s}`;
     document.getElementById('timerText').textContent = txt;
     const pill = document.getElementById('timerPill');
-    if (timerSec <= 300) pill.classList.add('ea-timer-warn');
-    if (timerSec <= 60)  pill.classList.add('ea-timer-danger');
+    if (timerSec <= 300) pill.classList.add('warning');
+    if (timerSec <= 60)  pill.classList.add('danger');
   }, 1000);
 }
 
@@ -567,8 +733,8 @@ function updateProgress() {
 document.addEventListener('change', e => {
   if (e.target.type === 'radio') {
     const qi = parseInt(e.target.name.slice(1));
-    document.querySelectorAll(`#opts${qi} .ea-option`).forEach(l => l.classList.remove('ea-opt-selected'));
-    e.target.closest('.ea-option').classList.add('ea-opt-selected');
+    document.querySelectorAll(`#opts${qi} .ea-option`).forEach(l => l.classList.remove('selected'));
+    e.target.closest('.ea-option').classList.add('selected');
   }
 });
 
@@ -666,7 +832,7 @@ function handleExamKeydown(e) {
   // Escape — browsers own ESC exit from fullscreen; we log but cannot prevent it.
   // fullscreenchange will fire and show the return-to-fullscreen modal.
   else if (key === 'Escape' && examActive) {
-    logFsEvent('esc_key_pressed', { key_pressed: 'Escape', severity: 'medium' });
+    logSecurityEvent('esc_key_pressed', { key_pressed: 'Escape', severity: 'medium' });
     // do NOT preventDefault — let browser handle ESC fullscreen exit
   }
   // Ctrl/Cmd + Shift combos (developer tools, inspect element)

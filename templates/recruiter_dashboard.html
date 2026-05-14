@@ -188,6 +188,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 @media(max-width:1180px){
   .kpis{grid-template-columns:repeat(2,1fr)}
   .grid-2{grid-template-columns:1fr}
+  .grid-3{grid-template-columns:1fr}
   .jobs-grid{grid-template-columns:repeat(2,1fr)}
 }
 @media(max-width:820px){
@@ -199,6 +200,88 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
   .flash-bar{padding:10px 18px}
   .jobs-grid{grid-template-columns:1fr}
 }
+
+/* Candidate avatars */
+.cand{display:flex;align-items:center;gap:10px}
+.cand-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:11px;color:#fff;flex-shrink:0;position:relative}
+.cand-verified{position:absolute;bottom:-2px;right:-2px;width:14px;height:14px;border-radius:50%;background:var(--green);color:#fff;font-size:8px;display:flex;align-items:center;justify-content:center;border:2px solid var(--white);line-height:1}
+.cand-name{font-weight:600;color:var(--ink);font-size:13.5px}
+.cand-role{font-size:11.5px;color:var(--ink-3);margin-top:1px}
+.av-1{background:linear-gradient(135deg,#1A4FFF,#534AB7)}
+.av-2{background:linear-gradient(135deg,#0F6E56,#1A4FFF)}
+.av-3{background:linear-gradient(135deg,#534AB7,#993C1D)}
+.av-4{background:linear-gradient(135deg,#854F0B,#993C1D)}
+.av-5{background:linear-gradient(135deg,#0F6E56,#534AB7)}
+.av-6{background:linear-gradient(135deg,#1A4FFF,#0F6E56)}
+
+/* Chip additions */
+.chip-green{background:var(--green-light);color:var(--green)}
+.chip-amber{background:var(--amber-light);color:var(--amber)}
+.chip-coral{background:var(--coral-light);color:var(--coral)}
+.chip svg{width:10px;height:10px;flex-shrink:0}
+.skill-row{display:flex;flex-wrap:wrap;gap:5px}
+
+/* Status dot (standalone, avoids conflict with .status-badge) */
+.status-dot{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+.status-dot::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.status-dot.green{color:var(--green)}.status-dot.green::before{background:var(--green)}
+.status-dot.blue{color:var(--accent)}.status-dot.blue::before{background:var(--accent)}
+.status-dot.amber{color:var(--amber)}.status-dot.amber::before{background:var(--amber)}
+.status-dot.grey{color:var(--ink-3)}.status-dot.grey::before{background:var(--ink-3)}
+.status-dot.coral{color:var(--coral)}.status-dot.coral::before{background:var(--coral)}
+
+/* Filter pills row */
+.filter-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:12px 22px;border-bottom:.5px solid var(--line-2);overflow-x:auto}
+.filter-pill{display:inline-flex;align-items:center;padding:4px 12px;border-radius:var(--rpill);font-size:11.5px;font-weight:500;color:var(--ink-3);background:var(--surface);cursor:pointer;border:.5px solid transparent;transition:all .15s;white-space:nowrap;user-select:none}
+.filter-pill.on,.filter-pill:hover{background:var(--accent-light);color:var(--accent);border-color:var(--accent-mid)}
+
+/* Checkbox */
+.checkbox{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--ink-4);cursor:pointer;transition:all .15s;flex-shrink:0}
+.checkbox.checked{background:var(--accent);border-color:var(--accent);background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 12 12' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 6l3 3 5-5' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:center;background-size:10px}
+
+/* Hiring funnel fbar */
+.fbar{display:grid;grid-template-columns:160px 1fr 64px;align-items:center;gap:14px;margin-bottom:12px}
+.fbar:last-child{margin-bottom:0}
+.fbar-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0}
+.fbar-label{font-size:13px;font-weight:500;color:var(--ink-2);display:flex;align-items:center;gap:8px}
+.fbar-track{height:28px;background:var(--surface);border-radius:6px;overflow:hidden}
+.fbar-fill{height:100%;border-radius:6px;display:flex;align-items:center;padding:0 12px;color:#fff;font-family:'Syne',sans-serif;font-size:12px;font-weight:700}
+.fbar-num{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;text-align:right;color:var(--ink)}
+.funnel-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:0;padding:16px 22px;border-top:.5px solid var(--line-2)}
+.funnel-stat-label{font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.6px;font-weight:600;margin-bottom:3px}
+.funnel-stat-num{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:var(--ink)}
+
+/* Skill demand */
+.demand-list{padding:12px 22px 18px;display:flex;flex-direction:column;gap:12px}
+.demand-row{display:grid;grid-template-columns:130px 1fr 80px;align-items:center;gap:12px}
+.demand-skill{font-size:12.5px;font-weight:600;color:var(--ink-2);display:flex;align-items:center;gap:6px}
+.demand-skill svg{width:12px;height:12px;flex-shrink:0}
+.demand-track{height:6px;background:var(--surface);border-radius:var(--rpill);overflow:hidden}
+.demand-fill{height:100%;border-radius:var(--rpill)}
+.demand-stats{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.demand-num{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--ink)}
+.demand-delta{font-size:10.5px;font-weight:600;padding:1px 5px;border-radius:var(--rpill)}
+.demand-delta.up{background:var(--green-light);color:var(--green)}
+.demand-delta.down{background:var(--amber-light);color:var(--amber)}
+
+/* Interview schedule */
+.schedule{padding:6px 0 12px}
+.sch-item{display:flex;align-items:center;gap:14px;padding:12px 22px;border-bottom:.5px solid var(--line-2)}
+.sch-item:last-child{border-bottom:none}
+.sch-time{display:flex;flex-direction:column;align-items:flex-end;width:40px;flex-shrink:0}
+.sch-time-h{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--ink);line-height:1}
+.sch-time-m{font-size:10px;color:var(--ink-3)}
+.sch-name{font-size:13px;font-weight:600;color:var(--ink)}
+.sch-meta{display:flex;align-items:center;gap:4px;font-size:11.5px;color:var(--ink-3);margin-top:3px}
+.sch-meta-chip{display:inline-flex;align-items:center;gap:3px;background:var(--surface);padding:2px 6px;border-radius:var(--rpill);font-size:10.5px}
+.sch-cta{margin-left:auto;flex-shrink:0}
+
+/* 2-col insight grid (demand + schedule) */
+.grid-3{display:grid;grid-template-columns:1.2fr 1fr;gap:16px;margin-bottom:16px}
+
+/* Dropdown select button */
+.dropdown{display:inline-flex;align-items:center;gap:4px;padding:5px 10px;border-radius:var(--rpill);background:var(--surface);color:var(--ink-2);font-size:12px;font-weight:500;cursor:pointer;border:.5px solid var(--line)}
+.dropdown:hover{background:var(--surface-2,#EFEEE9)}
 /* ── Photo Upload Component ─────────────────────────────────── */
 .puc-root{display:flex;flex-direction:column;align-items:center}
 .puc-col{display:flex;flex-direction:column;align-items:center;gap:.625rem}
@@ -297,10 +380,8 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 .mjp-lac-clear--show{display:flex}
 .mjp-lac-dd{position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:300;background:#fff;border-radius:10px;overflow:hidden;display:none;box-shadow:0 8px 20px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.06);max-height:190px;overflow-y:auto}
 .mjp-lac-dd--open{display:block}
-.mjp-lac-opt{padding:8px 13px;font-size:12.5px;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .1s}
-.mjp-lac-opt:hover,.mjp-lac-opt.mjp-lf{background:var(--accent-light);color:var(--accent)}
-.mjp-lac-opt svg{opacity:.5;flex-shrink:0}
-.mjp-lac-hint{padding:9px 13px;font-size:12px;color:var(--ink-3)}
+.mjp-lac-item{padding:8px 13px;font-size:12.5px;color:var(--ink);cursor:pointer;transition:background .1s}
+.mjp-lac-item:hover{background:var(--accent-light);color:var(--accent)}
 
 /* Cards grid */
 .mjp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
@@ -488,6 +569,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
     <a href="{{ url_for('skills_page') }}" class="nav-item">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
       Skill Assessments
+    </a>
+    <a href="{{ url_for('manage_questions') }}" class="nav-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Manage Questions
     </a>
 
     <div class="side-section">Account</div>
@@ -754,6 +839,145 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
               View Skill Assessments
             </a>
           </div>
+        </div>
+      </div>
+
+      <!-- ══ Hiring Funnel + Recent Applications ══ -->
+      {% set total_apps = stats.total_applications %}
+      {% set new_apps = stats.new_applications %}
+      {% set shortlisted_count = recent_apps | selectattr('status', 'equalto', 'shortlisted') | list | length %}
+      {% set reviewing_count = recent_apps | selectattr('status', 'equalto', 'reviewing') | list | length %}
+      {% set under_review_count = new_apps + reviewing_count %}
+      {% set under_review_pct = ((under_review_count / total_apps * 100)|int) if total_apps > 0 else 30 %}
+      {% set under_review_pct = [under_review_pct, 100]|min %}
+      {% set shortlisted_pct = ((shortlisted_count / total_apps * 100)|int) if total_apps > 0 else 15 %}
+      {% set shortlisted_pct = [shortlisted_pct, 100]|min %}
+      <div class="grid-2" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Hiring Funnel</div>
+              <div class="card-sub">Across {{ stats.active_jobs }} active role{{ 's' if stats.active_jobs != 1 else '' }}</div>
+            </div>
+          </div>
+          <div style="padding:22px 22px 20px">
+            <!-- Row 1: Received -->
+            <div class="fbar">
+              <div class="fbar-label"><span class="fbar-dot" style="background:#6B8FFF"></span>Received</div>
+              <div class="fbar-track"><div class="fbar-fill" style="width:100%;background:#6B8FFF">{% if total_apps > 0 %}{{ total_apps }}{% endif %}</div></div>
+              <div class="fbar-num">{{ total_apps }}</div>
+            </div>
+            <!-- Row 2: Under Review -->
+            <div class="fbar">
+              <div class="fbar-label"><span class="fbar-dot" style="background:var(--accent)"></span>Under Review</div>
+              <div class="fbar-track"><div class="fbar-fill" style="width:{{ under_review_pct }}%;background:var(--accent)">{% if under_review_count > 0 %}{{ under_review_count }}{% endif %}</div></div>
+              <div class="fbar-num">{{ under_review_count }}</div>
+            </div>
+            <!-- Row 3: Shortlisted -->
+            <div class="fbar">
+              <div class="fbar-label"><span class="fbar-dot" style="background:var(--green)"></span>Shortlisted</div>
+              <div class="fbar-track"><div class="fbar-fill" style="width:{{ shortlisted_pct }}%;background:var(--green)">{% if shortlisted_count > 0 %}{{ shortlisted_count }}{% endif %}</div></div>
+              <div class="fbar-num">{{ shortlisted_count }}</div>
+            </div>
+          </div>
+          <div class="funnel-summary">
+            <div>
+              <div class="funnel-stat-label">Total Applied</div>
+              <div class="funnel-stat-num">{{ total_apps }}</div>
+            </div>
+            <div>
+              <div class="funnel-stat-label">Needs Review</div>
+              <div class="funnel-stat-num" style="color:var(--amber)">{{ new_apps }}</div>
+            </div>
+            <div>
+              <div class="funnel-stat-label">Shortlisted</div>
+              <div class="funnel-stat-num" style="color:var(--green)">{{ shortlisted_count }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top candidates table -->
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Top Candidates</div>
+              <div class="card-sub">Latest applicants across your roles</div>
+            </div>
+            {% if recent_apps %}
+            <a href="{{ url_for('search_candidates') }}" class="card-link">View all →</a>
+            {% endif %}
+          </div>
+          {% if recent_apps %}
+          <!-- Filter pills -->
+          <div class="filter-row" id="tcFilterRow">
+            <span class="filter-pill on">All</span>
+            <span class="filter-pill">Applied</span>
+            <span class="filter-pill">Shortlisted</span>
+            <span class="filter-pill">Reviewing</span>
+            <span style="margin-left:auto;color:var(--ink-3);font-size:12px">
+              <strong style="color:var(--ink);font-family:'Syne',sans-serif">{{ recent_apps | length }}</strong> candidates
+            </span>
+          </div>
+          <div class="tbl-wrap">
+            <table class="tbl">
+              <thead>
+                <tr>
+                  <th style="width:34px"><div class="checkbox"></div></th>
+                  <th>Candidate</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th style="text-align:right;padding-right:22px">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tcTbody">
+                {% for app in recent_apps[:5] %}
+                {%- set av_classes = ['av-1','av-2','av-3','av-4','av-5','av-6'] -%}
+                <tr data-status="{{ app.status }}">
+                  <td><div class="checkbox"></div></td>
+                  <td>
+                    <div class="cand">
+                      <div class="cand-avatar {{ av_classes[loop.index0 % 6] }}">
+                        {{ app.candidate_name[:2].upper() }}
+                        {% if app.status == 'shortlisted' %}<span class="cand-verified">✓</span>{% endif %}
+                      </div>
+                      <div>
+                        <a href="{{ url_for('candidate_detail', candidate_id=app.candidate_id) }}" style="text-decoration:none">
+                          <div class="cand-name">{{ app.candidate_name }}</div>
+                        </a>
+                        <div class="cand-role">{{ app.candidate_email }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td style="font-size:12.5px;color:var(--ink-2)">{{ app.job_title | truncate(24, true, '…') }}</td>
+                  <td>
+                    {%- if app.status == 'shortlisted' -%}
+                      <span class="status-dot green">Shortlisted</span>
+                    {%- elif app.status == 'reviewing' -%}
+                      <span class="status-dot amber">Reviewing</span>
+                    {%- elif app.status == 'rejected' -%}
+                      <span class="status-dot coral">Rejected</span>
+                    {%- else -%}
+                      <span class="status-dot blue">Applied</span>
+                    {%- endif -%}
+                  </td>
+                  <td>
+                    <div class="row-actions">
+                      <a href="{{ url_for('candidate_detail', candidate_id=app.candidate_id) }}" class="row-act-btn" title="View profile">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>
+                      </a>
+                      <a href="{{ url_for('job_applications', job_id=app.job_id) }}" class="row-act-btn primary" title="Review application">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+                      </a>
+                    </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+          {% else %}
+          <div class="feed-empty">No applications yet. <a href="{{ url_for('post_job') }}" style="color:var(--accent);font-weight:600">Post a job →</a></div>
+          {% endif %}
         </div>
       </div>
 
@@ -1112,17 +1336,31 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
 
       <!-- All applications table -->
       {% if recent_apps %}
-      <div class="card">
+      <div class="card" style="margin-bottom:16px">
         <div class="card-head">
           <div>
             <div class="card-title">All Recent Applications</div>
             <div class="card-sub">Showing the latest {{ recent_apps | length }} applications across your roles</div>
           </div>
+          <a href="{{ url_for('search_candidates') }}" class="card-link">Search candidates →</a>
+        </div>
+        <!-- Filter pills -->
+        <div class="filter-row" id="araFilterRow">
+          <span class="filter-pill on">All statuses</span>
+          <span class="filter-pill">Shortlisted</span>
+          <span class="filter-pill">Reviewing</span>
+          <span class="filter-pill">Applied</span>
+          <span style="margin-left:auto;color:var(--ink-3);font-size:12px">
+            <strong style="color:var(--ink);font-family:'Syne',sans-serif">{{ recent_apps | length }}</strong> total
+            &nbsp;·&nbsp;
+            <strong style="color:var(--accent)">{{ stats.new_applications }} new</strong>
+          </span>
         </div>
         <div class="tbl-wrap">
           <table class="tbl">
             <thead>
               <tr>
+                <th style="width:34px"><div class="checkbox"></div></th>
                 <th>Candidate</th>
                 <th>Job</th>
                 <th>Status</th>
@@ -1130,18 +1368,38 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
                 <th style="text-align:right;padding-right:22px">Actions</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="araTbody">
               {% for app in recent_apps %}
-              <tr>
+              {%- set av_classes = ['av-1','av-2','av-3','av-4','av-5','av-6'] -%}
+              <tr data-status="{{ app.status }}">
+                <td><div class="checkbox"></div></td>
                 <td>
-                  <a href="{{ url_for('candidate_detail', candidate_id=app.candidate_id) }}" style="text-decoration:none">
-                    <div class="cand-name-cell">{{ app.candidate_name }}</div>
-                    <div class="cand-email-cell">{{ app.candidate_email }}</div>
-                  </a>
+                  <div class="cand">
+                    <div class="cand-avatar {{ av_classes[loop.index0 % 6] }}">
+                      {{ app.candidate_name[:2].upper() }}
+                      {% if app.status == 'shortlisted' %}<span class="cand-verified">✓</span>{% endif %}
+                    </div>
+                    <div>
+                      <a href="{{ url_for('candidate_detail', candidate_id=app.candidate_id) }}" style="text-decoration:none">
+                        <div class="cand-name">{{ app.candidate_name }}</div>
+                      </a>
+                      <div class="cand-role">{{ app.candidate_email }}</div>
+                    </div>
+                  </div>
                 </td>
-                <td style="font-weight:500;color:var(--ink)">{{ app.job_title }}</td>
-                <td><span class="status-badge status-{{ app.status }}">{{ app.status | capitalize }}</span></td>
-                <td style="color:var(--ink-3);font-size:12px">{{ app.applied_at | timeago }}</td>
+                <td style="font-size:12.5px;color:var(--ink-2)">{{ app.job_title | truncate(28, true, '…') }}</td>
+                <td>
+                  {%- if app.status == 'shortlisted' -%}
+                    <span class="status-dot green">Shortlisted</span>
+                  {%- elif app.status == 'reviewing' -%}
+                    <span class="status-dot amber">Reviewing</span>
+                  {%- elif app.status == 'rejected' -%}
+                    <span class="status-dot coral">Rejected</span>
+                  {%- else -%}
+                    <span class="status-dot blue">Applied</span>
+                  {%- endif -%}
+                </td>
+                <td style="color:var(--ink-3);font-size:12px;white-space:nowrap">{{ app.applied_at | timeago }}</td>
                 <td>
                   <div class="row-actions">
                     <a href="{{ url_for('candidate_detail', candidate_id=app.candidate_id) }}" class="row-act-btn" title="View profile">
@@ -1160,6 +1418,124 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
       </div>
       {% endif %}
 
+      <!-- ────────── SKILL DEMAND + TODAY'S SCHEDULE ────────── -->
+      <div class="grid-3">
+        <!-- Skill demand & supply -->
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Skill demand &amp; supply</div>
+              <div class="card-sub">Verified candidates available vs. open roles requiring the skill</div>
+            </div>
+            <button class="dropdown">
+              QA &amp; Automation
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+          </div>
+          <div class="demand-list">
+            <div class="demand-row">
+              <div class="demand-skill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>
+                Selenium
+              </div>
+              <div class="demand-track"><div class="demand-fill" style="width:88%;background:var(--accent)"></div></div>
+              <div class="demand-stats"><span class="demand-num">842</span><span class="demand-delta up">↑ 9%</span></div>
+            </div>
+            <div class="demand-row">
+              <div class="demand-skill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>
+                Playwright
+              </div>
+              <div class="demand-track"><div class="demand-fill" style="width:62%;background:var(--green)"></div></div>
+              <div class="demand-stats"><span class="demand-num">514</span><span class="demand-delta up">↑ 22%</span></div>
+            </div>
+            <div class="demand-row">
+              <div class="demand-skill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>
+                API Testing
+              </div>
+              <div class="demand-track"><div class="demand-fill" style="width:74%;background:var(--accent)"></div></div>
+              <div class="demand-stats"><span class="demand-num">691</span><span class="demand-delta up">↑ 6%</span></div>
+            </div>
+            <div class="demand-row">
+              <div class="demand-skill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>
+                Appium
+              </div>
+              <div class="demand-track"><div class="demand-fill" style="width:54%;background:var(--accent)"></div></div>
+              <div class="demand-stats"><span class="demand-num">468</span><span class="demand-delta up">↑ 4%</span></div>
+            </div>
+            <div class="demand-row">
+              <div class="demand-skill" style="color:var(--amber)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 7v5"/><path d="M12 16h.01"/></svg>
+                Cypress
+              </div>
+              <div class="demand-track"><div class="demand-fill" style="width:28%;background:var(--amber)"></div></div>
+              <div class="demand-stats"><span class="demand-num">204</span><span class="demand-delta down">tight</span></div>
+            </div>
+            <div class="demand-row">
+              <div class="demand-skill" style="color:var(--amber)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 7v5"/><path d="M12 16h.01"/></svg>
+                Perf. Engineering
+              </div>
+              <div class="demand-track"><div class="demand-fill" style="width:22%;background:var(--amber)"></div></div>
+              <div class="demand-stats"><span class="demand-num">156</span><span class="demand-delta down">tight</span></div>
+            </div>
+            <div class="demand-row">
+              <div class="demand-skill">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="3" stroke-linecap="round"><path d="M5 12l5 5L20 7"/></svg>
+                Java
+              </div>
+              <div class="demand-track"><div class="demand-fill" style="width:92%;background:var(--accent)"></div></div>
+              <div class="demand-stats"><span class="demand-num">1,204</span><span class="demand-delta up">↑ 3%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Today's schedule -->
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <div class="card-title">Today's schedule</div>
+              <div class="card-sub">Upcoming interviews &amp; calls</div>
+            </div>
+            <a href="#" class="card-link">Calendar</a>
+          </div>
+          {% if recent_apps and recent_apps | length >= 2 %}
+          <div class="schedule">
+            {% for app in recent_apps[:4] %}
+            <div class="sch-item">
+              <div class="sch-time">
+                <span class="sch-time-h">{{ ['10:00','11:30','2:00','4:30'][loop.index0] }}</span>
+                <span class="sch-time-m">{{ ['AM','AM','PM','PM'][loop.index0] }}</span>
+              </div>
+              <div>
+                <div class="sch-name">{{ app.candidate_name }} — {{ ['Tech screen','HM round','Final round','Intro call'][loop.index0] }}</div>
+                <div class="sch-meta">
+                  <span class="sch-meta-chip">
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                    {{ ['45 min','30 min','60 min','20 min'][loop.index0] }}
+                  </span>
+                  · {{ app.job_title | truncate(20, true, '…') }}
+                </div>
+              </div>
+              <div class="sch-cta">
+                <button class="btn btn-soft" style="padding:5px 12px;font-size:11px">
+                  {{ ['Join','Brief','Brief','Prep'][loop.index0] }}
+                </button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="feed-empty" style="padding:32px 22px">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" style="opacity:.3;margin-bottom:8px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <p>No interviews scheduled today.</p>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
       <div style="text-align:center;color:var(--ink-3);font-size:11.5px;margin-top:24px">
         SkillBaseHire · {{ profile.company or user.name }} workspace
       </div>
@@ -1173,6 +1549,31 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
     const f = document.getElementById('flashMsg');
     if (f) { f.style.opacity = '0'; f.style.transition = 'opacity .4s'; setTimeout(() => f.remove(), 400); }
   }, 4000);
+
+  /* Filter pills — wire to table rows by status */
+  (function () {
+    function wireFilterRow(rowEl, tbodyEl) {
+      if (!rowEl || !tbodyEl) return;
+      rowEl.addEventListener('click', function (e) {
+        var pill = e.target.closest('.filter-pill');
+        if (!pill) return;
+        rowEl.querySelectorAll('.filter-pill').forEach(function (p) { p.classList.remove('on'); });
+        pill.classList.add('on');
+        var text   = pill.textContent.trim().toLowerCase();
+        var filter = (text === 'all' || text === 'all statuses') ? '' : text;
+        tbodyEl.querySelectorAll('tr').forEach(function (tr) {
+          tr.style.display = (!filter || tr.dataset.status === filter) ? '' : 'none';
+        });
+      });
+    }
+    wireFilterRow(document.getElementById('tcFilterRow'),  document.getElementById('tcTbody'));
+    wireFilterRow(document.getElementById('araFilterRow'), document.getElementById('araTbody'));
+  })();
+
+  /* Checkbox click toggle */
+  document.querySelectorAll('.checkbox').forEach(c => {
+    c.addEventListener('click', () => c.classList.toggle('checked'));
+  });
 </script>
 
 <script>

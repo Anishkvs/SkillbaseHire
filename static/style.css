@@ -2275,15 +2275,12 @@ mark { background: none; color: inherit; font-weight: 700; }
 
 .ec-main { padding: 2.5rem 1rem 4rem; flex: 1; }
 .ec-content { max-width: 720px; margin: 0 auto; }
-.ec-page-title { font-size: 1.375rem; font-weight: 800; color: #0F172A; margin: 0 0 .375rem; }
-.ec-page-sub { font-size: .9rem; color: #64748B; margin: 0 0 1.75rem; }
 
 .ec-card {
   background: #fff; border-radius: 16px; border: 1px solid #E2E8F0;
   box-shadow: 0 2px 12px rgba(0,0,0,.05);
   padding: 1.75rem 2rem; margin-bottom: 1.25rem;
 }
-.ec-card-title { font-size: .9375rem; font-weight: 700; color: #0F172A; margin: 0 0 1.25rem; display: flex; align-items: center; gap: .5rem; }
 
 /* Camera box */
 .ec-cam-box {
@@ -2296,28 +2293,7 @@ mark { background: none; color: inherit; font-weight: 700; }
 .ec-cam-placeholder { color: #475569; font-size: .875rem; text-align: center; padding: 1rem; }
 
 /* Check items */
-.ec-checks { display: flex; flex-direction: column; gap: .625rem; }
 .ec-check-item { display: flex; align-items: center; gap: .75rem; font-size: .875rem; color: #334155; }
-.ec-check-dot {
-  width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center;
-  background: #E2E8F0;
-}
-.ec-check-dot.dot-ok  { background: #DCFCE7; color: #16A34A; }
-.ec-check-dot.dot-err { background: #FEE2E2; color: #DC2626; }
-.ec-check-dot.dot-spin { background: #DBEAFE; color: #2563EB; animation: ec-spin .8s linear infinite; }
-@keyframes ec-spin { to { transform: rotate(360deg); } }
-
-/* Identity section */
-.ec-id-radios { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1rem; }
-.ec-id-radio {
-  flex: 1; min-width: 140px; padding: .75rem 1rem;
-  border: 2px solid #E2E8F0; border-radius: 10px; cursor: pointer;
-  font-size: .875rem; color: #475569; display: flex; align-items: center; gap: .5rem;
-  transition: border-color .15s, background .15s;
-}
-.ec-id-radio input { accent-color: #2563EB; }
-.ec-id-radio:has(input:checked) { border-color: #2563EB; background: #EFF6FF; color: #1D4ED8; }
 
 .ec-upload-zone {
   border: 2px dashed #CBD5E1; border-radius: 10px;
@@ -2325,41 +2301,7 @@ mark { background: none; color: inherit; font-weight: 700; }
   transition: border-color .15s, background .15s;
 }
 .ec-upload-zone:hover { border-color: #93C5FD; background: #F8FBFF; }
-.ec-upload-zone input { display: none; }
-.ec-upload-icon { color: #94A3B8; margin-bottom: .5rem; }
 .ec-upload-text { font-size: .875rem; color: #64748B; }
-.ec-upload-text strong { color: #2563EB; }
-
-/* Permissions */
-.ec-perms { display: flex; flex-direction: column; gap: .875rem; }
-.ec-perm-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-.ec-perm-info { display: flex; align-items: flex-start; gap: .75rem; }
-.ec-perm-icon { width: 36px; height: 36px; border-radius: 9px; background: #EFF6FF; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.ec-perm-name { font-size: .875rem; font-weight: 600; color: #0F172A; margin-bottom: .15rem; }
-.ec-perm-desc { font-size: .8rem; color: #64748B; }
-.ec-perm-status { font-size: .75rem; font-weight: 600; padding: .3rem .75rem; border-radius: 20px; white-space: nowrap; }
-.ec-status-pending  { background: #F1F5F9; color: #64748B; }
-.ec-status-granted  { background: #DCFCE7; color: #166534; }
-.ec-status-denied   { background: #FEE2E2; color: #991B1B; }
-
-/* Notice */
-.ec-notice {
-  background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 10px;
-  padding: .875rem 1.125rem; font-size: .8375rem; color: #92400E;
-  display: flex; align-items: flex-start; gap: .625rem; line-height: 1.5; margin-bottom: 1.25rem;
-}
-
-/* Footer buttons */
-.ec-footer { display: flex; justify-content: flex-end; gap: .75rem; padding: 1.25rem 0; }
-.ec-btn-cancel { padding: .75rem 1.75rem; border-radius: 9px; border: 1px solid #E2E8F0; background: #fff; color: #475569; font-size: .9rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
-.ec-btn-cancel:hover { background: #F8FAFC; }
-.ec-btn-proceed {
-  padding: .75rem 1.75rem; border-radius: 9px; border: none;
-  background: #94A3B8; color: #fff; font-size: .9rem; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif;
-  transition: background .2s;
-}
-.ec-btn-proceed.ready { background: #2563EB; }
-.ec-btn-proceed.ready:hover { background: #1D4ED8; }
 
 /* ── Active Exam (ea-) ── */
 .ea-body { background: #F1F5F9; }
@@ -2381,7 +2323,6 @@ mark { background: none; color: inherit; font-weight: 700; }
 
 /* Right group: timer + submit */
 .ea-header-right { display: flex; align-items: center; gap: .875rem; }
-.ea-header-center { display: flex; align-items: center; gap: 1rem; }
 
 .ea-timer-pill {
   display: flex; align-items: center; gap: .45rem;
@@ -2404,14 +2345,6 @@ mark { background: none; color: inherit; font-weight: 700; }
 }
 .ea-submit-hdr-btn:hover, .ea-submit-btn:hover { background: #1D4ED8; box-shadow: 0 4px 14px rgba(37,99,235,.4); }
 
-/* Warning bar */
-.ea-warn-bar {
-  background: #FEF3C7; border-bottom: 1px solid #FDE68A;
-  padding: .5rem 1.5rem; font-size: .8125rem; color: #92400E; font-weight: 500;
-  display: none; align-items: center; gap: .5rem;
-}
-.ea-warn-bar.visible { display: flex; }
-
 /* Layout */
 .ea-layout { display: flex; gap: 1.25rem; padding: 1.25rem 1.5rem; max-width: 1200px; margin: 0 auto; align-items: flex-start; }
 .ea-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1rem; }
@@ -2423,7 +2356,6 @@ mark { background: none; color: inherit; font-weight: 700; }
   box-shadow: 0 2px 12px rgba(0,0,0,.05);
   padding: 2rem 2.25rem;
 }
-.ea-q-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
 .ea-q-type-badge { background: #EFF6FF; color: #1D4ED8; font-size: .75rem; font-weight: 700; padding: .3rem .75rem; border-radius: 20px; }
 .ea-flag-btn {
   display: flex; align-items: center; gap: .35rem;
@@ -2431,7 +2363,6 @@ mark { background: none; color: inherit; font-weight: 700; }
   border-radius: 7px; padding: .35rem .75rem; cursor: pointer; font-family: 'Inter', sans-serif;
 }
 .ea-flag-btn:hover { border-color: #F59E0B; color: #F59E0B; background: #FFFBEB; }
-.ea-flag-btn.flagged { border-color: #F59E0B; color: #D97706; background: #FFFBEB; }
 .ea-q-text { font-size: 1rem; font-weight: 600; color: #0F172A; line-height: 1.6; margin-bottom: 1.5rem; }
 
 /* Options */
@@ -2445,14 +2376,6 @@ mark { background: none; color: inherit; font-weight: 700; }
 }
 .ea-option:hover { border-color: #93C5FD; background: #F8FBFF; }
 .ea-option.selected { border-color: #2563EB; background: #EFF6FF; }
-.ea-radio-outer {
-  width: 18px; height: 18px; border-radius: 50%; border: 2px solid #CBD5E1;
-  display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: .15rem;
-  transition: border-color .15s;
-}
-.ea-option.selected .ea-radio-outer { border-color: #2563EB; }
-.ea-radio-inner { width: 8px; height: 8px; border-radius: 50%; background: #2563EB; display: none; }
-.ea-option.selected .ea-radio-inner { display: block; }
 
 /* Bottom nav */
 .ea-nav-bar {
@@ -2460,27 +2383,9 @@ mark { background: none; color: inherit; font-weight: 700; }
   padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between;
   box-shadow: 0 2px 8px rgba(0,0,0,.04);
 }
-.ea-nav-btn {
-  display: flex; align-items: center; gap: .4rem;
-  padding: .625rem 1.25rem; border-radius: 8px;
-  font-size: .875rem; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif;
-  border: 1px solid #E2E8F0; background: #fff; color: #475569;
-  transition: background .15s, border-color .15s;
-}
-.ea-nav-btn:hover:not(:disabled) { background: #F1F5F9; border-color: #CBD5E1; }
-.ea-nav-btn:disabled { opacity: .4; cursor: default; }
-.ea-nav-btn.primary { background: #2563EB; color: #fff; border-color: #2563EB; }
-.ea-nav-btn.primary:hover { background: #1D4ED8; }
 .ea-nav-pos { font-size: .875rem; color: #64748B; font-weight: 500; }
 
 /* Right panel */
-.ea-panel-card {
-  background: #fff; border-radius: 14px; border: 1px solid #E2E8F0;
-  box-shadow: 0 2px 8px rgba(0,0,0,.04); padding: 1.25rem;
-}
-.ea-panel-title { font-size: .875rem; font-weight: 700; color: #0F172A; margin: 0 0 1rem; }
-.ea-proctor-status { display: flex; flex-direction: column; gap: .6rem; margin-bottom: .5rem; }
-.ea-proctor-item { display: flex; align-items: center; gap: .625rem; font-size: .8125rem; color: #475569; }
 .ea-dot-green { width: 8px; height: 8px; border-radius: 50%; background: #22C55E; animation: ea-blink 2s ease-in-out infinite; }
 @keyframes ea-blink { 0%,100%{opacity:1} 50%{opacity:.4} }
 .ea-dot-gray  { width: 8px; height: 8px; border-radius: 50%; background: #CBD5E1; }
@@ -2492,7 +2397,6 @@ mark { background: none; color: inherit; font-weight: 700; }
   display: flex; align-items: center; justify-content: center; margin-bottom: .5rem;
 }
 .ea-webcam-box video { width: 100%; height: 100%; object-fit: cover; }
-.ea-webcam-label { font-size: .7rem; color: #94A3B8; text-align: center; margin-bottom: 1.25rem; }
 
 /* (palette/progress/legend styles moved to panel-section block above) */
 
@@ -2509,19 +2413,13 @@ mark { background: none; color: inherit; font-weight: 700; }
   max-width: 420px; width: 100%;
   box-shadow: 0 20px 60px rgba(0,0,0,.25);
 }
-.ea-modal-icon {
-  width: 52px; height: 52px; border-radius: 14px;
-  margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center;
-}
-.ea-modal-icon.blue   { background: #DBEAFE; color: #2563EB; }
-.ea-modal-icon.amber  { background: #FEF3C7; color: #D97706; }
 .ea-modal h3 { font-size: 1.0625rem; font-weight: 800; color: #0F172A; text-align: center; margin: 0 0 .5rem; }
 .ea-modal p  { font-size: .875rem; color: #64748B; text-align: center; margin: 0 0 1.5rem; line-height: 1.55; }
 .ea-modal-btns { display: flex; gap: .75rem; }
 .ea-modal-btns button { flex: 1; padding: .75rem; border-radius: 9px; font-size: .9rem; font-weight: 700; cursor: pointer; font-family: 'Inter', sans-serif; border: none; }
 .ea-mbtn-cancel, .ea-modal-cancel { background: #F1F5F9; color: #475569; border: 1px solid #E2E8F0 !important; }
 .ea-mbtn-confirm, .ea-modal-submit { background: #2563EB; color: #fff; }
-.ea-modal-submit:hover { background: #1D4ED8; }
+.ea-modal-submit:hover, .ea-mbtn-confirm:hover { background: #1D4ED8; }
 .ea-modal-warn-icon {
   width: 52px; height: 52px; border-radius: 14px;
   background: #FEF3C7; display: flex; align-items: center; justify-content: center;
@@ -2533,10 +2431,7 @@ mark { background: none; color: inherit; font-weight: 700; }
   padding: .625rem 1rem; font-size: .875rem; color: #166534; font-weight: 600;
   margin-bottom: 1.25rem; display: flex; flex-direction: column; gap: .3rem;
 }
-.ea-modal h3 { text-align: center; font-size: 1.0625rem; font-weight: 800; color: #0F172A; margin: 0 0 .5rem; }
 .ea-modal-danger .ea-modal h3, .ea-modal.ea-modal-danger h3 { color: #991B1B; }
-.ea-mbtn-confirm { background: #2563EB; color: #fff; }
-.ea-mbtn-confirm:hover { background: #1D4ED8; }
 
 /* ── Exam Result (er-) ── */
 .er-main { padding: 2.5rem 1rem 4rem; }
@@ -2658,7 +2553,6 @@ mark { background: none; color: inherit; font-weight: 700; }
   .er-actions { flex-direction: column; }
   .er-btn-primary, .er-btn-outline { justify-content: center; }
   .ei-overview-row { flex-direction: column; }
-  .ec-footer { flex-direction: column-reverse; }
 }
 
 /* ── Active Exam: missing panel classes ── */
@@ -2850,8 +2744,8 @@ mark { background: none; color: inherit; font-weight: 700; }
   display: flex; align-items: center; justify-content: center;
   background: #E2E8F0; color: #94A3B8;
 }
-.ec-check-status.ec-ok    { background: #DCFCE7; color: #16A34A; }
-.ec-check-status.ec-fail  { background: #FEE2E2; color: #DC2626; }
+.ec-check-status.ec-ok      { background: #DCFCE7; color: #16A34A; }
+.ec-check-status.ec-fail    { background: #DC2626; color: #fff; }
 .ec-check-status.ec-pending { background: #DBEAFE; color: #2563EB; }
 .ec-check-icon {
   width: 32px; height: 32px; border-radius: 8px;
@@ -2928,8 +2822,7 @@ mark { background: none; color: inherit; font-weight: 700; }
 }
 
 /* ── Exam Locked Blur State (fullscreen exited) ── */
-.ea-exam-locked .ea-layout,
-.ea-exam-locked .ea-warn-bar {
+.ea-exam-locked .ea-layout {
   filter: blur(8px) brightness(.7);
   pointer-events: none; user-select: none;
 }
@@ -2997,13 +2890,6 @@ body.dark-exam .ea-timer-pill {
 }
 body.dark-exam .ea-timer-pill.warning { background: #2D1F00; border-color: #7C4B00; color: #E3B341; }
 body.dark-exam .ea-timer-pill.danger  { background: #3D0000; border-color: #7C1D1D; color: #FF7B72; }
-
-/* ── Warning bar ── */
-body.dark-exam .ea-warn-bar {
-  background: #2D1F00;
-  border-bottom-color: #7C4B00;
-  color: #E3B341;
-}
 
 /* ── Layout container ── */
 body.dark-exam .ea-layout {

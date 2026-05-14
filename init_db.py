@@ -257,6 +257,24 @@ TABLE_STMTS = [
         created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """,
+
+    # ── skill_questions ──────────────────────────────────────────────────────
+    """
+    CREATE TABLE IF NOT EXISTS skill_questions (
+        id             SERIAL    PRIMARY KEY,
+        skill_id       INTEGER   NOT NULL REFERENCES skills(id) ON DELETE CASCADE,
+        question_text  TEXT      NOT NULL,
+        option_a       TEXT      NOT NULL,
+        option_b       TEXT      NOT NULL,
+        option_c       TEXT      NOT NULL,
+        option_d       TEXT      NOT NULL,
+        correct_option TEXT      NOT NULL CHECK (correct_option IN ('A','B','C','D')),
+        marks          INTEGER   DEFAULT 1,
+        difficulty     TEXT      DEFAULT 'Medium' CHECK (difficulty IN ('Easy','Medium','Hard')),
+        created_by     INTEGER   REFERENCES users(id) ON DELETE SET NULL,
+        created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """,
 ]
 
 
@@ -322,6 +340,7 @@ INDEX_STMTS = [
     "CREATE INDEX IF NOT EXISTS idx_applications_candidate  ON applications(candidate_id)",
     "CREATE INDEX IF NOT EXISTS idx_notifications_candidate ON notifications(candidate_id)",
     "CREATE INDEX IF NOT EXISTS idx_notifications_unread    ON notifications(candidate_id, is_read)",
+    "CREATE INDEX IF NOT EXISTS idx_skill_questions_skill   ON skill_questions(skill_id)",
 ]
 
 

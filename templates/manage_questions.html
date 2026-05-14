@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Manage Questions · SkillBaseHire</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#0E0F1A;--ink-2:#3A3C52;--ink-3:#7A7C94;--ink-4:#A8A9B8;
+  --surface:#F5F4F0;--surface-2:#EFEEE9;--white:#FFFFFF;
+  --line:rgba(14,15,26,.08);--line-2:rgba(14,15,26,.05);
+  --accent:#4F46E5;--accent-light:#EEF2FF;--accent-mid:#818CF8;
+  --green:#0F6E56;--green-light:#E1F5EE;
+  --amber:#854F0B;--amber-light:#FAEEDA;
+  --coral:#993C1D;--coral-light:#FAECE7;
+  --purple:#534AB7;--purple-light:#EEEDFE;
+  --r:12px;--r-sm:8px;--rpill:999px;
+}
+html,body{background:var(--surface);font-family:'DM Sans','Inter',sans-serif;color:var(--ink);font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;height:100%}
+.syne{font-family:'Syne',sans-serif}
+a{color:inherit;text-decoration:none}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh}
+
+/* Sidebar */
+.side{background:var(--white);border-right:.5px solid var(--line);padding:22px 16px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px;overflow-y:auto}
+.logo{display:flex;align-items:center;gap:10px;padding:4px 10px 22px}
+.logo-mark{width:30px;height:30px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center}
+.logo-text{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;letter-spacing:-.2px}
+.logo-text span{color:var(--accent)}
+.side-section{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--ink-4);padding:14px 12px 6px}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:var(--r-sm);font-size:13px;font-weight:500;color:var(--ink-2);cursor:pointer;transition:background .15s,color .15s}
+.nav-item:hover{background:var(--surface)}
+.nav-item.active{background:var(--accent-light);color:var(--accent);font-weight:600}
+.nav-item svg{flex-shrink:0;opacity:.75}
+.nav-item.active svg{opacity:1}
+.nav-count{margin-left:auto;background:var(--surface);color:var(--ink-3);font-size:11px;font-weight:600;padding:1px 7px;border-radius:var(--rpill)}
+.nav-item.active .nav-count{background:var(--white);color:var(--accent)}
+.side-footer{margin-top:auto;padding:14px 10px 0;border-top:.5px solid var(--line)}
+.side-user{display:flex;align-items:center;gap:10px}
+.side-user-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-mid));color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;flex-shrink:0}
+.side-user-name{font-size:13px;font-weight:600;color:var(--ink)}
+.side-user-role{font-size:11px;color:var(--ink-3)}
+
+/* Main */
+.main{display:flex;flex-direction:column;min-width:0}
+
+/* Topbar */
+.top{display:flex;align-items:center;gap:18px;padding:14px 32px;background:var(--white);border-bottom:.5px solid var(--line);position:sticky;top:0;z-index:50}
+.crumbs{font-size:12px;color:var(--ink-3);display:flex;align-items:center;gap:6px}
+.crumbs strong{color:var(--ink);font-weight:600}
+.top-actions{display:flex;align-items:center;gap:10px;margin-left:auto}
+.btn{display:inline-flex;align-items:center;gap:6px;font-family:'Syne',sans-serif;font-weight:600;font-size:12px;border-radius:var(--rpill);padding:8px 16px;transition:all .15s;cursor:pointer;border:none}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:#4338CA}
+.btn-ghost{background:transparent;color:var(--ink-2);border:.5px solid var(--line)}
+.btn-ghost:hover{background:var(--surface)}
+.btn-danger-soft{background:var(--coral-light);color:var(--coral)}
+.btn-danger-soft:hover{background:#f5d3c8}
+
+/* Flash */
+.flash-bar{padding:10px 32px;background:#FFFBEB;border-bottom:.5px solid #FDE68A;font-size:13px;color:#92400E;display:flex;align-items:center;gap:8px}
+.flash-bar.success{background:#F0FDF4;border-bottom-color:#BBF7D0;color:#15803D}
+.flash-bar.error{background:#FEF2F2;border-bottom-color:#FECACA;color:#DC2626}
+.flash-close{margin-left:auto;background:none;border:none;cursor:pointer;color:inherit;font-size:16px;opacity:.6}
+.flash-close:hover{opacity:1}
+
+/* Page */
+.page{padding:28px 32px 56px;max-width:1200px;width:100%;margin:0 auto}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:24px;flex-wrap:wrap}
+.page-title{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.5px;color:var(--ink)}
+.page-sub{font-size:13.5px;color:var(--ink-3);margin-top:4px}
+
+/* Skills grid (list view) */
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+.skill-card{background:var(--white);border:.5px solid var(--line);border-radius:var(--r);padding:18px 20px;display:flex;flex-direction:column;gap:10px;transition:box-shadow .15s,border-color .15s;cursor:pointer}
+.skill-card:hover{box-shadow:0 4px 16px rgba(14,15,26,.08);border-color:rgba(79,70,229,.2)}
+.skill-card-cat{font-size:10px;font-weight:700;letter-spacing:.9px;text-transform:uppercase;color:var(--ink-4)}
+.skill-card-name{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--ink)}
+.skill-card-count{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-3);margin-top:auto}
+.skill-card-count .badge{background:var(--accent-light);color:var(--accent);font-weight:700;font-size:11px;padding:2px 8px;border-radius:var(--rpill)}
+.skill-card-count .badge.empty{background:var(--surface-2);color:var(--ink-4)}
+
+/* Category section header */
+.cat-head{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--ink-4);padding:20px 0 8px;border-bottom:.5px solid var(--line);margin-bottom:12px}
+.cat-head:first-child{padding-top:0}
+
+/* Detail view */
+.detail-layout{display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:start}
+.skill-list-panel{background:var(--white);border:.5px solid var(--line);border-radius:var(--r);overflow:hidden;position:sticky;top:88px}
+.slp-head{padding:14px 16px;border-bottom:.5px solid var(--line-2);font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--ink)}
+.slp-search{padding:10px 12px;border-bottom:.5px solid var(--line-2)}
+.slp-search input{width:100%;padding:6px 10px;border:.5px solid var(--line);border-radius:6px;font-size:12px;background:var(--surface);color:var(--ink);outline:none}
+.slp-search input:focus{border-color:var(--accent)}
+.slp-list{max-height:calc(100vh - 260px);overflow-y:auto}
+.slp-item{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;font-size:13px;color:var(--ink-2);border-bottom:.5px solid var(--line-2);cursor:pointer;transition:background .1s}
+.slp-item:last-child{border-bottom:none}
+.slp-item:hover{background:var(--surface)}
+.slp-item.active{background:var(--accent-light);color:var(--accent);font-weight:600}
+.slp-count{font-size:11px;font-weight:600;padding:1px 6px;border-radius:var(--rpill);background:var(--surface);color:var(--ink-4)}
+.slp-item.active .slp-count{background:var(--white);color:var(--accent)}
+
+/* Add form card */
+.card{background:var(--white);border:.5px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:16px}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:.5px solid var(--line-2)}
+.card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;letter-spacing:-.1px;color:var(--ink)}
+.card-body{padding:20px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:14px}
+.form-row-full{margin-bottom:14px}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-label{font-size:12px;font-weight:600;color:var(--ink-2)}
+.form-label span{color:var(--coral);margin-left:2px}
+.form-control{padding:9px 12px;border:.5px solid var(--line);border-radius:var(--r-sm);font-size:13px;font-family:inherit;color:var(--ink);background:var(--white);outline:none;transition:border-color .15s}
+.form-control:focus{border-color:var(--accent)}
+select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237A7C94'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.correct-opts{display:flex;gap:8px;flex-wrap:wrap}
+.correct-opt{display:flex;align-items:center;gap:6px;padding:7px 14px;border:.5px solid var(--line);border-radius:6px;font-size:13px;cursor:pointer;transition:all .15s}
+.correct-opt input{accent-color:var(--accent)}
+.correct-opt:has(input:checked){border-color:var(--accent);background:var(--accent-light);color:var(--accent);font-weight:600}
+.form-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:4px}
+
+/* Questions table */
+.q-table{width:100%;border-collapse:collapse}
+.q-table th{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-4);padding:10px 16px;text-align:left;border-bottom:.5px solid var(--line)}
+.q-table td{padding:12px 16px;border-bottom:.5px solid var(--line-2);vertical-align:top;font-size:13px}
+.q-table tr:last-child td{border-bottom:none}
+.q-table tr:hover td{background:var(--surface)}
+.q-num{font-size:11px;font-weight:700;color:var(--ink-4);white-space:nowrap}
+.q-text{color:var(--ink);font-weight:500;line-height:1.45;max-width:340px}
+.q-opts{margin-top:6px;display:flex;flex-direction:column;gap:2px}
+.q-opt{font-size:12px;color:var(--ink-3);display:flex;align-items:center;gap:5px}
+.q-opt.correct{color:var(--green);font-weight:600}
+.q-opt.correct::before{content:'✓';font-size:11px}
+.q-opt::before{content:'·';font-size:14px;color:var(--ink-4)}
+.q-opt.correct::before{content:'✓'}
+.diff-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:var(--rpill);font-size:11px;font-weight:600}
+.diff-easy{background:#DCFCE7;color:#15803D}
+.diff-medium{background:#FEF9C3;color:#854D0E}
+.diff-hard{background:#FEE2E2;color:#DC2626}
+.empty-state{text-align:center;padding:40px 20px;color:var(--ink-3)}
+.empty-state svg{opacity:.3;margin-bottom:12px}
+.empty-state p{font-size:13px}
+.delete-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;background:var(--coral-light);color:var(--coral);border:none;cursor:pointer;transition:background .15s}
+.delete-btn:hover{background:#f5d3c8}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="side">
+    <a href="{{ url_for('recruiter_dashboard') }}" class="logo">
+      <div class="logo-mark">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </div>
+      <span class="logo-text">Skill<span>BaseHire</span></span>
+    </a>
+
+    <div class="side-section">Workspace</div>
+    <a href="{{ url_for('recruiter_dashboard') }}" class="nav-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="9" rx="1.4"/><rect x="14" y="3" width="7" height="5" rx="1.4"/><rect x="14" y="12" width="7" height="9" rx="1.4"/><rect x="3" y="16" width="7" height="5" rx="1.4"/></svg>
+      Dashboard
+    </a>
+    <a href="{{ url_for('search_candidates') }}" class="nav-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M21 21l-4.5-4.5"/><circle cx="11" cy="11" r="7"/></svg>
+      Find Candidates
+    </a>
+    <a href="{{ url_for('post_job') }}" class="nav-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="14" rx="2"/><path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+      Jobs
+    </a>
+    <a href="{{ url_for('skills_page') }}" class="nav-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+      Skill Assessments
+    </a>
+    <a href="{{ url_for('manage_questions') }}" class="nav-item active">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Manage Questions
+    </a>
+
+    <div class="side-section">Account</div>
+    <a href="{{ url_for('recruiter_detail', recruiter_id=user.id) }}" class="nav-item">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0116 0"/></svg>
+      Profile
+    </a>
+    <form action="{{ url_for('logout') }}" method="post" style="margin-top:4px">
+      <button type="submit" class="nav-item" style="width:100%;background:none;text-align:left">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Log Out
+      </button>
+    </form>
+
+    <div class="side-footer">
+      <div class="side-user">
+        <div class="side-user-avatar" style="flex-shrink:0;overflow:hidden;">
+          {% if profile and profile.profile_photo %}
+            <img src="/static/uploads/photos/{{ profile.profile_photo }}" alt="{{ user.name }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">
+          {% else %}
+            {{ user.name[0].upper() }}
+          {% endif %}
+        </div>
+        <div>
+          <div class="side-user-name">{{ user.name }}</div>
+          <div class="side-user-role">Recruiter</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <!-- Topbar -->
+    <div class="top">
+      <div class="crumbs">
+        <a href="{{ url_for('recruiter_dashboard') }}">Dashboard</a>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+        {% if skill %}
+          <a href="{{ url_for('manage_questions') }}">Manage Questions</a>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+          <strong>{{ skill.name }}</strong>
+        {% else %}
+          <strong>Manage Questions</strong>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Flash messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}
+        <div class="flash-bar {{ cat }}">
+          {% if cat == 'success' %}
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><path d="M9 12l2 2 4-4"/></svg>
+          {% else %}
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {% endif %}
+          {{ msg }}
+          <button class="flash-close" onclick="this.parentElement.remove()">×</button>
+        </div>
+      {% endfor %}
+    {% endwith %}
+
+    <div class="page">
+
+      {% if skill %}
+      <!-- ── Detail view: manage questions for one skill ── -->
+      <div class="page-head">
+        <div>
+          <div class="page-title syne">{{ skill.name }} — Questions</div>
+          <div class="page-sub">
+            {{ questions|length }} question{{ 's' if questions|length != 1 else '' }} in the bank
+            &nbsp;·&nbsp; <a href="{{ url_for('manage_questions') }}" style="color:var(--accent)">← All Skills</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-layout">
+        <!-- Left: skill list panel -->
+        <div class="skill-list-panel">
+          <div class="slp-head">All Skills</div>
+          <div class="slp-search">
+            <input type="text" id="slpSearch" placeholder="Search skills…" oninput="filterSlp(this.value)"/>
+          </div>
+          <div class="slp-list" id="slpList">
+            {% for s in skills %}
+              <a href="{{ url_for('manage_skill_questions', skill_id=s.id) }}"
+                 class="slp-item {% if s.id == skill.id %}active{% endif %}"
+                 data-name="{{ s.name|lower }}">
+                {{ s.name }}
+                <span class="slp-count">{{ s.question_count }}</span>
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Right: add form + questions list -->
+        <div>
+          <!-- Add question form -->
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title">Add New Question</div>
+            </div>
+            <div class="card-body">
+              <form method="post" action="{{ url_for('manage_skill_questions', skill_id=skill.id) }}">
+                <input type="hidden" name="action" value="add"/>
+                <div class="form-row-full">
+                  <div class="form-group">
+                    <label class="form-label">Question Text <span>*</span></label>
+                    <textarea name="question_text" class="form-control" rows="3" placeholder="Enter the question…" required></textarea>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Option A <span>*</span></label>
+                    <input name="option_a" class="form-control" placeholder="Option A" required/>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Option B <span>*</span></label>
+                    <input name="option_b" class="form-control" placeholder="Option B" required/>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label class="form-label">Option C <span>*</span></label>
+                    <input name="option_c" class="form-control" placeholder="Option C" required/>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Option D <span>*</span></label>
+                    <input name="option_d" class="form-control" placeholder="Option D" required/>
+                  </div>
+                </div>
+                <div class="form-row-3" style="margin-bottom:18px">
+                  <div class="form-group">
+                    <label class="form-label">Correct Answer <span>*</span></label>
+                    <div class="correct-opts">
+                      <label class="correct-opt"><input type="radio" name="correct_option" value="A" required> A</label>
+                      <label class="correct-opt"><input type="radio" name="correct_option" value="B"> B</label>
+                      <label class="correct-opt"><input type="radio" name="correct_option" value="C"> C</label>
+                      <label class="correct-opt"><input type="radio" name="correct_option" value="D"> D</label>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Difficulty</label>
+                    <select name="difficulty" class="form-control">
+                      <option value="Easy">Easy</option>
+                      <option value="Medium" selected>Medium</option>
+                      <option value="Hard">Hard</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Marks</label>
+                    <input name="marks" type="number" min="1" max="10" value="1" class="form-control"/>
+                  </div>
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Add Question
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+
+          <!-- Questions list -->
+          <div class="card">
+            <div class="card-head">
+              <div class="card-title">Question Bank ({{ questions|length }})</div>
+            </div>
+            {% if questions %}
+              <table class="q-table">
+                <thead>
+                  <tr>
+                    <th style="width:40px">#</th>
+                    <th>Question &amp; Options</th>
+                    <th style="width:90px">Difficulty</th>
+                    <th style="width:55px">Marks</th>
+                    <th style="width:70px"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for q in questions %}
+                  <tr>
+                    <td class="q-num">{{ loop.index }}</td>
+                    <td>
+                      <div class="q-text">{{ q.question_text }}</div>
+                      <div class="q-opts">
+                        {% for letter, opt in [('A', q.option_a), ('B', q.option_b), ('C', q.option_c), ('D', q.option_d)] %}
+                          <span class="q-opt {% if letter == q.correct_option %}correct{% endif %}">
+                            <strong>{{ letter }}.</strong> {{ opt }}
+                          </span>
+                        {% endfor %}
+                      </div>
+                    </td>
+                    <td>
+                      <span class="diff-badge diff-{{ q.difficulty|lower }}">{{ q.difficulty }}</span>
+                    </td>
+                    <td style="color:var(--ink-3);text-align:center">{{ q.marks }}</td>
+                    <td>
+                      <form method="post" action="{{ url_for('manage_skill_questions', skill_id=skill.id) }}"
+                            onsubmit="return confirm('Delete this question?')">
+                        <input type="hidden" name="action" value="delete"/>
+                        <input type="hidden" name="question_id" value="{{ q.id }}"/>
+                        <button type="submit" class="delete-btn">
+                          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                          Delete
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            {% else %}
+              <div class="empty-state">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <p>No questions yet for <strong>{{ skill.name }}</strong>.<br>Add your first question using the form above.</p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      {% else %}
+      <!-- ── List view: all skills with question counts ── -->
+      <div class="page-head">
+        <div>
+          <div class="page-title syne">Manage Questions</div>
+          <div class="page-sub">Add and manage exam questions for each skill. Click a skill to get started.</div>
+        </div>
+      </div>
+
+      {% set categories = skills | map(attribute='category') | unique | list %}
+      {% for cat in categories | sort %}
+        {% set cat_skills = skills | selectattr('category', 'equalto', cat) | list %}
+        {% if cat_skills %}
+          <div class="cat-head">{{ cat }}</div>
+          <div class="skills-grid" style="margin-bottom:8px">
+            {% for s in cat_skills %}
+              <a href="{{ url_for('manage_skill_questions', skill_id=s.id) }}" class="skill-card">
+                <div class="skill-card-cat">{{ s.category }}</div>
+                <div class="skill-card-name">{{ s.name }}</div>
+                <div class="skill-card-count">
+                  <span class="badge {% if s.question_count == 0 %}empty{% endif %}">{{ s.question_count }}</span>
+                  question{{ 's' if s.question_count != 1 else '' }}
+                </div>
+              </a>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endfor %}
+      {% endif %}
+
+    </div><!-- /page -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<script>
+function filterSlp(val) {
+  var v = val.toLowerCase();
+  document.querySelectorAll('#slpList .slp-item').forEach(function(el) {
+    el.style.display = el.dataset.name.includes(v) ? '' : 'none';
+  });
+}
+</script>
+
+<script>
+(function () {
+  var meta = document.querySelector('meta[name="csrf-token"]');
+  if (!meta) return;
+  var token = meta.content;
+  document.querySelectorAll('form[method="post"],form[method="POST"]').forEach(function (f) {
+    if (!f.querySelector('[name="csrf_token"]')) {
+      var inp = document.createElement('input');
+      inp.type = 'hidden'; inp.name = 'csrf_token'; inp.value = token;
+      f.appendChild(inp);
+    }
+  });
+})();
+</script>
+</body>
+</html>

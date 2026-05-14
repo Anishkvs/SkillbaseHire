@@ -1,0 +1,990 @@
+{% extends "base.html" %}
+{% block title %}Import Resume — SkillBaseHire{% endblock %}
+
+{% block head %}
+<style>
+:root{
+  --accent:#4F46E5;--accent-light:#EEF0FF;--accent-mid:#C7D2FE;
+  --green:#16A34A;--green-light:#DCFCE7;
+  --red:#DC2626;--red-light:#FEE2E2;
+  --amber:#D97706;--amber-light:#FEF3C7;
+  --text:#1A1A1A;--text-2:#4A4A48;--text-3:#76756F;--text-4:#A8A7A0;
+  --border:#E7E6E1;--bg:#F4F4F1;--white:#FFFFFF;
+  --radius:14px;--radius-sm:10px;--radius-xs:6px;
+  --shadow:0 1px 2px rgba(20,18,12,.06),0 1px 8px rgba(20,18,12,.04);
+  --shadow-md:0 4px 24px rgba(20,18,12,.10);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--text)}
+.ri-page{max-width:820px;margin:0 auto;padding:2.5rem 1.25rem 4rem}
+
+/* ── Step indicator ──────────────────────────────── */
+.ri-steps{display:flex;align-items:center;gap:0;margin-bottom:2.5rem}
+.ri-step{display:flex;align-items:center;gap:.5rem;flex:1}
+.ri-step-dot{width:32px;height:32px;border-radius:50%;border:2px solid var(--border);
+  background:var(--white);display:flex;align-items:center;justify-content:center;
+  font-size:.75rem;font-weight:700;color:var(--text-3);flex-shrink:0;transition:all .25s}
+.ri-step-dot.active{border-color:var(--accent);background:var(--accent);color:#fff}
+.ri-step-dot.done{border-color:var(--green);background:var(--green);color:#fff}
+.ri-step-label{font-size:.75rem;font-weight:600;color:var(--text-3);white-space:nowrap}
+.ri-step-label.active{color:var(--accent)}
+.ri-step-label.done{color:var(--green)}
+.ri-step-line{flex:1;height:2px;background:var(--border);margin:0 .5rem;transition:background .25s}
+.ri-step-line.done{background:var(--green)}
+
+/* ── Cards ───────────────────────────────────────── */
+.ri-card{background:var(--white);border-radius:var(--radius);border:1px solid var(--border);
+  box-shadow:var(--shadow);padding:2rem}
+.ri-card-title{font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:.25rem}
+.ri-card-sub{font-size:.85rem;color:var(--text-3);margin-bottom:1.5rem}
+
+/* ── Upload zone ─────────────────────────────────── */
+.ri-drop{border:2px dashed var(--border);border-radius:var(--radius);
+  background:var(--bg);padding:3rem 2rem;text-align:center;cursor:pointer;
+  transition:border-color .2s,background .2s;position:relative}
+.ri-drop:hover,.ri-drop.over{border-color:var(--accent);background:var(--accent-light)}
+.ri-drop-icon{width:56px;height:56px;background:var(--accent-light);border-radius:14px;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
+.ri-drop-title{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:.35rem}
+.ri-drop-sub{font-size:.8rem;color:var(--text-3)}
+.ri-drop-browse{color:var(--accent);font-weight:600;cursor:pointer;text-decoration:underline}
+.ri-drop-hint{font-size:.72rem;color:var(--text-4);margin-top:.75rem}
+#riFile{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+/* ── Progress bar ────────────────────────────────── */
+.ri-prog-wrap{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:1.25rem;display:none}
+.ri-prog-fill{height:100%;width:0%;background:var(--accent);border-radius:3px;transition:width .1s linear}
+
+/* ── File info chip ──────────────────────────────── */
+.ri-file-chip{display:none;align-items:center;gap:.625rem;background:var(--accent-light);
+  border:1px solid var(--accent-mid);border-radius:8px;padding:.5rem .875rem;
+  font-size:.8125rem;font-weight:600;color:var(--accent);margin-top:1rem}
+.ri-file-chip svg{flex-shrink:0}
+
+/* ── Error / info banners ────────────────────────── */
+.ri-banner{border-radius:var(--radius-sm);padding:.75rem 1rem;font-size:.825rem;
+  font-weight:500;display:none;margin-top:1rem;align-items:flex-start;gap:.5rem}
+.ri-banner.error{background:var(--red-light);color:var(--red);border:1px solid #fca5a5}
+.ri-banner.info{background:var(--accent-light);color:var(--accent);border:1px solid var(--accent-mid)}
+
+/* ── Analyzing / loading ─────────────────────────── */
+.ri-loading{text-align:center;padding:3rem 1rem;display:none}
+.ri-spinner{width:48px;height:48px;border:3px solid var(--border);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 1rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Summary cards ───────────────────────────────── */
+.ri-summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.875rem;
+  margin-bottom:1.5rem;display:none}
+.ri-sum-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:.875rem 1rem;text-align:center}
+.ri-sum-num{font-size:1.75rem;font-weight:800;color:var(--accent);line-height:1}
+.ri-sum-label{font-size:.72rem;color:var(--text-3);margin-top:.25rem;font-weight:500}
+
+/* ── Review sections ─────────────────────────────── */
+.ri-section-head{font-size:.9375rem;font-weight:700;color:var(--text);
+  padding-bottom:.625rem;border-bottom:1px solid var(--border);margin-bottom:1rem;
+  display:flex;align-items:center;gap:.5rem}
+.ri-section-head .ri-badge{background:var(--accent-light);color:var(--accent);
+  font-size:.7rem;font-weight:700;padding:.15rem .5rem;border-radius:99px}
+
+/* Fields table */
+.ri-fields-table{width:100%;border-collapse:collapse;font-size:.8125rem}
+.ri-fields-table th{text-align:left;padding:.5rem .75rem;font-size:.72rem;font-weight:600;
+  color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;
+  border-bottom:1px solid var(--border)}
+.ri-fields-table td{padding:.625rem .75rem;vertical-align:top;border-bottom:1px solid #f1f0eb}
+.ri-fields-table tr:last-child td{border-bottom:none}
+.ri-field-name{font-weight:600;color:var(--text);white-space:nowrap}
+.ri-val{max-width:200px;overflow-wrap:break-word}
+.ri-val.existing{color:var(--text-3)}
+.ri-val.extracted{color:var(--text);font-weight:500}
+.ri-val.empty{color:var(--text-4);font-style:italic}
+
+/* Action buttons */
+.ri-actions{display:flex;gap:.375rem;flex-wrap:nowrap}
+.ri-btn-accept{background:var(--green);color:#fff;border:none;border-radius:6px;
+  padding:.3rem .625rem;font-size:.75rem;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;gap:.25rem;white-space:nowrap;transition:opacity .15s}
+.ri-btn-accept:hover{opacity:.85}
+.ri-btn-accept.active{outline:2px solid var(--green);outline-offset:2px}
+.ri-btn-skip{background:transparent;color:var(--text-3);border:1px solid var(--border);
+  border-radius:6px;padding:.3rem .625rem;font-size:.75rem;font-weight:600;
+  cursor:pointer;transition:background .15s;white-space:nowrap}
+.ri-btn-skip:hover{background:var(--bg)}
+.ri-btn-skip.active{background:#fee2e2;color:var(--red);border-color:#fca5a5}
+.ri-btn-edit{background:transparent;color:var(--accent);border:1px solid var(--accent-mid);
+  border-radius:6px;padding:.3rem .625rem;font-size:.75rem;font-weight:600;cursor:pointer;
+  transition:background .15s;white-space:nowrap}
+.ri-btn-edit:hover{background:var(--accent-light)}
+
+/* List item cards */
+.ri-item-card{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:.875rem 1rem;margin-bottom:.625rem;display:flex;align-items:flex-start;gap:.75rem}
+.ri-item-check{width:20px;height:20px;border:2px solid var(--border);border-radius:5px;
+  flex-shrink:0;margin-top:.125rem;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;transition:all .15s}
+.ri-item-check.checked{background:var(--green);border-color:var(--green)}
+.ri-item-check.checked svg{display:block}
+.ri-item-check svg{display:none}
+.ri-item-body{flex:1;min-width:0}
+.ri-item-title{font-size:.8125rem;font-weight:700;color:var(--text);margin-bottom:.125rem}
+.ri-item-sub{font-size:.75rem;color:var(--text-3);line-height:1.5}
+.ri-item-desc{font-size:.72rem;color:var(--text-3);margin-top:.25rem;
+  overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.ri-item-skipped{opacity:.45;pointer-events:none}
+
+/* Skills grid */
+.ri-skills-grid{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.25rem}
+.ri-skill-chip{background:var(--accent-light);color:var(--accent);border:1px solid var(--accent-mid);
+  border-radius:99px;padding:.25rem .75rem;font-size:.75rem;font-weight:600;
+  cursor:pointer;transition:all .15s;user-select:none}
+.ri-skill-chip:hover{background:var(--accent);color:#fff}
+.ri-skill-chip.skipped{background:#f1f0eb;color:var(--text-4);border-color:var(--border);
+  text-decoration:line-through}
+
+/* Inline edit input */
+.ri-edit-input{width:100%;border:1.5px solid var(--accent-mid);border-radius:6px;
+  padding:.35rem .625rem;font-size:.8125rem;color:var(--text);
+  outline:none;background:var(--white);font-family:inherit}
+.ri-edit-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.12)}
+
+/* CTA row */
+.ri-cta{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-top:2rem;
+  padding-top:1.5rem;border-top:1px solid var(--border)}
+.btn-primary{background:var(--accent);color:#fff;border:none;border-radius:8px;
+  padding:.65rem 1.5rem;font-size:.875rem;font-weight:700;cursor:pointer;
+  transition:opacity .15s;display:inline-flex;align-items:center;gap:.5rem}
+.btn-primary:hover{opacity:.88}
+.btn-primary:disabled{opacity:.5;cursor:default}
+.btn-outline{background:transparent;color:var(--text-2);border:1.5px solid var(--border);
+  border-radius:8px;padding:.65rem 1.25rem;font-size:.875rem;font-weight:600;
+  cursor:pointer;transition:background .15s}
+.btn-outline:hover{background:var(--bg)}
+.btn-ghost{background:transparent;color:var(--text-3);border:none;
+  font-size:.875rem;font-weight:500;cursor:pointer;padding:.65rem .5rem}
+.btn-ghost:hover{color:var(--text)}
+
+/* ── Success screen ──────────────────────────────── */
+.ri-success{text-align:center;padding:2.5rem 1rem;display:none}
+.ri-success-icon{width:64px;height:64px;background:var(--green-light);border-radius:50%;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem}
+.ri-success h2{font-size:1.4rem;font-weight:800;color:var(--text);margin-bottom:.5rem}
+.ri-success p{font-size:.875rem;color:var(--text-3);margin-bottom:2rem}
+
+/* Completion ring */
+.ri-ring-wrap{position:relative;width:120px;height:120px;margin:0 auto 1.25rem}
+.ri-ring-wrap svg{transform:rotate(-90deg)}
+.ri-ring-bg{fill:none;stroke:var(--border);stroke-width:8}
+.ri-ring-fill{fill:none;stroke:var(--accent);stroke-width:8;
+  stroke-linecap:round;stroke-dasharray:283;stroke-dashoffset:283;
+  transition:stroke-dashoffset 1s ease}
+.ri-ring-pct{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center}
+.ri-ring-pct .num{font-size:1.5rem;font-weight:800;color:var(--accent)}
+.ri-ring-pct .lbl{font-size:.65rem;color:var(--text-3);font-weight:600}
+.ri-comp-items{display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap;
+  margin-bottom:1.75rem}
+.ri-comp-item{text-align:center}
+.ri-comp-item .val{font-size:1.1rem;font-weight:800;color:var(--text)}
+.ri-comp-item .lab{font-size:.7rem;color:var(--text-3);font-weight:500}
+
+@media(max-width:600px){
+  .ri-page{padding:1.5rem .75rem 3rem}
+  .ri-card{padding:1.25rem}
+  .ri-fields-table th:nth-child(2),.ri-fields-table td:nth-child(2){display:none}
+  .ri-cta{flex-direction:column;align-items:stretch}
+  .ri-cta button{width:100%;justify-content:center}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ri-page">
+
+  <!-- Back link -->
+  <a href="{{ url_for('candidate_profile') }}"
+     style="display:inline-flex;align-items:center;gap:.375rem;font-size:.8125rem;
+            font-weight:600;color:var(--accent,#4F46E5);text-decoration:none;margin-bottom:1.5rem">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 12H5M12 5l-7 7 7 7"/>
+    </svg>
+    Back to Profile
+  </a>
+
+  <!-- Step indicator -->
+  <div class="ri-steps" id="riSteps">
+    <div class="ri-step">
+      <div class="ri-step-dot active" id="dot1">1</div>
+      <span class="ri-step-label active" id="lbl1">Upload</span>
+    </div>
+    <div class="ri-step-line" id="line1"></div>
+    <div class="ri-step">
+      <div class="ri-step-dot" id="dot2">2</div>
+      <span class="ri-step-label" id="lbl2">Analysis</span>
+    </div>
+    <div class="ri-step-line" id="line2"></div>
+    <div class="ri-step">
+      <div class="ri-step-dot" id="dot3">3</div>
+      <span class="ri-step-label" id="lbl3">Review</span>
+    </div>
+    <div class="ri-step-line" id="line3"></div>
+    <div class="ri-step">
+      <div class="ri-step-dot" id="dot4">4</div>
+      <span class="ri-step-label" id="lbl4">Done</span>
+    </div>
+  </div>
+
+  <!-- ── STEP 1: Upload ── -->
+  <div class="ri-card" id="stepUpload">
+    <div class="ri-card-title">Import Your Resume</div>
+    <div class="ri-card-sub">Upload your resume and we'll extract your profile details for review.</div>
+
+    <div class="ri-drop" id="riDrop">
+      <input type="file" id="riFile" accept=".pdf,.doc,.docx">
+      <div class="ri-drop-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#4F46E5"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+          <polyline points="10 9 9 9 8 9"/>
+        </svg>
+      </div>
+      <div class="ri-drop-title">Drag &amp; drop your resume here</div>
+      <div class="ri-drop-sub">or <span class="ri-drop-browse">browse to upload</span></div>
+      <div class="ri-drop-hint">Supported: PDF, DOC, DOCX &nbsp;·&nbsp; Maximum 1 MB</div>
+    </div>
+
+    <div class="ri-file-chip" id="riFileChip">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+      </svg>
+      <span id="riFileName">resume.pdf</span>
+      <span style="color:#94a3b8;margin-left:auto" id="riFileSize"></span>
+    </div>
+
+    <div class="ri-prog-wrap" id="riProgWrap">
+      <div class="ri-prog-fill" id="riProgFill"></div>
+    </div>
+
+    <div class="ri-banner error" id="riBanner" style="display:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;margin-top:.1rem">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span id="riBannerMsg"></span>
+    </div>
+
+    <div class="ri-cta">
+      <button class="btn-primary" id="riAnalyzeBtn" disabled onclick="startParse()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        Analyze Resume
+      </button>
+    </div>
+  </div>
+
+  <!-- ── STEP 2: Analysis ── -->
+  <div class="ri-card" id="stepAnalysis" style="display:none">
+    <div class="ri-loading" id="riLoading">
+      <div class="ri-spinner"></div>
+      <div style="font-size:.9375rem;font-weight:700;color:var(--text)">Analyzing your resume…</div>
+      <div style="font-size:.8125rem;color:var(--text-3);margin-top:.375rem">Extracting skills, experience &amp; education</div>
+    </div>
+
+    <div id="riAnalysisDone" style="display:none">
+      <div class="ri-card-title" style="margin-bottom:.375rem">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16A34A"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+             style="vertical-align:middle;margin-right:.35rem">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        Analysis Complete
+      </div>
+      <div class="ri-card-sub">We found the following details in your resume.</div>
+
+      <div class="ri-summary" id="riSummary">
+        <div class="ri-sum-card"><div class="ri-sum-num" id="sumSkills">0</div><div class="ri-sum-label">Skills</div></div>
+        <div class="ri-sum-card"><div class="ri-sum-num" id="sumExp">0</div><div class="ri-sum-label">Work Entries</div></div>
+        <div class="ri-sum-card"><div class="ri-sum-num" id="sumEdu">0</div><div class="ri-sum-label">Education</div></div>
+        <div class="ri-sum-card"><div class="ri-sum-num" id="sumProj">0</div><div class="ri-sum-label">Projects</div></div>
+        <div class="ri-sum-card"><div class="ri-sum-num" id="sumCerts">0</div><div class="ri-sum-label">Certifications</div></div>
+      </div>
+
+      <div class="ri-cta">
+        <button class="btn-primary" onclick="showReview()">
+          Review Changes
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+        <button class="btn-ghost" onclick="skipAll()">Skip for Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 3: Review ── -->
+  <div id="stepReview" style="display:none">
+
+    <!-- Profile fields -->
+    <div class="ri-card" style="margin-bottom:1rem">
+      <div class="ri-section-head">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        Profile Fields
+        <span class="ri-badge" id="fieldsCount">0</span>
+      </div>
+      <table class="ri-fields-table" id="riFieldsTable">
+        <thead>
+          <tr>
+            <th style="width:130px">Field</th>
+            <th style="width:180px">Current Value</th>
+            <th>From Resume</th>
+            <th style="width:160px">Action</th>
+          </tr>
+        </thead>
+        <tbody id="riFieldsBody"></tbody>
+      </table>
+      <div id="riNoFields" style="display:none;font-size:.8rem;color:var(--text-4);padding:.5rem 0">
+        No new profile fields detected.
+      </div>
+    </div>
+
+    <!-- Work Experience -->
+    <div class="ri-card" style="margin-bottom:1rem" id="expSection">
+      <div class="ri-section-head">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2" y="7" width="20" height="14" rx="2"/>
+          <path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/>
+        </svg>
+        Work Experience
+        <span class="ri-badge" id="expCount">0</span>
+      </div>
+      <div style="font-size:.75rem;color:var(--text-3);margin-bottom:.875rem">
+        Select entries to add to your profile. Existing entries will not be affected.
+      </div>
+      <div id="riExpList"></div>
+    </div>
+
+    <!-- Education -->
+    <div class="ri-card" style="margin-bottom:1rem" id="eduSection">
+      <div class="ri-section-head">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+          <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>
+        Education
+        <span class="ri-badge" id="eduCount">0</span>
+      </div>
+      <div style="font-size:.75rem;color:var(--text-3);margin-bottom:.875rem">
+        Select education entries to add to your profile.
+      </div>
+      <div id="riEduList"></div>
+    </div>
+
+    <!-- Skills -->
+    <div class="ri-card" style="margin-bottom:1rem" id="skillsSection">
+      <div class="ri-section-head">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        Skills Detected
+        <span class="ri-badge" id="skillsCount">0</span>
+      </div>
+      <div style="font-size:.75rem;color:var(--text-3);margin-bottom:.875rem">
+        Click a skill to toggle it. Highlighted = will be added. Grey = will be skipped.
+        Skills already in your profile are hidden.
+      </div>
+      <div class="ri-skills-grid" id="riSkillsGrid"></div>
+    </div>
+
+    <!-- Projects -->
+    <div class="ri-card" style="margin-bottom:1rem" id="projSection">
+      <div class="ri-section-head">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+        Projects
+        <span class="ri-badge" id="projCount">0</span>
+      </div>
+      <div id="riProjList"></div>
+    </div>
+
+    <!-- Certifications -->
+    <div class="ri-card" style="margin-bottom:1rem" id="certSection">
+      <div class="ri-section-head">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="6"/>
+          <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/>
+        </svg>
+        Certifications
+        <span class="ri-badge" id="certCount">0</span>
+      </div>
+      <div id="riCertList"></div>
+    </div>
+
+    <!-- CTA -->
+    <div class="ri-cta">
+      <button class="btn-primary" id="riUpdateBtn" onclick="confirmUpdate()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+          <polyline points="17 21 17 13 7 13 7 21"/>
+          <polyline points="7 3 7 8 15 8"/>
+        </svg>
+        Update Profile
+      </button>
+      <button class="btn-outline" onclick="showReview()" id="riBtnBack">← Back</button>
+      <button class="btn-ghost" onclick="skipAll()">Skip for Now</button>
+    </div>
+  </div>
+
+  <!-- ── STEP 4: Done ── -->
+  <div class="ri-card" id="stepDone" style="display:none">
+    <div class="ri-success" id="riSuccess">
+      <div class="ri-success-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#16A34A"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+      </div>
+      <h2>Profile Updated!</h2>
+      <p>Your profile has been updated with the details from your resume.</p>
+
+      <div class="ri-ring-wrap">
+        <svg viewBox="0 0 100 100" width="120" height="120">
+          <circle class="ri-ring-bg" cx="50" cy="50" r="45"/>
+          <circle class="ri-ring-fill" id="riRingFill" cx="50" cy="50" r="45"/>
+        </svg>
+        <div class="ri-ring-pct">
+          <span class="num" id="riPctNum">0%</span>
+          <span class="lbl">Complete</span>
+        </div>
+      </div>
+
+      <div class="ri-comp-items" id="riCompItems"></div>
+
+      <a href="{{ url_for('candidate_profile') }}" class="btn-primary"
+         style="display:inline-flex;text-decoration:none">
+        View My Profile
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+
+</div><!-- .ri-page -->
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── State ─────────────────────────────────────────────────────────── */
+  var parsed       = null;  // {extracted, existing, filename}
+  var fieldDecisions = {};  // key → {accept:bool, value:str}
+  var listDecisions  = {};  // 'exp'|'edu'|'proj'|'cert' → [bool, ...]
+  var skillDecisions = {};  // skill_name → bool
+
+  /* ── File picker / drag-and-drop ────────────────────────────────────── */
+  var dropEl   = document.getElementById('riDrop');
+  var fileEl   = document.getElementById('riFile');
+  var analyzeBtn = document.getElementById('riAnalyzeBtn');
+  var selectedFile = null;
+
+  dropEl.addEventListener('dragover',  function(e){ e.preventDefault(); dropEl.classList.add('over'); });
+  dropEl.addEventListener('dragleave', function(){ dropEl.classList.remove('over'); });
+  dropEl.addEventListener('drop', function(e){
+    e.preventDefault(); dropEl.classList.remove('over');
+    var f = e.dataTransfer.files[0];
+    if (f) setFile(f);
+  });
+  fileEl.addEventListener('change', function(){
+    if (fileEl.files[0]) setFile(fileEl.files[0]);
+  });
+
+  function setFile(f) {
+    hideBanner();
+    var allowedExts = ['pdf', 'doc', 'docx'];
+    var ext = (f.name.split('.').pop() || '').toLowerCase();
+    if (!allowedExts.includes(ext)) {
+      showBanner('Only PDF, DOC, and DOCX resumes up to 1 MB are allowed.', 'error');
+      return;
+    }
+    if (f.size > 1 * 1024 * 1024) {
+      showBanner('Only PDF, DOC, and DOCX resumes up to 1 MB are allowed.', 'error');
+      return;
+    }
+    selectedFile = f;
+    var chip = document.getElementById('riFileChip');
+    chip.style.display = 'flex';
+    document.getElementById('riFileName').textContent = f.name;
+    document.getElementById('riFileSize').textContent = formatBytes(f.size);
+    analyzeBtn.disabled = false;
+  }
+
+  /* ── Upload + parse ─────────────────────────────────────────────────── */
+  window.startParse = function () {
+    if (!selectedFile) return;
+    hideBanner();
+    analyzeBtn.disabled = true;
+
+    var prog = document.getElementById('riProgWrap');
+    var fill = document.getElementById('riProgFill');
+    prog.style.display = 'block';
+    fill.style.width   = '0%';
+
+    var fd  = new FormData();
+    fd.append('resume', selectedFile);
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    var csrf     = csrfMeta ? csrfMeta.content : '';
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/candidate/resume/parse', true);
+    xhr.setRequestHeader('X-CSRFToken', csrf);
+
+    xhr.upload.onprogress = function(e) {
+      if (e.lengthComputable)
+        fill.style.width = Math.round(e.loaded / e.total * 90) + '%';
+    };
+    xhr.onload = function() {
+      fill.style.width = '100%';
+      if (xhr.status >= 200 && xhr.status < 300) {
+        var data = JSON.parse(xhr.responseText);
+        if (data.error) {
+          showBanner(data.error, 'error');
+          analyzeBtn.disabled = false;
+          prog.style.display  = 'none';
+          return;
+        }
+        parsed = data;
+        setTimeout(function(){ showAnalysis(); }, 400);
+      } else {
+        var msg = 'Upload failed. Please try again.';
+        try { msg = JSON.parse(xhr.responseText).error || msg; } catch(e){}
+        showBanner(msg, 'error');
+        analyzeBtn.disabled = false;
+        prog.style.display  = 'none';
+      }
+    };
+    xhr.onerror = function() {
+      showBanner('Network error. Please check your connection and try again.', 'error');
+      analyzeBtn.disabled = false;
+      prog.style.display  = 'none';
+    };
+    xhr.send(fd);
+
+    // Switch to analysis step immediately (show spinner)
+    document.getElementById('stepUpload').style.display    = 'none';
+    document.getElementById('stepAnalysis').style.display  = 'block';
+    document.getElementById('riLoading').style.display     = 'block';
+    document.getElementById('riAnalysisDone').style.display = 'none';
+    setStep(2);
+  };
+
+  /* ── Show analysis results ──────────────────────────────────────────── */
+  function showAnalysis() {
+    var ex = parsed.extracted;
+    document.getElementById('riLoading').style.display      = 'none';
+    document.getElementById('riAnalysisDone').style.display = 'block';
+
+    var summary = document.getElementById('riSummary');
+    summary.style.display = 'grid';
+    document.getElementById('sumSkills').textContent = (ex.skills   || []).length;
+    document.getElementById('sumExp').textContent    = (ex.work_experience || []).length;
+    document.getElementById('sumEdu').textContent    = (ex.education || []).length;
+    document.getElementById('sumProj').textContent   = (ex.projects  || []).length;
+    document.getElementById('sumCerts').textContent  = (ex.certifications || []).length;
+  }
+
+  /* ── Show review screen ─────────────────────────────────────────────── */
+  window.showReview = function() {
+    document.getElementById('stepAnalysis').style.display = 'none';
+    document.getElementById('stepReview').style.display   = 'block';
+    setStep(3);
+    buildReview();
+  };
+
+  function buildReview() {
+    var ex   = parsed.extracted;
+    var exist = parsed.existing;
+
+    /* Profile fields */
+    var fieldDefs = [
+      { key: 'headline',   label: 'Headline' },
+      { key: 'job_title',  label: 'Current Role' },
+      { key: 'experience', label: 'Experience (yrs)' },
+      { key: 'location',   label: 'Location' },
+    ];
+    var tbody     = document.getElementById('riFieldsBody');
+    tbody.innerHTML = '';
+    var fieldCount = 0;
+
+    fieldDefs.forEach(function(fd) {
+      var extVal  = (ex[fd.key] || '').toString().trim();
+      if (!extVal) return;
+      var curVal  = (exist[fd.key] || '').toString().trim();
+      var accepted = !(curVal);  // auto-accept if empty, else default skip
+
+      if (!(fd.key in fieldDecisions)) {
+        fieldDecisions[fd.key] = { accept: accepted, value: extVal };
+      }
+      var dec = fieldDecisions[fd.key];
+      fieldCount++;
+
+      var tr = document.createElement('tr');
+      tr.setAttribute('data-field', fd.key);
+      tr.innerHTML =
+        '<td class="ri-field-name">' + esc(fd.label) + '</td>' +
+        '<td class="ri-val existing">' + (curVal ? esc(curVal) : '<span class="ri-val empty">—</span>') + '</td>' +
+        '<td class="ri-val extracted" id="cell_' + fd.key + '">' +
+          '<span id="disp_' + fd.key + '">' + esc(extVal) + '</span>' +
+          '<input class="ri-edit-input" id="inp_' + fd.key + '" value="' + esc(extVal) +
+          '" style="display:none" oninput="onFieldEdit(\'' + fd.key + '\', this.value)">' +
+        '</td>' +
+        '<td><div class="ri-actions">' +
+          '<button class="ri-btn-accept' + (dec.accept ? ' active' : '') + '" ' +
+          'onclick="toggleField(\'' + fd.key + '\', true)" id="acc_' + fd.key + '">✓ Accept</button>' +
+          '<button class="ri-btn-skip' + (!dec.accept ? ' active' : '') + '" ' +
+          'onclick="toggleField(\'' + fd.key + '\', false)" id="sk_' + fd.key + '">✗ Skip</button>' +
+          '<button class="ri-btn-edit" onclick="editField(\'' + fd.key + '\')" id="edit_' + fd.key + '">✏</button>' +
+        '</div></td>';
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('fieldsCount').textContent = fieldCount;
+    document.getElementById('riNoFields').style.display  = fieldCount ? 'none' : 'block';
+    document.getElementById('riFieldsTable').style.display = fieldCount ? '' : 'none';
+
+    /* Work experience */
+    renderListSection(
+      'riExpList', 'expCount', 'expSection',
+      ex.work_experience || [],
+      'exp',
+      function(item) {
+        return {
+          title: (item.designation || 'Unknown Role') + (item.company ? ' · ' + item.company : ''),
+          sub:   formatDateRange(item.start_date, item.end_date, item.is_current),
+          desc:  item.description || '',
+        };
+      }
+    );
+
+    /* Education */
+    renderListSection(
+      'riEduList', 'eduCount', 'eduSection',
+      ex.education || [],
+      'edu',
+      function(item) {
+        return {
+          title: item.degree || 'Unknown Degree',
+          sub:   item.college + (item.end_year ? ' · ' + item.end_year : ''),
+          desc:  '',
+        };
+      }
+    );
+
+    /* Skills — filter out already-existing ones */
+    var existSkillsLower = (exist.skills || []).map(function(s){ return s.toLowerCase(); });
+    var newSkills = (ex.skills || []).filter(function(s){
+      return !existSkillsLower.includes(s.toLowerCase());
+    });
+    var grid = document.getElementById('riSkillsGrid');
+    grid.innerHTML = '';
+    document.getElementById('skillsCount').textContent = newSkills.length;
+    document.getElementById('skillsSection').style.display = newSkills.length ? '' : 'none';
+
+    newSkills.forEach(function(skill) {
+      if (!(skill in skillDecisions)) skillDecisions[skill] = true;
+      var chip = document.createElement('span');
+      chip.className = 'ri-skill-chip' + (skillDecisions[skill] ? '' : ' skipped');
+      chip.textContent = skill;
+      chip.setAttribute('data-skill', skill);
+      chip.addEventListener('click', function() {
+        skillDecisions[skill] = !skillDecisions[skill];
+        chip.classList.toggle('skipped', !skillDecisions[skill]);
+      });
+      grid.appendChild(chip);
+    });
+
+    /* Projects */
+    renderListSection(
+      'riProjList', 'projCount', 'projSection',
+      ex.projects || [],
+      'proj',
+      function(item) {
+        return {
+          title: item.project_name || 'Untitled Project',
+          sub:   (item.domain ? item.domain : '') + (item.year ? ' · ' + item.year : ''),
+          desc:  item.description || '',
+        };
+      }
+    );
+
+    /* Certifications */
+    renderListSection(
+      'riCertList', 'certCount', 'certSection',
+      ex.certifications || [],
+      'cert',
+      function(item) {
+        return {
+          title: item.cert_name || 'Certification',
+          sub:   (item.issued_by ? item.issued_by : '') + (item.year ? ' · ' + item.year : ''),
+          desc:  '',
+        };
+      }
+    );
+  }
+
+  function renderListSection(listId, countId, sectionId, items, key, mapper) {
+    var container = document.getElementById(listId);
+    container.innerHTML = '';
+    document.getElementById(countId).textContent = items.length;
+    document.getElementById(sectionId).style.display = items.length ? '' : 'none';
+
+    if (!listDecisions[key] || listDecisions[key].length !== items.length) {
+      listDecisions[key] = items.map(function(){ return true; });
+    }
+
+    items.forEach(function(item, i) {
+      var info  = mapper(item);
+      var checked = listDecisions[key][i];
+
+      var card = document.createElement('div');
+      card.className = 'ri-item-card' + (checked ? '' : ' ri-item-skipped');
+      card.setAttribute('data-list', key);
+      card.setAttribute('data-idx', i);
+
+      var checkEl = document.createElement('div');
+      checkEl.className = 'ri-item-check' + (checked ? ' checked' : '');
+      checkEl.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+      checkEl.addEventListener('click', function() {
+        listDecisions[key][i] = !listDecisions[key][i];
+        var on = listDecisions[key][i];
+        checkEl.classList.toggle('checked', on);
+        card.classList.toggle('ri-item-skipped', !on);
+      });
+
+      var body = document.createElement('div');
+      body.className = 'ri-item-body';
+      body.innerHTML =
+        '<div class="ri-item-title">' + esc(info.title) + '</div>' +
+        (info.sub.trim() ? '<div class="ri-item-sub">' + esc(info.sub) + '</div>' : '') +
+        (info.desc.trim() ? '<div class="ri-item-desc">' + esc(info.desc) + '</div>' : '');
+
+      card.appendChild(checkEl);
+      card.appendChild(body);
+      container.appendChild(card);
+    });
+  }
+
+  /* ── Field decision helpers ─────────────────────────────────────────── */
+  window.toggleField = function(key, accept) {
+    fieldDecisions[key].accept = accept;
+    document.getElementById('acc_' + key).classList.toggle('active', accept);
+    document.getElementById('sk_'  + key).classList.toggle('active', !accept);
+  };
+  window.onFieldEdit = function(key, val) {
+    fieldDecisions[key].value = val;
+    fieldDecisions[key].accept = true;
+    document.getElementById('acc_' + key).classList.add('active');
+    document.getElementById('sk_'  + key).classList.remove('active');
+  };
+  window.editField = function(key) {
+    var disp = document.getElementById('disp_' + key);
+    var inp  = document.getElementById('inp_'  + key);
+    var editing = inp.style.display !== 'none';
+    if (editing) {
+      // Commit
+      disp.textContent = inp.value;
+      disp.style.display = '';
+      inp.style.display  = 'none';
+      document.getElementById('edit_' + key).textContent = '✏';
+    } else {
+      disp.style.display = 'none';
+      inp.style.display  = '';
+      inp.focus();
+      document.getElementById('edit_' + key).textContent = '✔';
+    }
+  };
+
+  /* ── Confirm update ─────────────────────────────────────────────────── */
+  window.confirmUpdate = function() {
+    var btn = document.getElementById('riUpdateBtn');
+    btn.disabled    = true;
+    btn.textContent = 'Saving…';
+
+    var payload = buildPayload();
+    var csrf    = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+
+    fetch('/candidate/resume/confirm', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+      body: JSON.stringify(payload),
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (data.error) {
+        btn.disabled    = false;
+        btn.textContent = 'Update Profile';
+        alert(data.error);
+        return;
+      }
+      showDone(data.completion);
+    })
+    .catch(function() {
+      btn.disabled    = false;
+      btn.textContent = 'Update Profile';
+      alert('Something went wrong. Please try again.');
+    });
+  };
+
+  function buildPayload() {
+    var ex   = parsed.extracted;
+    var payload = { fields: {}, work_experience: [], education: [],
+                    skills: [], projects: [], certifications: [] };
+
+    // Scalar fields
+    Object.keys(fieldDecisions).forEach(function(k) {
+      var d = fieldDecisions[k];
+      if (d.accept) payload.fields[k] = d.value;
+    });
+
+    // Work experience
+    (ex.work_experience || []).forEach(function(item, i) {
+      if (listDecisions['exp'] && listDecisions['exp'][i]) payload.work_experience.push(item);
+    });
+    // Education
+    (ex.education || []).forEach(function(item, i) {
+      if (listDecisions['edu'] && listDecisions['edu'][i]) payload.education.push(item);
+    });
+    // Skills
+    Object.keys(skillDecisions).forEach(function(s) {
+      if (skillDecisions[s]) payload.skills.push(s);
+    });
+    // Projects
+    (ex.projects || []).forEach(function(item, i) {
+      if (listDecisions['proj'] && listDecisions['proj'][i]) payload.projects.push(item);
+    });
+    // Certifications
+    (ex.certifications || []).forEach(function(item, i) {
+      if (listDecisions['cert'] && listDecisions['cert'][i]) payload.certifications.push(item);
+    });
+    return payload;
+  }
+
+  /* ── Success screen ─────────────────────────────────────────────────── */
+  function showDone(pct) {
+    document.getElementById('stepReview').style.display = 'none';
+    document.getElementById('stepDone').style.display   = 'block';
+    document.getElementById('riSuccess').style.display  = 'block';
+    setStep(4);
+
+    // Animate ring
+    var fill   = document.getElementById('riRingFill');
+    var radius = 45;
+    var circ   = 2 * Math.PI * radius;  // ≈ 282.7
+    fill.style.strokeDasharray  = circ;
+    fill.style.strokeDashoffset = circ;
+    setTimeout(function() {
+      fill.style.strokeDashoffset = circ * (1 - pct / 100);
+    }, 100);
+
+    // Count-up animation
+    var pctEl = document.getElementById('riPctNum');
+    var count = 0;
+    var target = pct;
+    var step   = Math.ceil(target / 40);
+    var timer  = setInterval(function() {
+      count = Math.min(count + step, target);
+      pctEl.textContent = count + '%';
+      if (count >= target) clearInterval(timer);
+    }, 25);
+
+    // What was added
+    var added = buildPayload();
+    var items = [];
+    var flds  = Object.keys(added.fields).length;
+    if (flds > 0)                       items.push({ val: flds,                          lab: 'Fields' });
+    if (added.work_experience.length)   items.push({ val: added.work_experience.length,  lab: 'Work Entries' });
+    if (added.education.length)         items.push({ val: added.education.length,        lab: 'Education' });
+    if (added.skills.length)            items.push({ val: added.skills.length,           lab: 'Skills' });
+    if (added.projects.length)          items.push({ val: added.projects.length,         lab: 'Projects' });
+    if (added.certifications.length)    items.push({ val: added.certifications.length,   lab: 'Certs' });
+
+    var compItems = document.getElementById('riCompItems');
+    compItems.innerHTML = items.map(function(it) {
+      return '<div class="ri-comp-item"><div class="val">+' + it.val + '</div><div class="lab">' + esc(it.lab) + '</div></div>';
+    }).join('');
+  }
+
+  /* ── Skip ───────────────────────────────────────────────────────────── */
+  window.skipAll = function() { window.location.href = '{{ url_for("candidate_profile") }}'; };
+
+  /* ── Step indicator ─────────────────────────────────────────────────── */
+  function setStep(n) {
+    [1,2,3,4].forEach(function(i) {
+      var dot = document.getElementById('dot' + i);
+      var lbl = document.getElementById('lbl' + i);
+      if (i < n)  { dot.className = 'ri-step-dot done';   lbl.className = 'ri-step-label done'; dot.innerHTML = '✓'; }
+      if (i === n){ dot.className = 'ri-step-dot active'; lbl.className = 'ri-step-label active'; }
+      if (i > n)  { dot.className = 'ri-step-dot';        lbl.className = 'ri-step-label'; if (i!==1&&i!==2&&i!==3&&i!==4) dot.textContent=i; else dot.textContent=i; }
+    });
+    [1,2,3].forEach(function(i) {
+      var line = document.getElementById('line' + i);
+      line.className = 'ri-step-line' + (i < n ? ' done' : '');
+    });
+  }
+
+  /* ── Utilities ──────────────────────────────────────────────────────── */
+  function showBanner(msg, type) {
+    var b = document.getElementById('riBanner');
+    b.className = 'ri-banner ' + type;
+    document.getElementById('riBannerMsg').textContent = msg;
+    b.style.display = 'flex';
+  }
+  function hideBanner() {
+    document.getElementById('riBanner').style.display = 'none';
+  }
+  function formatBytes(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1024*1024) return (b/1024).toFixed(1) + ' KB';
+    return (b/1024/1024).toFixed(1) + ' MB';
+  }
+  function formatDateRange(start, end, isCurrent) {
+    var s = start ? start.slice(0,7).replace('-','/')  : '';
+    var e = isCurrent ? 'Present' : (end ? end.slice(0,7).replace('-','/') : '');
+    if (!s && !e) return '';
+    if (!s) return e;
+    if (!e) return s;
+    return s + ' – ' + e;
+  }
+  function esc(s) {
+    return String(s || '')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+
+}());
+</script>
+{% endblock %}

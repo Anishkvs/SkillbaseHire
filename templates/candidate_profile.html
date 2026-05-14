@@ -1722,12 +1722,20 @@ textarea.fc{resize:vertical;min-height:80px}
               <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               Preview Resume
             </a>
+            <a href="{{ url_for('resume_import_page') }}" class="btn btn-primary btn-sm btn-full">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+              Import &amp; Update Profile
+            </a>
           </div>
           {% else %}
           <div class="empty-state" style="padding:1.25rem 0">
             <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             <p>Upload your resume to improve recruiter visibility.</p>
             <label for="resumeFileInput" class="btn btn-primary btn-sm" style="cursor:pointer">Upload Resume</label>
+            <a href="{{ url_for('resume_import_page') }}" class="btn btn-outline btn-sm" style="margin-top:.5rem;display:inline-flex;align-items:center;gap:.35rem;text-decoration:none">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+              Import Resume &amp; Auto-fill Profile
+            </a>
             <p style="font-size:.7rem;color:var(--text-muted);margin-top:.5rem">Supported formats: PDF, DOC, DOCX &nbsp;·&nbsp; Maximum size: 1 MB</p>
           </div>
           {% endif %}

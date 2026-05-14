@@ -1764,6 +1764,220 @@ def upload_resume():
     return redirect(url_for('candidate_profile'))
 
 
+# ── Resume import wizard ──────────────────────────────────────────────────────
+
+def _profile_completion_pct(user_id, db) -> int:
+    """Return 0-100 profile completion score for the given candidate."""
+    profile = db.execute(
+        'SELECT * FROM candidate_profiles WHERE user_id=?', [user_id]
+    ).fetchone()
+    if not profile:
+        return 0
+    score = 0
+    if profile['headline']  and profile['headline'].strip():   score += 10
+    if profile['bio']       and profile['bio'].strip():        score += 10
+    if profile['location']  and profile['location'].strip():   score += 8
+    if profile['job_title'] and profile['job_title'].strip():  score += 7
+    if profile['resume_filename']:                             score += 10
+    exp_ct  = db.execute('SELECT COUNT(*) FROM candidate_work_experience WHERE user_id=?', [user_id]).fetchone()[0]
+    edu_ct  = db.execute('SELECT COUNT(*) FROM candidate_education       WHERE user_id=?', [user_id]).fetchone()[0]
+    sk_ct   = db.execute('SELECT COUNT(*) FROM user_skills               WHERE user_id=?', [user_id]).fetchone()[0]
+    proj_ct = db.execute('SELECT COUNT(*) FROM candidate_projects        WHERE user_id=?', [user_id]).fetchone()[0]
+    cert_ct = db.execute('SELECT COUNT(*) FROM candidate_certifications  WHERE user_id=?', [user_id]).fetchone()[0]
+    if exp_ct  > 0: score += 15
+    if edu_ct  > 0: score += 15
+    if sk_ct   > 0: score += 10
+    if proj_ct > 0: score +=  8
+    if cert_ct > 0: score +=  7
+    return min(score, 100)
+
+
+@app.route('/candidate/resume/import')
+@candidate_required
+def resume_import_page():
+    db         = get_db()
+    profile    = db.execute('SELECT * FROM candidate_profiles WHERE user_id=?',
+                            [session['user_id']]).fetchone()
+    completion = _profile_completion_pct(session['user_id'], db)
+    return render_template('resume_import.html',
+                           user=get_current_user(), profile=profile,
+                           completion=completion)
+
+
+@app.route('/candidate/resume/parse', methods=['POST'])
+@candidate_required
+def resume_parse_api():
+    file = request.files.get('resume')
+    if not file or not file.filename:
+        return jsonify({'error': 'No file provided.'}), 400
+
+    ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
+    if ext not in ALLOWED_RESUME_EXT:
+        return jsonify({'error': 'Only PDF, DOC, and DOCX resumes up to 1 MB are allowed.'}), 400
+
+    file.seek(0, 2)
+    size = file.tell()
+    file.seek(0)
+    if size > MAX_RESUME_SIZE:
+        return jsonify({'error': 'Only PDF, DOC, and DOCX resumes up to 1 MB are allowed.'}), 400
+
+    if not validate_file_magic(file, ALLOWED_RESUME_EXT):
+        return jsonify({'error': 'File content does not match the declared format.'}), 400
+    file.seek(0)
+
+    os.makedirs(RESUME_UPLOAD_FOLDER, exist_ok=True)
+    filename = secure_filename(f"resume_{session['user_id']}_{file.filename}")
+    filepath = os.path.join(RESUME_UPLOAD_FOLDER, filename)
+
+    db  = get_db()
+    old = db.execute('SELECT resume_filename FROM candidate_profiles WHERE user_id=?',
+                     [session['user_id']]).fetchone()
+
+    if old and old['resume_filename'] == filename:
+        return jsonify({'error': 'This resume file is already uploaded.'}), 400
+
+    if old and old['resume_filename']:
+        try:
+            os.remove(os.path.join(RESUME_UPLOAD_FOLDER, old['resume_filename']))
+        except OSError:
+            pass
+
+    file.save(filepath)
+    db.execute('UPDATE candidate_profiles SET resume_filename=? WHERE user_id=?',
+               [filename, session['user_id']])
+    db.commit()
+
+    # Parse resume text
+    try:
+        from resume_parser import extract_text, parse_resume as _parse
+        text = extract_text(filepath, ext)
+        if not text.strip():
+            return jsonify({'error': 'Could not read text from this resume. '
+                                     'Please try a PDF or DOCX file.'}), 422
+        extracted = _parse(text)
+    except Exception:
+        return jsonify({'error': 'Resume parsing failed. Please try a different file.'}), 422
+
+    # Fetch existing profile data for the comparison UI
+    profile    = db.execute('SELECT * FROM candidate_profiles WHERE user_id=?',
+                            [session['user_id']]).fetchone()
+    experiences = db.execute(
+        'SELECT * FROM candidate_work_experience WHERE user_id=?',
+        [session['user_id']]).fetchall()
+    educations  = db.execute(
+        'SELECT * FROM candidate_education WHERE user_id=?',
+        [session['user_id']]).fetchall()
+    certs       = db.execute(
+        'SELECT * FROM candidate_certifications WHERE user_id=?',
+        [session['user_id']]).fetchall()
+    projects    = db.execute(
+        'SELECT * FROM candidate_projects WHERE user_id=?',
+        [session['user_id']]).fetchall()
+    my_skills   = db.execute(
+        'SELECT s.name FROM user_skills us JOIN skills s ON us.skill_id=s.id WHERE us.user_id=?',
+        [session['user_id']]).fetchall()
+
+    existing = {
+        'headline':        profile['headline']  or '' if profile else '',
+        'job_title':       profile['job_title'] or '' if profile else '',
+        'experience':      profile['experience'] or '' if profile else '',
+        'location':        profile['location']  or '' if profile else '',
+        'bio':             profile['bio']        or '' if profile else '',
+        'work_experience': [dict(r) for r in experiences],
+        'education':       [dict(r) for r in educations],
+        'skills':          [r['name'] for r in my_skills],
+        'projects':        [dict(r) for r in projects],
+        'certifications':  [dict(r) for r in certs],
+    }
+
+    return jsonify({'filename': filename, 'extracted': extracted, 'existing': existing})
+
+
+@app.route('/candidate/resume/confirm', methods=['POST'])
+@candidate_required
+def resume_confirm():
+    data = request.get_json(force=True)
+    if not data:
+        return jsonify({'error': 'No data provided.'}), 400
+
+    db      = get_db()
+    user_id = session['user_id']
+
+    # Profile scalar fields
+    allowed_fields = ['headline', 'job_title', 'experience', 'location', 'bio']
+    updates = {f: str(data['fields'][f]).strip()
+               for f in allowed_fields
+               if f in data.get('fields', {}) and data['fields'][f] is not None}
+    if updates:
+        set_clause = ', '.join(f"{k}=?" for k in updates)
+        db.execute(f"UPDATE candidate_profiles SET {set_clause} WHERE user_id=?",
+                   list(updates.values()) + [user_id])
+
+    # Work experience (add new entries only)
+    for exp in data.get('work_experience', []):
+        db.execute(
+            '''INSERT INTO candidate_work_experience
+               (user_id, company, designation, start_date, end_date, is_current, description)
+               VALUES (?, ?, ?, ?, ?, ?, ?)''',
+            [user_id,
+             str(exp.get('company', ''))[:200],
+             str(exp.get('designation', ''))[:200],
+             str(exp.get('start_date', '')),
+             str(exp.get('end_date', '')),
+             1 if exp.get('is_current') else 0,
+             str(exp.get('description', ''))[:1000]])
+
+    # Education
+    for edu in data.get('education', []):
+        db.execute(
+            '''INSERT INTO candidate_education (user_id, degree, college, start_year, end_year)
+               VALUES (?, ?, ?, ?, ?)''',
+            [user_id,
+             str(edu.get('degree', ''))[:200],
+             str(edu.get('college', ''))[:200],
+             str(edu.get('start_year', '')),
+             str(edu.get('end_year', ''))])
+
+    # Skills — match against the skills catalogue; silently skip unknowns
+    if data.get('skills'):
+        all_skills = db.execute('SELECT id, name FROM skills').fetchall()
+        skill_map  = {s['name'].lower(): s['id'] for s in all_skills}
+        for sk in data['skills']:
+            sid = skill_map.get(sk.strip().lower())
+            if sid:
+                db.execute(
+                    'INSERT OR IGNORE INTO user_skills (user_id, skill_id) VALUES (?, ?)',
+                    [user_id, sid])
+
+    # Projects
+    for proj in data.get('projects', []):
+        db.execute(
+            '''INSERT INTO candidate_projects
+               (user_id, project_name, domain, description, project_url, year)
+               VALUES (?, ?, ?, ?, ?, ?)''',
+            [user_id,
+             str(proj.get('project_name', ''))[:200],
+             str(proj.get('domain', ''))[:100],
+             str(proj.get('description', ''))[:1000],
+             str(proj.get('project_url', ''))[:300],
+             str(proj.get('year', ''))])
+
+    # Certifications
+    for cert in data.get('certifications', []):
+        db.execute(
+            '''INSERT INTO candidate_certifications
+               (user_id, cert_name, issued_by, year, credential_url)
+               VALUES (?, ?, ?, ?, ?)''',
+            [user_id,
+             str(cert.get('cert_name', ''))[:200],
+             str(cert.get('issued_by', ''))[:200],
+             str(cert.get('year', '')),
+             str(cert.get('credential_url', ''))[:300]])
+
+    db.commit()
+    return jsonify({'ok': True, 'completion': _profile_completion_pct(user_id, db)})
+
+
 @app.route('/candidate/profile/upload-photo', methods=['POST'])
 @candidate_required
 def candidate_upload_photo():

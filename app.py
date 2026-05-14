@@ -205,10 +205,8 @@ if _USE_POSTGRES:
             conn = _get_pg_pool().getconn()
             try:
                 cur = conn.cursor()
-                # Tables and indexes: run as one transaction (idempotent IF NOT EXISTS)
+                # Tables: one transaction, all use IF NOT EXISTS
                 for stmt in _schema.TABLE_STMTS:
-                    cur.execute(stmt)
-                for stmt in _schema.INDEX_STMTS:
                     cur.execute(stmt)
                 cur.executemany(
                     "INSERT INTO skills (name, category, description) VALUES (%s, %s, %s)"
@@ -216,6 +214,16 @@ if _USE_POSTGRES:
                     _schema.SKILLS_DATA,
                 )
                 conn.commit()
+                # Indexes: each in its own savepoint — guards against race condition
+                # when multiple gunicorn workers run _init_postgres_schema concurrently
+                for stmt in _schema.INDEX_STMTS:
+                    try:
+                        cur.execute('SAVEPOINT _idx')
+                        cur.execute(stmt)
+                        conn.commit()
+                    except Exception:
+                        cur.execute('ROLLBACK TO SAVEPOINT _idx')
+                        conn.commit()
                 print('[STARTUP] PostgreSQL tables/indexes ready')
             except Exception as e:
                 conn.rollback()

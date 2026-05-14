@@ -26,6 +26,8 @@ if _app_env == 'production':
 else:
     load_dotenv('.env.development')
 
+# Re-read after load_dotenv so APP_ENV=development inside .env.development takes effect.
+_app_env = os.environ.get('APP_ENV', '')
 # True only in production — controls HTTPS-only cookies, HSTS header, etc.
 _is_production = (_app_env == 'production')
 

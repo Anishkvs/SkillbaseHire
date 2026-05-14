@@ -202,9 +202,8 @@ if _USE_POSTGRES:
             conn = _get_pg_pool().getconn()
             try:
                 cur = conn.cursor()
+                # Tables and indexes: run as one transaction (idempotent IF NOT EXISTS)
                 for stmt in _schema.TABLE_STMTS:
-                    cur.execute(stmt)
-                for stmt in _schema.MIGRATION_STMTS:
                     cur.execute(stmt)
                 for stmt in _schema.INDEX_STMTS:
                     cur.execute(stmt)
@@ -214,13 +213,26 @@ if _USE_POSTGRES:
                     _schema.SKILLS_DATA,
                 )
                 conn.commit()
-                print('[STARTUP] PostgreSQL schema ready')
+                print('[STARTUP] PostgreSQL tables/indexes ready')
             except Exception as e:
                 conn.rollback()
-                print(f'[STARTUP] Schema init error: {e}')
+                print(f'[STARTUP] Table init error: {e}')
                 _tb.print_exc()
-            finally:
-                _get_pg_pool().putconn(conn)
+
+            # Migrations: each in its own savepoint so one failure doesn't block others
+            applied = 0
+            for stmt in _schema.MIGRATION_STMTS:
+                try:
+                    cur.execute('SAVEPOINT _mig')
+                    cur.execute(stmt)
+                    conn.commit()
+                    applied += 1
+                except Exception as e:
+                    cur.execute('ROLLBACK TO SAVEPOINT _mig')
+                    conn.commit()
+                    print(f'[STARTUP] Migration skipped ({e}): {stmt[:60]}')
+            print(f'[STARTUP] {applied}/{len(_schema.MIGRATION_STMTS)} migrations applied')
+            _get_pg_pool().putconn(conn)
         except Exception as e:
             print(f'[STARTUP] Could not connect to PostgreSQL: {e}')
             _tb.print_exc()
@@ -1426,13 +1438,21 @@ def candidate_signup():
 
         db = get_db()
         raw_token, token_hash, expires_at = _gen_email_token()
-        cur = db.execute(
-            'INSERT INTO users (name, email, password_hash, role, email_verified,'
-            ' email_verification_token_hash, email_verification_expires_at, email_verification_sent_at)'
-            ' VALUES (?,?,?,?,0,?,?,?)',
-            [name, email, generate_password_hash(password), 'candidate',
-             token_hash, expires_at, datetime.utcnow()]
-        )
+        pw_hash = generate_password_hash(password)
+        try:
+            cur = db.execute(
+                'INSERT INTO users (name, email, password_hash, role, email_verified,'
+                ' email_verification_token_hash, email_verification_expires_at, email_verification_sent_at)'
+                ' VALUES (?,?,?,?,0,?,?,?)',
+                [name, email, pw_hash, 'candidate', token_hash, expires_at, datetime.utcnow()]
+            )
+        except Exception:
+            # Fallback: schema migration hasn't run yet — insert without verification columns
+            raw_token = None
+            cur = db.execute(
+                'INSERT INTO users (name, email, password_hash, role) VALUES (?,?,?,?)',
+                [name, email, pw_hash, 'candidate']
+            )
         uid = cur.lastrowid
         db.execute('''INSERT INTO candidate_profiles
                       (user_id, headline, location, bio, linkedin, github, phone, job_title, experience, resume_filename, work_status)
@@ -1442,10 +1462,11 @@ def candidate_signup():
             db.execute('INSERT OR IGNORE INTO user_skills (user_id, skill_id) VALUES (?,?)', [uid, sid])
         db.commit()
 
-        send_verification_email(email, name, raw_token)
+        if raw_token:
+            send_verification_email(email, name, raw_token)
         session.update({'user_id': uid, 'role': 'candidate', 'name': name,
-                        'email_verified': False, 'pending_email': email, 'pending_name': name})
-        return redirect(url_for('email_sent'))
+                        'email_verified': not raw_token, 'pending_email': email, 'pending_name': name})
+        return redirect(url_for('email_sent') if raw_token else url_for('jobs'))
 
     return render_template('candidate_signup.html', user=None, all_skills=all_skills,
                            form={}, sel_skills=[])
@@ -1468,7 +1489,7 @@ def candidate_login():
             cp = get_db().execute('SELECT profile_photo FROM candidate_profiles WHERE user_id=?', [user['id']]).fetchone()
             session.update({'user_id': user['id'], 'role': 'candidate', 'name': user['name'],
                             'profile_photo': cp['profile_photo'] if cp else None,
-                            'email_verified': bool(user['email_verified'])})
+                            'email_verified': bool(user.get('email_verified', 0))})
             flash(f'Welcome back, {user["name"]}!', 'success')
             return redirect(url_for('jobs'))
         flash('Invalid email or password.', 'error')
@@ -2433,13 +2454,20 @@ def recruiter_signup():
 
         db = get_db()
         raw_token, token_hash, expires_at = _gen_email_token()
-        cur = db.execute(
-            'INSERT INTO users (name, email, password_hash, role, email_verified,'
-            ' email_verification_token_hash, email_verification_expires_at, email_verification_sent_at)'
-            ' VALUES (?,?,?,?,0,?,?,?)',
-            [name, email, generate_password_hash(password), 'recruiter',
-             token_hash, expires_at, datetime.utcnow()]
-        )
+        pw_hash = generate_password_hash(password)
+        try:
+            cur = db.execute(
+                'INSERT INTO users (name, email, password_hash, role, email_verified,'
+                ' email_verification_token_hash, email_verification_expires_at, email_verification_sent_at)'
+                ' VALUES (?,?,?,?,0,?,?,?)',
+                [name, email, pw_hash, 'recruiter', token_hash, expires_at, datetime.utcnow()]
+            )
+        except Exception:
+            raw_token = None
+            cur = db.execute(
+                'INSERT INTO users (name, email, password_hash, role) VALUES (?,?,?,?)',
+                [name, email, pw_hash, 'recruiter']
+            )
         uid = cur.lastrowid
         db.execute('''INSERT INTO recruiter_profiles
                       (user_id, company, company_bio, website, phone, job_title, company_size, industry, company_location)
@@ -2447,10 +2475,11 @@ def recruiter_signup():
                    [uid, company, company_bio, website, phone, job_title, company_size, industry, company_location])
         db.commit()
 
-        send_verification_email(email, name, raw_token)
+        if raw_token:
+            send_verification_email(email, name, raw_token)
         session.update({'user_id': uid, 'role': 'recruiter', 'name': name,
-                        'email_verified': False, 'pending_email': email, 'pending_name': name})
-        return redirect(url_for('email_sent'))
+                        'email_verified': not raw_token, 'pending_email': email, 'pending_name': name})
+        return redirect(url_for('email_sent') if raw_token else url_for('recruiter_dashboard'))
 
     return render_template('recruiter_signup.html', user=None, form={})
 
@@ -2472,7 +2501,7 @@ def recruiter_login():
             rp = get_db().execute('SELECT profile_photo FROM recruiter_profiles WHERE user_id=?', [user['id']]).fetchone()
             session.update({'user_id': user['id'], 'role': 'recruiter', 'name': user['name'],
                             'profile_photo': rp['profile_photo'] if rp else None,
-                            'email_verified': bool(user['email_verified'])})
+                            'email_verified': bool(user.get('email_verified', 0))})
             flash(f'Welcome back, {user["name"]}!', 'success')
             return redirect(url_for('recruiter_dashboard'))
         flash('Invalid email or password.', 'error')
@@ -3000,7 +3029,7 @@ def candidate_detail(candidate_id):
 
     if session.get('role') == 'recruiter':
         viewer = db.execute('SELECT email_verified FROM users WHERE id=?', [session['user_id']]).fetchone()
-        if viewer and not viewer['email_verified']:
+        if viewer and not viewer.get('email_verified', 0):
             return render_template('candidate_detail.html', candidate=None, skills=[],
                                    blocked_recruiter=True, user=get_current_user())
 
@@ -3127,20 +3156,24 @@ def email_sent():
 def verify_email(token):
     token_hash = hashlib.sha256(token.encode()).hexdigest()
     db = get_db()
-    user = db.execute(
-        'SELECT * FROM users WHERE email_verification_token_hash=?', [token_hash]
-    ).fetchone()
+    try:
+        user = db.execute(
+            'SELECT * FROM users WHERE email_verification_token_hash=?', [token_hash]
+        ).fetchone()
+    except Exception:
+        flash('Verification is temporarily unavailable. Please try again shortly.', 'error')
+        return redirect(url_for('home'))
     if not user:
         flash('This verification link is invalid or has already been used. Please request a new one.', 'error')
         return redirect(url_for('home'))
-    if user['email_verified']:
+    if user.get('email_verified', 0):
         flash('Your email is already verified. Please log in.', 'success')
         session.pop('pending_email', None)
         session.pop('pending_name', None)
         session.update({'user_id': user['id'], 'role': user['role'], 'name': user['name'],
                         'email_verified': True})
         return redirect(url_for('recruiter_dashboard') if user['role'] == 'recruiter' else url_for('candidate_profile'))
-    expires_at = user['email_verification_expires_at']
+    expires_at = user.get('email_verification_expires_at')
     if expires_at:
         try:
             if isinstance(expires_at, str):
@@ -3181,7 +3214,7 @@ def resend_verification():
     if not user:
         flash('No pending verification found. Please sign up again.', 'error')
         return redirect(url_for('home'))
-    if user['email_verified']:
+    if user.get('email_verified', 0):
         flash('Your email is already verified.', 'success')
         dest = url_for('candidate_profile') if user['role'] == 'candidate' else url_for('recruiter_dashboard')
         return redirect(dest)

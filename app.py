@@ -252,6 +252,18 @@ MAX_RESUME_SIZE = 1 * 1024 * 1024   # 1 MB
 MAX_PHOTO_SIZE  = 100 * 1024         # 100 KB
 
 
+class _SQLiteRow(dict):
+    """Dict-based SQLite row that also supports integer positional access like sqlite3.Row."""
+    def __getitem__(self, key):
+        if isinstance(key, int):
+            return list(self.values())[key]
+        return super().__getitem__(key)
+
+
+def _sqlite_row_factory(cur, row):
+    return _SQLiteRow(zip([c[0] for c in cur.description], row))
+
+
 def get_db():
     db = getattr(g, '_database', None)
     if db is None:
@@ -261,7 +273,7 @@ def get_db():
             db = g._database = _PGConn(conn)
         else:
             db = g._database = sqlite3.connect(DATABASE)
-            db.row_factory = lambda cur, row: dict(zip([c[0] for c in cur.description], row))
+            db.row_factory = _sqlite_row_factory
     return db
 
 

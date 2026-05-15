@@ -3533,7 +3533,9 @@ function phVerifyOtp() {
 })();
 </script>
 
-<form action="{{ url_for('logout') }}" method="post" id="ndLogoutForm" style="display:none"></form>
+<form action="{{ url_for('logout') }}" method="post" id="ndLogoutForm" style="display:none">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+</form>
 
 <div class="nd-mo" id="ndLogoutModal" onclick="if(event.target===this)hideLogoutModal()">
   <div class="nd-mc">

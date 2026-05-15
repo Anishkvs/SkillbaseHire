@@ -1238,12 +1238,81 @@ def verify_skill(skill_id):
         }
         return redirect(url_for('exam_result', skill_id=skill_id))
 
-    # GET — show active exam; add skill to profile if not already present
+    # GET — redirect to result if already terminated this session
+    if session.get('exam_result', {}).get('skill_id') == skill_id:
+        return redirect(url_for('exam_result', skill_id=skill_id))
+
+    # Show active exam; add skill to profile if not already present
     db.execute('INSERT OR IGNORE INTO user_skills (user_id, skill_id) VALUES (?,?)',
                [session['user_id'], skill_id])
     db.commit()
     return render_template('verify_skill.html', skill=skill, questions=questions,
                            meta=meta, user=get_current_user())
+
+
+@app.route('/skills/verify/<int:skill_id>/auto-submit', methods=['POST'])
+@candidate_required
+def exam_auto_submit(skill_id):
+    db = get_db()
+    skill = db.execute('SELECT * FROM skills WHERE id=?', [skill_id]).fetchone()
+    if not skill:
+        return jsonify({'ok': False, 'error': 'Skill not found'}), 404
+
+    db_rows = db.execute(
+        'SELECT * FROM skill_questions WHERE skill_id=? ORDER BY id', [skill_id]
+    ).fetchall()
+    if db_rows:
+        questions = [_db_q_to_quiz(r) for r in db_rows]
+        meta = dict(SKILL_META.get(skill['name'], DEFAULT_META))
+        meta['questions'] = len(questions)
+    else:
+        questions = QUIZ_BANK.get(skill['name'], DEFAULT_QUESTIONS(skill['name']))
+        meta = SKILL_META.get(skill['name'], DEFAULT_META)
+
+    data = request.get_json(silent=True) or {}
+    reason       = data.get('reason', 'Tab switching limit exceeded')
+    time_elapsed = int(data.get('time_elapsed', 0))
+    answers      = data.get('answers', {})
+
+    score = sum(
+        1 for i, q in enumerate(questions)
+        if answers.get(f'q{i}') == q['answer']
+    )
+    total = len(questions)
+    pct   = int((score / total) * 100) if total else 0
+    mins, secs = divmod(time_elapsed, 60)
+
+    existing = db.execute(
+        'SELECT id FROM user_skills WHERE user_id=? AND skill_id=?',
+        [session['user_id'], skill_id]
+    ).fetchone()
+    if existing:
+        db.execute(
+            'UPDATE user_skills SET verified=0, score=?, correct_answers=?, '
+            'time_taken_secs=?, terminated_reason=? WHERE user_id=? AND skill_id=?',
+            [pct, score, time_elapsed, reason, session['user_id'], skill_id]
+        )
+    else:
+        db.execute(
+            'INSERT INTO user_skills (user_id, skill_id, verified, score, '
+            'correct_answers, time_taken_secs, terminated_reason) VALUES (?,?,0,?,?,?,?)',
+            [session['user_id'], skill_id, pct, score, time_elapsed, reason]
+        )
+    db.commit()
+
+    session['exam_result'] = {
+        'skill_id':          skill_id,
+        'skill_name':        skill['name'],
+        'score':             pct,
+        'correct':           score,
+        'total':             total,
+        'verified':          False,
+        'passing':           meta['passing'],
+        'duration':          meta['duration'],
+        'time_taken':        f'{mins}:{secs:02d}',
+        'terminated_reason': reason,
+    }
+    return jsonify({'ok': True, 'redirect': url_for('exam_result', skill_id=skill_id)})
 
 
 @app.route('/skills/verify/<int:skill_id>/result')

@@ -143,6 +143,19 @@
   {% else %}
   <!-- ══════════════ FAIL ══════════════ -->
 
+    {% if result.terminated_reason %}
+    <!-- Terminated banner -->
+    <div class="er-card" style="border-left:4px solid #F59E0B;background:#FFFBEB">
+      <div style="display:flex;align-items:flex-start;gap:.75rem">
+        <svg style="flex-shrink:0;margin-top:.125rem;color:#D97706" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <div>
+          <div style="font-weight:600;color:#92400E;margin-bottom:.25rem">Exam Auto-Submitted</div>
+          <div style="color:#78350F;font-size:.875rem">{{ result.terminated_reason }}. Your answers at the time of termination have been saved and scored.</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
     <!-- Card 1: Verdict -->
     <div class="er-card er-card-fail">
       <div class="er-verdict-ring er-ring-fail">
@@ -150,11 +163,11 @@
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </div>
-      <h1 class="er-verdict-title er-fail-text">Assessment Not Passed</h1>
-      <p class="er-verdict-sub">You scored <strong>{{ result.score }}%</strong> — the passing score is <strong>{{ result.passing }}%</strong>. Don't give up!</p>
+      <h1 class="er-verdict-title er-fail-text">{% if result.terminated_reason %}Exam Terminated{% else %}Assessment Not Passed{% endif %}</h1>
+      <p class="er-verdict-sub">{% if result.terminated_reason %}Your exam was ended due to a security violation. You scored <strong>{{ result.score }}%</strong>.{% else %}You scored <strong>{{ result.score }}%</strong> — the passing score is <strong>{{ result.passing }}%</strong>. Don't give up!{% endif %}</p>
       <div class="er-status-pill er-pill-fail">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        Not Verified
+        {% if result.terminated_reason %}Terminated{% else %}Not Verified{% endif %}
       </div>
     </div>
 

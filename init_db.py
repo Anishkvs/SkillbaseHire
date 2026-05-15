@@ -324,8 +324,9 @@ MIGRATION_STMTS = [
     # applications
     "ALTER TABLE applications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP",
     # user_skills
-    "ALTER TABLE user_skills ADD COLUMN IF NOT EXISTS correct_answers INTEGER",
-    "ALTER TABLE user_skills ADD COLUMN IF NOT EXISTS time_taken_secs INTEGER",
+    "ALTER TABLE user_skills ADD COLUMN IF NOT EXISTS correct_answers   INTEGER",
+    "ALTER TABLE user_skills ADD COLUMN IF NOT EXISTS time_taken_secs   INTEGER",
+    "ALTER TABLE user_skills ADD COLUMN IF NOT EXISTS terminated_reason TEXT DEFAULT NULL",
     # candidate_projects
     "ALTER TABLE candidate_projects ADD COLUMN IF NOT EXISTS year TEXT DEFAULT ''",
     # notifications

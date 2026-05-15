@@ -377,13 +377,15 @@
 </div>
 
 <script>
-const TOTAL = {{ questions | length }};
+const TOTAL        = {{ questions | length }};
 const DURATION_SEC = {{ meta.duration }} * 60;
+const SKILL_ID     = {{ skill.id }};
 
 let current = 0;
 let answered = new Array(TOTAL).fill(false);
 let flagged  = new Array(TOTAL).fill(false);
-let tabViolations = 0;
+let tabViolations  = 0;
+let tabSwitchCount = 0;
 let timerSec = DURATION_SEC;
 let timerInterval;
 let startTime;
@@ -972,7 +974,45 @@ function returnToFullscreen() {
     });
 }
 
-/* ── Auto-end exam on 3rd violation ── */
+/* ── Auto-submit via AJAX on tab-switch limit exceeded ── */
+async function autoSubmitExam(reason) {
+  if (!examActive) return;
+  examActive = false;
+  clearInterval(timerInterval);
+  document.getElementById('fsModal').style.display   = 'none';
+  document.getElementById('autoModal').style.display = 'none';
+  document.getElementById('submitModal').classList.remove('ea-modal-open');
+  lockExamUI();
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  if (camStream) camStream.getTracks().forEach(t => t.stop());
+
+  const timeElapsed = startTime ? Math.round((Date.now() - startTime) / 1000) : 0;
+  const answers = {};
+  document.querySelectorAll('#examForm input[type="radio"]:checked').forEach(inp => {
+    answers[inp.name] = parseInt(inp.value, 10);
+  });
+  const csrfToken = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+
+  try {
+    const resp = await fetch(`/skills/verify/${SKILL_ID}/auto-submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+      body: JSON.stringify({ reason, time_elapsed: timeElapsed, answers })
+    });
+    const json = await resp.json();
+    if (json.ok && json.redirect) {
+      window.location.href = json.redirect;
+      return;
+    }
+  } catch (_) { /* fall through to form submit */ }
+
+  // Fallback: plain form submit so the user never gets stuck
+  document.getElementById('integrityEnded').value   = '1';
+  document.getElementById('timeElapsed').value      = timeElapsed;
+  document.getElementById('examForm').submit();
+}
+
+/* ── Auto-end exam on 3rd fullscreen-exit violation ── */
 function endExamDueToViolation() {
   examActive = false;
   clearInterval(timerInterval);
@@ -1006,10 +1046,25 @@ document.addEventListener('paste', e => { if (examActive) { e.preventDefault(); 
 document.addEventListener('cut',   e => { if (examActive) { e.preventDefault(); logIntegrityEvent('Ctrl+X'); } });
 document.addEventListener('keydown', handleExamKeydown);
 
-// Tab / app switch → counts as a violation
+// Tab / app switch — tracked separately from fullscreen exits
 document.addEventListener('visibilitychange', () => {
   if (!examActive || !document.hidden) return;
-  handleSecurityViolation('tab_switch');
+  tabSwitchCount++;
+  logSecurityEvent('tab_switch', { tab_switch_count: tabSwitchCount });
+  if (tabSwitchCount > 2) {
+    // 3rd+ tab switch: AJAX auto-submit, redirect to result
+    autoSubmitExam('Tab switching limit exceeded');
+    return;
+  }
+  // 1st / 2nd tab switch: show warning modal (deduplicated with fullscreen exit)
+  const now = Date.now();
+  if (now - lastViolationTime < 800) return;
+  lastViolationTime = now;
+  fsExitCount++;
+  document.getElementById('fsExitCountInput').value = fsExitCount;
+  lockExamUI();
+  updateFsBadge(false);
+  showFsModal();
 });
 
 // Window blur → log only (too noisy for violation count)

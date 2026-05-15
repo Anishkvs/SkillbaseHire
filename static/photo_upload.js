@@ -188,7 +188,7 @@
       this._circle.innerHTML = '';
       if (this.photo) {
         var img = document.createElement('img');
-        img.src = '/static/uploads/photos/' + this.photo;
+        img.src = '/photo/' + this.photo;
         img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;';
         img.onerror = () => { this.photo = null; this._setAvatarContent(); };
         this._circle.appendChild(img);

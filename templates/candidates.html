@@ -409,7 +409,7 @@
             <!-- Avatar -->
             <a href="{{ url_for('candidate_detail', candidate_id=c.id) }}" class="fcp-av" aria-label="{{ c.name }}">
               {% if c.profile_photo %}
-                <img src="/static/uploads/photos/{{ c.profile_photo }}" alt="{{ c.name }}">
+                <img src="/photo/{{ c.profile_photo }}" alt="{{ c.name }}">
               {% else %}
                 {{ c.name[0].upper() }}
               {% endif %}

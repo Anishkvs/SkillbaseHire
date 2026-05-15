@@ -61,7 +61,7 @@
            aria-label="View my profile">
           <div class="nav-avatar">
             {% if session.get('profile_photo') %}
-              <img src="/static/uploads/photos/{{ session.get('profile_photo') }}" class="avatar-img" alt="{{ session.get('name','') }}">
+              <img src="/photo/{{ session.get('profile_photo') }}" class="avatar-img" alt="{{ session.get('name','') }}">
             {% else %}
               {{ session.get('name','?')[0].upper() }}
             {% endif %}

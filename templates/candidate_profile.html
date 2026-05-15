@@ -806,7 +806,7 @@ textarea.fc{resize:vertical;min-height:80px}
     <a href="{{ url_for('candidate_profile') }}">
       <div class="tb-avatar" title="{{ user.name }}" style="overflow:hidden">
         {% if profile and profile.profile_photo %}
-          <img src="/static/uploads/photos/{{ profile.profile_photo }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" alt="{{ user.name }}">
+          <img src="/photo/{{ profile.profile_photo }}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" alt="{{ user.name }}">
         {% else %}
           {{ (user.name or '?')[0].upper() if user else '?' }}
         {% endif %}
@@ -1700,6 +1700,7 @@ textarea.fc{resize:vertical;min-height:80px}
           </div>
         </div>
         <div class="card-body">
+          <div id="resumeCardBody">
           {% if profile and profile.resume_filename %}
           <div class="resume-file">
             <div class="resume-icon"><svg width="22" height="22" fill="none" stroke="var(--red)" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
@@ -1714,10 +1715,18 @@ textarea.fc{resize:vertical;min-height:80px}
               <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               Download
             </a>
+            {% set rname = profile.resume_original_name or profile.resume_filename or '' %}
+            {% if rname.lower().endswith('.pdf') %}
             <a href="{{ url_for('download_resume') }}" target="_blank" class="btn btn-ghost btn-sm btn-full" style="color:var(--accent)">
               <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               Preview Resume
             </a>
+            {% else %}
+            <span class="btn btn-ghost btn-sm btn-full" style="color:var(--text-muted);cursor:default;pointer-events:none" title="Preview is available only for PDF resumes. Please download the file to view.">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              Preview (PDF only)
+            </span>
+            {% endif %}
             <label for="resumeFileInput" class="btn btn-outline btn-sm btn-full" style="cursor:pointer">
               <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               Replace Resume
@@ -1726,13 +1735,10 @@ textarea.fc{resize:vertical;min-height:80px}
               <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
               Import &amp; Update Profile
             </a>
-            <form method="post" action="{{ url_for('candidate_profile') }}" onsubmit="return confirm('Delete your resume?')">
-              <input type="hidden" name="delete_resume" value="1">
-              <button type="submit" class="btn btn-ghost btn-sm btn-full" style="color:var(--red)">
-                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
-                Delete Resume
-              </button>
-            </form>
+            <button type="button" class="btn btn-ghost btn-sm btn-full" style="color:var(--red)" onclick="deleteResume()">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+              Delete Resume
+            </button>
           </div>
           {% else %}
           <div class="empty-state" style="padding:1.25rem 0">
@@ -1747,6 +1753,7 @@ textarea.fc{resize:vertical;min-height:80px}
           </div>
           {% endif %}
           <div id="resumeErr" style="display:none;margin-top:.5rem;font-size:.8125rem;color:var(--red);padding:.4375rem .625rem;background:var(--red-light);border-radius:var(--radius-xs)"></div>
+          </div><!-- #resumeCardBody -->
         </div>
       </div>
 
@@ -1951,16 +1958,66 @@ function toggleEdit(id) {
     }
   }
 }
+function _resumeEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function _resumeRenderFile(originalName) {
+  var isPdf = originalName.toLowerCase().endsWith('.pdf');
+  var previewBtn = isPdf
+    ? '<a href="/candidate/resume/download" target="_blank" class="btn btn-ghost btn-sm btn-full" style="color:var(--accent)"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Preview Resume</a>'
+    : '<span class="btn btn-ghost btn-sm btn-full" style="color:var(--text-muted);cursor:default;pointer-events:none" title="Preview is available only for PDF resumes. Please download the file to view."><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Preview (PDF only)</span>';
+  document.getElementById('resumeCardBody').innerHTML =
+    '<div class="resume-file"><div class="resume-icon"><svg width="22" height="22" fill="none" stroke="var(--red)" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div><div class="resume-info"><div class="resume-fname">' + _resumeEsc(originalName) + '</div><div class="resume-meta">Uploaded to SkillBaseHire</div><div class="resume-visibility"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>Visible to Recruiters</div></div></div>'
+    + '<div class="resume-actions">'
+    + '<a href="/candidate/resume/download?dl=1" class="btn btn-ghost btn-sm btn-full"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download</a>'
+    + previewBtn
+    + '<label for="resumeFileInput" class="btn btn-outline btn-sm btn-full" style="cursor:pointer"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Replace Resume</label>'
+    + '<a href="/candidate/resume/import" class="btn btn-primary btn-sm btn-full"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg> Import &amp; Update Profile</a>'
+    + '<button type="button" class="btn btn-ghost btn-sm btn-full" style="color:var(--red)" onclick="deleteResume()"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg> Delete Resume</button>'
+    + '</div>'
+    + '<div id="resumeErr" style="display:none;margin-top:.5rem;font-size:.8125rem;color:var(--red);padding:.4375rem .625rem;background:var(--red-light);border-radius:var(--radius-xs)"></div>';
+}
+
+function _resumeRenderEmpty() {
+  document.getElementById('resumeCardBody').innerHTML =
+    '<div class="empty-state" style="padding:1.25rem 0"><svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>Upload your resume to improve recruiter visibility.</p><label for="resumeFileInput" class="btn btn-primary btn-sm" style="cursor:pointer">Upload Resume</label><a href="/candidate/resume/import" class="btn btn-outline btn-sm" style="margin-top:.5rem;display:inline-flex;align-items:center;gap:.35rem;text-decoration:none"><svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg> Import Resume &amp; Auto-fill Profile</a><p style="font-size:.7rem;color:var(--text-muted);margin-top:.5rem">Supported formats: PDF, DOC, DOCX &nbsp;&middot;&nbsp; Maximum size: 1 MB</p></div>'
+    + '<div id="resumeErr" style="display:none;margin-top:.5rem;font-size:.8125rem;color:var(--red);padding:.4375rem .625rem;background:var(--red-light);border-radius:var(--radius-xs)"></div>';
+}
+
 function handleResume(input) {
-  const allowed = ['pdf','doc','docx'];
-  const file = input.files[0];
-  const errEl = document.getElementById('resumeErr');
+  var scrollY = window.scrollY;
+  var allowed = ['pdf','doc','docx'];
+  var file = input.files[0];
   if (!file) return;
-  const ext = file.name.split('.').pop().toLowerCase();
+  var ext = file.name.split('.').pop().toLowerCase();
+  var errEl = document.getElementById('resumeErr');
   if (!allowed.includes(ext)) { errEl.style.display='block'; errEl.textContent='Only PDF, DOC, and DOCX resumes up to 1 MB are allowed.'; input.value=''; return; }
   if (file.size > 1*1024*1024) { errEl.style.display='block'; errEl.textContent='Only PDF, DOC, and DOCX resumes up to 1 MB are allowed.'; input.value=''; return; }
-  errEl.style.display='none';
-  document.getElementById('resumeUploadForm').submit();
+  if (errEl) errEl.style.display='none';
+  var form = document.getElementById('resumeUploadForm');
+  var data = new FormData(form);
+  var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+  if (csrfMeta) data.set('csrf_token', csrfMeta.content);
+  fetch(form.action, { method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}, body:data })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (res.ok) { _resumeRenderFile(res.original_name); }
+      else {
+        var e = document.getElementById('resumeErr');
+        if (e) { e.textContent = res.error || 'Upload failed.'; e.style.display='block'; }
+      }
+      requestAnimationFrame(function(){ window.scrollTo(0, scrollY); });
+    })
+    .catch(function(){ form.submit(); });
+}
+
+function deleteResume() {
+  if (!confirm('Delete your resume?')) return;
+  var scrollY = window.scrollY;
+  var csrfToken = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+  fetch('/candidate/profile/delete-resume', { method:'POST', headers:{'X-CSRFToken':csrfToken,'X-Requested-With':'XMLHttpRequest'} })
+    .then(function(r){ return r.json(); })
+    .then(function(res){ if (res.ok) _resumeRenderEmpty(); requestAnimationFrame(function(){ window.scrollTo(0, scrollY); }); })
+    .catch(function(){ location.reload(); });
 }
 function saveVisibility(checkbox, type) {
   // Visual feedback only — backend toggle can be wired when needed

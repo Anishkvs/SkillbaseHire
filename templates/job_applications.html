@@ -246,7 +246,7 @@
           <!-- Avatar -->
           <a href="{{ url_for('candidate_detail', candidate_id=app.candidate_id) }}" class="ja-avatar">
             {% if app.profile_photo %}
-              <img src="/static/uploads/photos/{{ app.profile_photo }}" alt="{{ app.candidate_name }}">
+              <img src="/photo/{{ app.profile_photo }}" alt="{{ app.candidate_name }}">
             {% else %}
               {{ app.candidate_name[0].upper() }}
             {% endif %}

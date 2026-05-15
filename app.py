@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, g, jsonify, Response, send_file
+from flask import Flask, render_template, request, redirect, url_for, session, flash, g, jsonify, Response, send_file, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect, CSRFError
@@ -773,6 +773,38 @@ def parse_skills_data(raw):
         if len(parts) == 2:
             result.append({'name': parts[0], 'verified': parts[1] == '1'})
     return result
+
+
+# ── Profile photo serve (DB-backed, survives ephemeral filesystem) ────────────
+
+_PHOTO_MIME = {'jpg': 'image/jpeg', 'jpeg': 'image/jpeg', 'png': 'image/png', 'webp': 'image/webp'}
+
+@app.route('/photo/<path:filename>')
+def serve_profile_photo(filename):
+    db = get_db()
+    row = None
+    try:
+        if filename.startswith('candidate_'):
+            row = db.execute(
+                'SELECT profile_photo_data, profile_photo_mime FROM candidate_profiles WHERE profile_photo=?',
+                [filename]).fetchone()
+        elif filename.startswith('recruiter_'):
+            row = db.execute(
+                'SELECT profile_photo_data, profile_photo_mime FROM recruiter_profiles WHERE profile_photo=?',
+                [filename]).fetchone()
+    except Exception:
+        pass
+    if row and row.get('profile_photo_data'):
+        raw = row['profile_photo_data']
+        if isinstance(raw, memoryview):
+            raw = raw.tobytes().decode('ascii')
+        mime = row.get('profile_photo_mime') or 'image/jpeg'
+        return send_file(io.BytesIO(base64.b64decode(raw)), mimetype=mime)
+    # Fallback: disk (for photos uploaded before DB migration)
+    disk_path = os.path.join(PHOTO_UPLOAD_FOLDER, filename)
+    if os.path.exists(disk_path):
+        return send_from_directory(PHOTO_UPLOAD_FOLDER, filename)
+    return ('', 404)
 
 
 # ── Home ─────────────────────────────────────────────────────────────────────
@@ -1890,26 +1922,24 @@ def candidate_profile():
 @app.route('/candidate/profile/upload-resume', methods=['POST'])
 @candidate_required
 def upload_resume():
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    _err_msg = 'Only PDF, DOC, and DOCX resumes up to 1 MB are allowed.'
+    def _err(msg):
+        if is_ajax: return jsonify({'ok': False, 'error': msg})
+        flash(msg, 'error'); return redirect(url_for('candidate_profile'))
     if 'resume' not in request.files:
-        flash('No file selected.', 'error')
-        return redirect(url_for('candidate_profile'))
+        return _err('No file selected.')
     file = request.files['resume']
     if not file or not file.filename:
-        flash('No file selected.', 'error')
-        return redirect(url_for('candidate_profile'))
+        return _err('No file selected.')
     ext = file.filename.rsplit('.', 1)[-1].lower() if '.' in file.filename else ''
     if ext not in ALLOWED_RESUME_EXT:
-        flash('Only PDF, DOC, and DOCX resumes up to 1 MB are allowed.', 'error')
-        return redirect(url_for('candidate_profile'))
-    file.seek(0, 2)
-    size = file.tell()
-    file.seek(0)
+        return _err(_err_msg)
+    file.seek(0, 2); size = file.tell(); file.seek(0)
     if size > MAX_RESUME_SIZE:
-        flash('Only PDF, DOC, and DOCX resumes up to 1 MB are allowed.', 'error')
-        return redirect(url_for('candidate_profile'))
+        return _err(_err_msg)
     if not validate_file_magic(file, ALLOWED_RESUME_EXT):
-        flash('File content does not match the declared format.', 'error')
-        return redirect(url_for('candidate_profile'))
+        return _err('File content does not match the declared format.')
     file_bytes = file.read()
     encoded = base64.b64encode(file_bytes).decode('ascii')
     original_name = secure_filename(file.filename)
@@ -1919,8 +1949,28 @@ def upload_resume():
         'UPDATE candidate_profiles SET resume_filename=?, resume_data=?, resume_original_name=? WHERE user_id=?',
         [filename, encoded, original_name, session['user_id']])
     db.commit()
+    if is_ajax:
+        return jsonify({'ok': True, 'filename': filename, 'original_name': original_name})
     flash('Resume uploaded successfully!', 'success')
     return redirect(url_for('candidate_profile'))
+
+
+@app.route('/candidate/profile/delete-resume', methods=['POST'])
+@candidate_required
+def delete_resume_ajax():
+    db = get_db()
+    old = db.execute('SELECT resume_filename FROM candidate_profiles WHERE user_id=?',
+                     [session['user_id']]).fetchone()
+    if old and old.get('resume_filename'):
+        try:
+            os.remove(os.path.join(RESUME_UPLOAD_FOLDER, old['resume_filename']))
+        except OSError:
+            pass
+    db.execute(
+        'UPDATE candidate_profiles SET resume_filename=NULL, resume_data=NULL, resume_original_name=NULL WHERE user_id=?',
+        [session['user_id']])
+    db.commit()
+    return jsonify({'ok': True})
 
 
 @app.route('/candidate/resume/download')
@@ -2179,18 +2229,13 @@ def candidate_upload_photo():
     file.seek(0)
     if not validate_file_magic(file, ALLOWED_PHOTO_EXT):
         return ('Only JPG, JPEG, PNG, and WEBP images up to 100 KB are allowed.', 400)
-    os.makedirs(PHOTO_UPLOAD_FOLDER, exist_ok=True)
     filename = f"candidate_{session['user_id']}.{ext}"
-    old = db.execute('SELECT profile_photo FROM candidate_profiles WHERE user_id=?',
-                     [session['user_id']]).fetchone()
-    if old and old['profile_photo']:
-        try:
-            os.remove(os.path.join(PHOTO_UPLOAD_FOLDER, old['profile_photo']))
-        except OSError:
-            pass
-    file.save(os.path.join(PHOTO_UPLOAD_FOLDER, filename))
-    db.execute('UPDATE candidate_profiles SET profile_photo=? WHERE user_id=?',
-               [filename, session['user_id']])
+    mime = _PHOTO_MIME.get(ext, 'image/jpeg')
+    file_bytes = file.read()
+    encoded = base64.b64encode(file_bytes).decode('ascii')
+    db.execute(
+        'UPDATE candidate_profiles SET profile_photo=?, profile_photo_data=?, profile_photo_mime=? WHERE user_id=?',
+        [filename, encoded, mime, session['user_id']])
     db.commit()
     session['profile_photo'] = filename
     return ('OK', 200)
@@ -2211,18 +2256,13 @@ def recruiter_upload_photo():
     file.seek(0)
     if not validate_file_magic(file, ALLOWED_PHOTO_EXT):
         return ('Only JPG, JPEG, PNG, and WEBP images up to 100 KB are allowed.', 400)
-    os.makedirs(PHOTO_UPLOAD_FOLDER, exist_ok=True)
     filename = f"recruiter_{session['user_id']}.{ext}"
-    old = db.execute('SELECT profile_photo FROM recruiter_profiles WHERE user_id=?',
-                     [session['user_id']]).fetchone()
-    if old and old['profile_photo']:
-        try:
-            os.remove(os.path.join(PHOTO_UPLOAD_FOLDER, old['profile_photo']))
-        except OSError:
-            pass
-    file.save(os.path.join(PHOTO_UPLOAD_FOLDER, filename))
-    db.execute('UPDATE recruiter_profiles SET profile_photo=? WHERE user_id=?',
-               [filename, session['user_id']])
+    mime = _PHOTO_MIME.get(ext, 'image/jpeg')
+    file_bytes = file.read()
+    encoded = base64.b64encode(file_bytes).decode('ascii')
+    db.execute(
+        'UPDATE recruiter_profiles SET profile_photo=?, profile_photo_data=?, profile_photo_mime=? WHERE user_id=?',
+        [filename, encoded, mime, session['user_id']])
     db.commit()
     session['profile_photo'] = filename
     return ('OK', 200)
@@ -2234,13 +2274,9 @@ def candidate_remove_photo():
     db = get_db()
     row = db.execute('SELECT profile_photo FROM candidate_profiles WHERE user_id=?',
                      [session['user_id']]).fetchone()
-    if row and row['profile_photo']:
-        try:
-            os.remove(os.path.join(PHOTO_UPLOAD_FOLDER, row['profile_photo']))
-        except OSError:
-            pass
-    db.execute('UPDATE candidate_profiles SET profile_photo=NULL WHERE user_id=?',
-               [session['user_id']])
+    db.execute(
+        'UPDATE candidate_profiles SET profile_photo=NULL, profile_photo_data=NULL, profile_photo_mime=NULL WHERE user_id=?',
+        [session['user_id']])
     db.commit()
     session.pop('profile_photo', None)
     return ('OK', 200)
@@ -2252,13 +2288,9 @@ def recruiter_remove_photo():
     db = get_db()
     row = db.execute('SELECT profile_photo FROM recruiter_profiles WHERE user_id=?',
                      [session['user_id']]).fetchone()
-    if row and row['profile_photo']:
-        try:
-            os.remove(os.path.join(PHOTO_UPLOAD_FOLDER, row['profile_photo']))
-        except OSError:
-            pass
-    db.execute('UPDATE recruiter_profiles SET profile_photo=NULL WHERE user_id=?',
-               [session['user_id']])
+    db.execute(
+        'UPDATE recruiter_profiles SET profile_photo=NULL, profile_photo_data=NULL, profile_photo_mime=NULL WHERE user_id=?',
+        [session['user_id']])
     db.commit()
     session.pop('profile_photo', None)
     return ('OK', 200)

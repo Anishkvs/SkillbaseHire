@@ -53,7 +53,7 @@
           <!-- Avatar -->
           <div class="cd-avatar" aria-label="{{ candidate.name }}" style="overflow:hidden">
             {% if profile_extra and profile_extra.profile_photo %}
-              <img src="/static/uploads/photos/{{ profile_extra.profile_photo }}" class="avatar-img" alt="{{ candidate.name }}">
+              <img src="/photo/{{ profile_extra.profile_photo }}" class="avatar-img" alt="{{ candidate.name }}">
             {% else %}
               {{ candidate.name[0].upper() }}
             {% endif %}

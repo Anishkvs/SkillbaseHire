@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, g, jsonify, Response
+from flask import Flask, render_template, request, redirect, url_for, session, flash, g, jsonify, Response, send_file
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect, CSRFError
@@ -6,6 +6,8 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from dotenv import load_dotenv
 import logging
+import base64
+import io
 import sqlite3
 import os
 import re
@@ -1767,13 +1769,14 @@ def candidate_profile():
         if request.form.get('delete_resume') == '1':
             old = db.execute('SELECT resume_filename FROM candidate_profiles WHERE user_id=?',
                              [session['user_id']]).fetchone()
-            if old and old['resume_filename']:
+            if old and old.get('resume_filename'):
                 try:
                     os.remove(os.path.join(RESUME_UPLOAD_FOLDER, old['resume_filename']))
                 except OSError:
                     pass
-            db.execute('UPDATE candidate_profiles SET resume_filename=NULL WHERE user_id=?',
-                       [session['user_id']])
+            db.execute(
+                'UPDATE candidate_profiles SET resume_filename=NULL, resume_data=NULL, resume_original_name=NULL WHERE user_id=?',
+                [session['user_id']])
             db.commit()
             flash('Resume deleted.', 'success')
             return redirect(url_for('candidate_profile'))
@@ -1907,23 +1910,44 @@ def upload_resume():
     if not validate_file_magic(file, ALLOWED_RESUME_EXT):
         flash('File content does not match the declared format.', 'error')
         return redirect(url_for('candidate_profile'))
-    os.makedirs(RESUME_UPLOAD_FOLDER, exist_ok=True)
+    file_bytes = file.read()
+    encoded = base64.b64encode(file_bytes).decode('ascii')
+    original_name = secure_filename(file.filename)
     filename = secure_filename(f"resume_{session['user_id']}_{file.filename}")
     db = get_db()
-    # Delete old file if exists
-    old = db.execute('SELECT resume_filename FROM candidate_profiles WHERE user_id=?',
-                     [session['user_id']]).fetchone()
-    if old and old['resume_filename']:
-        try:
-            os.remove(os.path.join(RESUME_UPLOAD_FOLDER, old['resume_filename']))
-        except OSError:
-            pass
-    file.save(os.path.join(RESUME_UPLOAD_FOLDER, filename))
-    db.execute('UPDATE candidate_profiles SET resume_filename=? WHERE user_id=?',
-               [filename, session['user_id']])
+    db.execute(
+        'UPDATE candidate_profiles SET resume_filename=?, resume_data=?, resume_original_name=? WHERE user_id=?',
+        [filename, encoded, original_name, session['user_id']])
     db.commit()
     flash('Resume uploaded successfully!', 'success')
     return redirect(url_for('candidate_profile'))
+
+
+@app.route('/candidate/resume/download')
+@candidate_required
+def download_resume():
+    db = get_db()
+    profile = db.execute(
+        'SELECT resume_data, resume_original_name, resume_filename FROM candidate_profiles WHERE user_id=?',
+        [session['user_id']]
+    ).fetchone()
+    if not profile or not profile.get('resume_data'):
+        flash('Resume not found. Please upload your resume again.', 'error')
+        return redirect(url_for('candidate_profile'))
+    raw = profile['resume_data']
+    if isinstance(raw, memoryview):
+        raw = raw.tobytes().decode('ascii')
+    file_bytes = base64.b64decode(raw)
+    name = profile.get('resume_original_name') or profile.get('resume_filename') or 'resume.pdf'
+    ext  = name.rsplit('.', 1)[-1].lower() if '.' in name else 'pdf'
+    mime = {
+        'pdf':  'application/pdf',
+        'doc':  'application/msword',
+        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    }.get(ext, 'application/octet-stream')
+    as_attachment = request.args.get('dl') == '1'
+    return send_file(io.BytesIO(file_bytes), mimetype=mime,
+                     as_attachment=as_attachment, download_name=name)
 
 
 # ── Resume import wizard ──────────────────────────────────────────────────────

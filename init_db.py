@@ -323,6 +323,9 @@ MIGRATION_STMTS = [
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS skill_test_mandatory INTEGER DEFAULT 0",
     # applications
     "ALTER TABLE applications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP",
+    # candidate_profiles — resume stored as base64 in DB so it survives ephemeral filesystems
+    "ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS resume_data          TEXT DEFAULT NULL",
+    "ALTER TABLE candidate_profiles ADD COLUMN IF NOT EXISTS resume_original_name TEXT DEFAULT NULL",
     # user_skills
     "ALTER TABLE user_skills ADD COLUMN IF NOT EXISTS correct_answers   INTEGER",
     "ALTER TABLE user_skills ADD COLUMN IF NOT EXISTS time_taken_secs   INTEGER",

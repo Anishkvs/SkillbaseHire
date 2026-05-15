@@ -12,6 +12,91 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   {% block head %}{% endblock %}
+  <style>
+    /* ── Nav Dropdown ──────────────────────────────── */
+    .nav-dropdown-wrap { position: relative; }
+    .nav-avatar-btn {
+      display: flex; align-items: center; gap: .5rem;
+      background: transparent; border: none; cursor: pointer;
+      padding: .25rem .5rem; border-radius: 8px;
+      transition: background .15s; color: inherit;
+    }
+    .nav-avatar-btn:hover { background: rgba(0,0,0,.05); }
+    .nav-avatar-btn .nav-name { font-size: .875rem; font-weight: 500; }
+    .nd-chevron { transition: transform .2s; color: #94a3b8; }
+    .nav-avatar-btn[aria-expanded="true"] .nd-chevron { transform: rotate(180deg); }
+    .nav-dropdown {
+      position: absolute; top: calc(100% + 10px); right: 0;
+      width: 240px; background: #fff; border-radius: 14px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.14), 0 0 0 1px rgba(0,0,0,.06);
+      z-index: 999; opacity: 0; transform: translateY(-8px);
+      pointer-events: none; transition: opacity .18s ease, transform .18s ease;
+    }
+    .nav-dropdown.nd-open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .nd-user {
+      padding: 1rem; display: flex; align-items: center; gap: .75rem;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .nd-user-avatar {
+      width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+      background: linear-gradient(135deg,#4F46E5,#7C3AED);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; font-weight: 700; color: #fff; overflow: hidden;
+    }
+    .nd-user-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+    .nd-user-info { min-width: 0; }
+    .nd-user-name { font-size: .875rem; font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nd-user-role { font-size: .75rem; color: #64748b; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nd-user-email { font-size: .6875rem; color: #94a3b8; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .nd-menu { padding: .375rem 0; }
+    .nd-item {
+      display: flex; align-items: center; gap: .625rem;
+      width: 100%; padding: .625rem 1rem;
+      font-size: .875rem; font-weight: 500; color: #334155;
+      background: transparent; border: none; cursor: pointer;
+      text-decoration: none; transition: background .12s; text-align: left;
+    }
+    .nd-item:hover { background: #f8fafc; color: #0f172a; }
+    .nd-item svg { flex-shrink: 0; color: #94a3b8; }
+    .nd-item:hover svg { color: #64748b; }
+    .nd-divider { height: 1px; background: #f1f5f9; margin: .25rem 0; }
+    .nd-item-logout { color: #dc2626 !important; }
+    .nd-item-logout svg { color: #dc2626 !important; }
+    .nd-item-logout:hover { background: #fef2f2 !important; color: #b91c1c !important; }
+    /* ── Logout Modal ──────────────────────────────── */
+    .nd-modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.45);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 9999; opacity: 0; pointer-events: none; transition: opacity .18s;
+    }
+    .nd-modal-overlay.nd-modal-open { opacity: 1; pointer-events: auto; }
+    .nd-modal-card {
+      background: #fff; border-radius: 16px; padding: 1.75rem;
+      width: 90%; max-width: 360px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+      transform: translateY(12px) scale(.97); transition: transform .18s ease;
+    }
+    .nd-modal-overlay.nd-modal-open .nd-modal-card { transform: translateY(0) scale(1); }
+    .nd-modal-icon {
+      width: 48px; height: 48px; border-radius: 50%; background: #fef2f2;
+      display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;
+    }
+    .nd-modal-title { font-size: 1.0625rem; font-weight: 700; color: #0f172a; text-align: center; margin: 0 0 .5rem; }
+    .nd-modal-msg { font-size: .875rem; color: #64748b; text-align: center; margin: 0 0 1.5rem; line-height: 1.5; }
+    .nd-modal-btns { display: flex; gap: .625rem; }
+    .nd-modal-cancel {
+      flex: 1; padding: .625rem; border-radius: 10px;
+      border: 1.5px solid #e2e8f0; background: transparent;
+      font-size: .875rem; font-weight: 600; color: #475569; cursor: pointer; transition: background .12s;
+    }
+    .nd-modal-cancel:hover { background: #f8fafc; }
+    .nd-modal-logout-btn {
+      flex: 1; padding: .625rem; border-radius: 10px; border: none;
+      background: #dc2626; color: #fff;
+      font-size: .875rem; font-weight: 600; cursor: pointer; transition: background .12s;
+    }
+    .nd-modal-logout-btn:hover { background: #b91c1c; }
+  </style>
 </head>
 <body>
 
@@ -56,24 +141,77 @@
             </span>
           </button>
         {% endif %}
-        <a href="{{ url_for('recruiter_detail', recruiter_id=session.get('user_id')) if session.get('role') == 'recruiter' else url_for('candidate_profile') }}"
-           class="nav-user-info nav-profile-link"
-           aria-label="View my profile">
-          <div class="nav-avatar">
-            {% if session.get('profile_photo') %}
-              <img src="/photo/{{ session.get('profile_photo') }}" class="avatar-img" alt="{{ session.get('name','') }}">
-            {% else %}
-              {{ session.get('name','?')[0].upper() }}
-            {% endif %}
+
+        <div class="nav-dropdown-wrap" id="navDropdownWrap">
+          <button type="button" class="nav-avatar-btn" id="navAvatarBtn"
+                  onclick="toggleNavDropdown()" aria-expanded="false" aria-haspopup="true"
+                  aria-label="Account menu">
+            <div class="nav-avatar">
+              {% if session.get('profile_photo') %}
+                <img src="/photo/{{ session.get('profile_photo') }}" class="avatar-img" alt="{{ session.get('name','') }}">
+              {% else %}
+                {{ session.get('name','?')[0].upper() }}
+              {% endif %}
+            </div>
+            <span class="nav-name">{{ session.get('name','') }}</span>
+            <svg class="nd-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+
+          <div class="nav-dropdown" id="navDropdown" role="menu">
+            <div class="nd-user">
+              <div class="nd-user-avatar">
+                {% if session.get('profile_photo') %}
+                  <img src="/photo/{{ session.get('profile_photo') }}" alt="{{ session.get('name','') }}">
+                {% else %}
+                  {{ session.get('name','?')[0].upper() }}
+                {% endif %}
+              </div>
+              <div class="nd-user-info">
+                <div class="nd-user-name">{{ session.get('name','') }}</div>
+                <div class="nd-user-role">{{ session.get('headline') or ('Recruiter' if session.get('role') == 'recruiter' else 'Candidate') }}</div>
+                {% if session.get('email') %}<div class="nd-user-email">{{ session.get('email') }}</div>{% endif %}
+              </div>
+            </div>
+
+            <div class="nd-menu">
+              <a href="{{ url_for('recruiter_detail', recruiter_id=session.get('user_id')) if session.get('role') == 'recruiter' else url_for('candidate_profile') }}"
+                 class="nd-item" role="menuitem">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                My Profile
+              </a>
+              {% if session.get('role') == 'recruiter' %}
+              <a href="{{ url_for('recruiter_dashboard') }}" class="nd-item" role="menuitem">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Dashboard
+              </a>
+              {% endif %}
+              {% if session.get('role') == 'candidate' %}
+              <a href="{{ url_for('candidate_notifications') }}" class="nd-item" role="menuitem">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                Notifications
+              </a>
+              {% endif %}
+              <a href="#" class="nd-item" role="menuitem">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+                Account Settings
+              </a>
+              <a href="#" class="nd-item" role="menuitem">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                Help &amp; Support
+              </a>
+            </div>
+
+            <div class="nd-divider"></div>
+
+            <div class="nd-menu">
+              <button type="button" class="nd-item nd-item-logout" onclick="showLogoutModal()" role="menuitem">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Log Out
+              </button>
+            </div>
           </div>
-          <span class="nav-name">{{ session.get('name','') }}</span>
-        </a>
-        {% if session.get('role') == 'recruiter' %}
-          <a href="{{ url_for('recruiter_dashboard') }}" class="btn btn-sm btn-primary">Dashboard</a>
-        {% endif %}
-        <form action="{{ url_for('logout') }}" method="post" style="display:inline">
-          <button type="submit" class="btn btn-sm btn-ghost">Log out</button>
-        </form>
+        </div>
+
       {% else %}
         <a href="{{ url_for('candidate_login') }}" class="btn btn-sm btn-login">Log in</a>
         <a href="{{ url_for('candidate_signup') }}" class="btn btn-sm btn-primary">Sign up</a>
@@ -212,6 +350,65 @@
     </div>
   </div>
 </footer>
+
+<!-- Hidden logout form (submitted by modal) -->
+<form action="{{ url_for('logout') }}" method="post" id="ndLogoutForm" style="display:none"></form>
+
+<!-- Logout confirmation modal -->
+<div class="nd-modal-overlay" id="ndLogoutModal" onclick="if(event.target===this)hideLogoutModal()">
+  <div class="nd-modal-card">
+    <div class="nd-modal-icon">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </div>
+    <h3 class="nd-modal-title">Log out from SkillBaseHire?</h3>
+    <p class="nd-modal-msg">You will be signed out of your account. Any unsaved changes will be lost.</p>
+    <div class="nd-modal-btns">
+      <button type="button" class="nd-modal-cancel" onclick="hideLogoutModal()">Cancel</button>
+      <button type="button" class="nd-modal-logout-btn" onclick="document.getElementById('ndLogoutForm').submit()">Log Out</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  function toggleNavDropdown() {
+    var btn   = document.getElementById('navAvatarBtn');
+    var panel = document.getElementById('navDropdown');
+    if (!btn || !panel) return;
+    var open = panel.classList.contains('nd-open');
+    panel.classList.toggle('nd-open', !open);
+    btn.setAttribute('aria-expanded', String(!open));
+  }
+  function closeNavDropdown() {
+    var btn   = document.getElementById('navAvatarBtn');
+    var panel = document.getElementById('navDropdown');
+    if (!btn || !panel) return;
+    panel.classList.remove('nd-open');
+    btn.setAttribute('aria-expanded', 'false');
+  }
+  function showLogoutModal() {
+    closeNavDropdown();
+    document.getElementById('ndLogoutModal').classList.add('nd-modal-open');
+  }
+  function hideLogoutModal() {
+    document.getElementById('ndLogoutModal').classList.remove('nd-modal-open');
+  }
+  document.addEventListener('click', function (e) {
+    var wrap = document.getElementById('navDropdownWrap');
+    if (wrap && !wrap.contains(e.target)) closeNavDropdown();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { closeNavDropdown(); hideLogoutModal(); }
+  });
+  window.toggleNavDropdown = toggleNavDropdown;
+  window.showLogoutModal   = showLogoutModal;
+  window.hideLogoutModal   = hideLogoutModal;
+})();
+</script>
 
 <script src="{{ url_for('static', filename='photo_upload.js') }}"></script>
 {% if session.get('role') == 'candidate' %}

@@ -1625,14 +1625,16 @@ def candidate_login():
         if pw_ok:
             try:
                 cp = get_db().execute(
-                    'SELECT profile_photo FROM candidate_profiles WHERE user_id=?',
+                    'SELECT profile_photo, headline FROM candidate_profiles WHERE user_id=?',
                     [user['id']]).fetchone()
             except Exception:
                 cp = get_db().execute(
                     'SELECT * FROM candidate_profiles WHERE user_id=?',
                     [user['id']]).fetchone()
             session.update({'user_id': user['id'], 'role': 'candidate', 'name': user['name'],
+                            'email': user['email'],
                             'profile_photo': cp['profile_photo'] if cp else None,
+                            'headline': (cp['headline'] or '') if cp else '',
                             'email_verified': bool(user.get('email_verified', 0))})
             flash(f'Welcome back, {user["name"]}!', 'success')
             return redirect(url_for('jobs'))
@@ -2698,14 +2700,16 @@ def recruiter_login():
         if pw_ok:
             try:
                 rp = get_db().execute(
-                    'SELECT profile_photo FROM recruiter_profiles WHERE user_id=?',
+                    'SELECT profile_photo, company FROM recruiter_profiles WHERE user_id=?',
                     [user['id']]).fetchone()
             except Exception:
                 rp = get_db().execute(
                     'SELECT * FROM recruiter_profiles WHERE user_id=?',
                     [user['id']]).fetchone()
             session.update({'user_id': user['id'], 'role': 'recruiter', 'name': user['name'],
+                            'email': user['email'],
                             'profile_photo': rp['profile_photo'] if rp else None,
+                            'headline': (rp['company'] or '') if rp else '',
                             'email_verified': bool(user.get('email_verified', 0))})
             flash(f'Welcome back, {user["name"]}!', 'success')
             return redirect(url_for('recruiter_dashboard'))

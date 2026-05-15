@@ -1197,7 +1197,7 @@ textarea.fc{resize:vertical;min-height:80px}
         <div id="editAddExp" class="edit-panel">
           <form method="post" action="{{ url_for('add_experience') }}">
             <div class="form-grid">
-              <div class="fg"><label>Company *</label><input class="fc" type="text" name="company" placeholder="e.g. Aspire Systems" required></div>
+              <div class="fg"><label>Company *</label><input class="fc" type="text" name="company" placeholder="e.g. Tech Corp" required></div>
               <div class="fg"><label>Designation *</label><input class="fc" type="text" name="designation" placeholder="e.g. Software Engineer" required></div>
               <!-- Add: Start Date -->
               <div class="fg">
@@ -1336,7 +1336,7 @@ textarea.fc{resize:vertical;min-height:80px}
           <form method="post" action="{{ url_for('add_education') }}">
             <div class="form-grid">
               <div class="fg"><label>Degree *</label><input class="fc" type="text" name="degree" placeholder="e.g. B.Tech / MCA / B.Sc" required></div>
-              <div class="fg"><label>College / University *</label><input class="fc" type="text" name="college" placeholder="e.g. Anna University" required></div>
+              <div class="fg"><label>College / University *</label><input class="fc" type="text" name="college" placeholder="e.g. State University" required></div>
               <div class="fg"><label>Start Year</label><input class="fc" type="number" name="start_year" placeholder="e.g. 2018" min="1950" max="2030"></div>
               <div class="fg"><label>End Year</label><input class="fc" type="number" name="end_year" placeholder="e.g. 2022" min="1950" max="2030"></div>
             </div>
@@ -3185,8 +3185,8 @@ function phVerifyOtp() {
     <form method="post" action="{{ url_for('add_certification') }}">
       <div class="sbh-modal-body">
         <div class="form-grid">
-          <div class="fg"><label>Certificate Name *</label><input class="fc" type="text" name="cert_name" placeholder="e.g. ISTQB Foundation Level" required></div>
-          <div class="fg"><label>Issued By</label><input class="fc" type="text" name="issued_by" placeholder="e.g. ISTQB"></div>
+          <div class="fg"><label>Certificate Name *</label><input class="fc" type="text" name="cert_name" placeholder="e.g. AWS Certified Developer" required></div>
+          <div class="fg"><label>Issued By</label><input class="fc" type="text" name="issued_by" placeholder="e.g. Amazon Web Services"></div>
           <div class="fg"><label>Year</label><input class="fc" type="number" name="year" placeholder="e.g. 2023" min="1990" max="2030"></div>
           <div class="fg"><label>Credential URL</label><input class="fc" type="url" name="credential_url" placeholder="https://..."></div>
         </div>
@@ -3214,8 +3214,8 @@ function phVerifyOtp() {
     <form id="editCertForm" method="post" action="">
       <div class="sbh-modal-body">
         <div class="form-grid">
-          <div class="fg"><label>Certificate Name *</label><input class="fc" type="text" id="editCertName" name="cert_name" placeholder="e.g. ISTQB Foundation Level" required></div>
-          <div class="fg"><label>Issued By</label><input class="fc" type="text" id="editCertBy" name="issued_by" placeholder="e.g. ISTQB"></div>
+          <div class="fg"><label>Certificate Name *</label><input class="fc" type="text" id="editCertName" name="cert_name" placeholder="e.g. AWS Certified Developer" required></div>
+          <div class="fg"><label>Issued By</label><input class="fc" type="text" id="editCertBy" name="issued_by" placeholder="e.g. Amazon Web Services"></div>
           <div class="fg"><label>Year</label><input class="fc" type="number" id="editCertYear" name="year" placeholder="e.g. 2023" min="1990" max="2030"></div>
           <div class="fg"><label>Credential URL</label><input class="fc" type="url" id="editCertUrl" name="credential_url" placeholder="https://..."></div>
         </div>
@@ -3280,7 +3280,7 @@ function phVerifyOtp() {
       <div class="sbh-modal-body">
         <div class="form-grid">
           <div class="fg"><label>Degree *</label><input class="fc" type="text" id="editEduDegree" name="degree" placeholder="e.g. B.Tech / MCA / B.Sc" required></div>
-          <div class="fg"><label>College / University *</label><input class="fc" type="text" id="editEduCollege" name="college" placeholder="e.g. Anna University" required></div>
+          <div class="fg"><label>College / University *</label><input class="fc" type="text" id="editEduCollege" name="college" placeholder="e.g. State University" required></div>
           <div class="fg"><label>Start Year</label><input class="fc" type="number" id="editEduStart" name="start_year" placeholder="e.g. 2018" min="1950" max="2030"></div>
           <div class="fg"><label>End Year</label><input class="fc" type="number" id="editEduEnd" name="end_year" placeholder="e.g. 2022" min="1950" max="2030"></div>
         </div>

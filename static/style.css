@@ -784,6 +784,56 @@ textarea.form-control { resize: vertical; min-height: 96px; }
   color: var(--text-muted);
 }
 
+/* ── Auth: Resend OTP ────────────────────────────────────── */
+.auth-resend-wrap {
+  display: flex; align-items: center; justify-content: center;
+  gap: .375rem; margin-top: .875rem;
+  font-size: .8125rem; color: var(--text-muted);
+}
+.auth-resend-btn {
+  background: none; border: none; padding: 0;
+  font-size: .8125rem; font-family: inherit;
+  color: var(--primary); font-weight: 600; cursor: pointer;
+}
+.auth-resend-btn:hover { text-decoration: underline; }
+.auth-resend-btn:disabled { color: var(--text-muted); cursor: default; text-decoration: none; }
+.auth-resend-msg {
+  margin-top: .625rem; padding: .5rem .875rem;
+  border-radius: 8px; font-size: .8125rem; text-align: center;
+  animation: auth-fade-in .2s ease;
+}
+.auth-resend-msg.success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+.auth-resend-msg.error   { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+@keyframes auth-fade-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+/* ── Auth: Social login ──────────────────────────────────── */
+.auth-social-stack { display: flex; flex-direction: column; gap: .625rem; }
+.btn-social {
+  display: flex; align-items: center; justify-content: center; gap: .625rem;
+  width: 100%; padding: .6875rem 1rem;
+  border: 1.5px solid #e2e8f0; border-radius: 10px;
+  background: #fff; font-size: .9rem; font-weight: 600; color: #1e293b;
+  cursor: pointer; text-decoration: none;
+  transition: border-color .15s, box-shadow .15s, transform .12s;
+  font-family: inherit;
+}
+.btn-social:hover {
+  border-color: #94a3b8;
+  box-shadow: 0 2px 10px rgba(0,0,0,.08);
+  transform: translateY(-1px); color: #0f172a;
+}
+.btn-social:active { transform: translateY(0); }
+.btn-social .social-icon { display: flex; align-items: center; flex-shrink: 0; }
+.btn-social .social-spinner {
+  width: 16px; height: 16px;
+  border: 2px solid #e2e8f0; border-top-color: var(--primary);
+  border-radius: 50%; animation: social-spin .6s linear infinite;
+  display: none; flex-shrink: 0;
+}
+@keyframes social-spin { to { transform: rotate(360deg); } }
+.btn-social.loading .social-icon    { display: none; }
+.btn-social.loading .social-spinner { display: block; }
+
 /* ── Page headers ─────────────────────────────────────────── */
 .page-header {
   background: #fff;

@@ -4,6 +4,7 @@ from werkzeug.utils import secure_filename
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from authlib.integrations.flask_client import OAuth as _FlaskOAuth
 from dotenv import load_dotenv
 import logging
 import base64
@@ -71,6 +72,33 @@ limiter = Limiter(
     key_func=get_remote_address,
     storage_uri='memory://',
 )
+
+# ── OAuth (Google + LinkedIn) ─────────────────────────────────────────────────
+_oauth = _FlaskOAuth(app)
+
+_GOOGLE_CLIENT_ID     = os.environ.get('GOOGLE_CLIENT_ID', '')
+_GOOGLE_CLIENT_SECRET = os.environ.get('GOOGLE_CLIENT_SECRET', '')
+_LINKEDIN_CLIENT_ID     = os.environ.get('LINKEDIN_CLIENT_ID', '')
+_LINKEDIN_CLIENT_SECRET = os.environ.get('LINKEDIN_CLIENT_SECRET', '')
+
+if _GOOGLE_CLIENT_ID and _GOOGLE_CLIENT_SECRET:
+    _oauth.register(
+        'google',
+        client_id=_GOOGLE_CLIENT_ID,
+        client_secret=_GOOGLE_CLIENT_SECRET,
+        server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+        client_kwargs={'scope': 'openid email profile'},
+    )
+
+if _LINKEDIN_CLIENT_ID and _LINKEDIN_CLIENT_SECRET:
+    _oauth.register(
+        'linkedin',
+        client_id=_LINKEDIN_CLIENT_ID,
+        client_secret=_LINKEDIN_CLIENT_SECRET,
+        authorize_url='https://www.linkedin.com/oauth/v2/authorization',
+        access_token_url='https://www.linkedin.com/oauth/v2/accessToken',
+        client_kwargs={'scope': 'openid profile email'},
+    )
 
 DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'skillbasehire.db')
 
@@ -585,6 +613,8 @@ def init_db():
             "ALTER TABLE notifications ADD COLUMN redirect_url TEXT DEFAULT ''",
             "ALTER TABLE user_skills ADD COLUMN correct_answers INTEGER",
             "ALTER TABLE user_skills ADD COLUMN time_taken_secs INTEGER",
+            "ALTER TABLE users ADD COLUMN google_id TEXT DEFAULT NULL",
+            "ALTER TABLE users ADD COLUMN linkedin_id TEXT DEFAULT NULL",
         ]:
             try:
                 db.execute(stmt)
@@ -1596,6 +1626,263 @@ def candidate_signup():
 
     return render_template('candidate_signup.html', user=None, all_skills=all_skills,
                            form={}, sel_skills=[])
+
+
+# ── Social login helper ──────────────────────────────────────────────────────
+
+def _handle_social_login(email, name, google_id, linkedin_id, role):
+    """Find or create user from social OAuth, set session, redirect."""
+    db = get_db()
+    login_url = url_for('candidate_login') if role == 'candidate' else url_for('recruiter_login')
+
+    if not email:
+        flash('Social login failed: no email returned. Please try again.', 'error')
+        return redirect(login_url)
+
+    user = db.execute('SELECT * FROM users WHERE email=?', [email]).fetchone()
+
+    if user:
+        if user['role'] != role:
+            flash(
+                f'This email is registered as a {user["role"]} account. '
+                f'Please use the {user["role"]} login page.',
+                'error'
+            )
+            return redirect(login_url)
+        # Update social ID if not already stored
+        if google_id and not user.get('google_id'):
+            try:
+                db.execute('UPDATE users SET google_id=? WHERE id=?', [google_id, user['id']])
+                db.commit()
+            except Exception:
+                pass
+        if linkedin_id and not user.get('linkedin_id'):
+            try:
+                db.execute('UPDATE users SET linkedin_id=? WHERE id=?', [linkedin_id, user['id']])
+                db.commit()
+            except Exception:
+                pass
+    else:
+        # Auto-create account; social users have no password
+        placeholder_hash = generate_password_hash(secrets.token_hex(32))
+        try:
+            db.execute(
+                'INSERT INTO users (name, email, password_hash, role, email_verified, google_id, linkedin_id)'
+                ' VALUES (?,?,?,?,1,?,?)',
+                [name, email, placeholder_hash, role, google_id, linkedin_id]
+            )
+            db.commit()
+        except Exception as exc:
+            app.logger.error('[SOCIAL_LOGIN] insert user failed: %s', exc)
+            flash('Social login failed. Please try again.', 'error')
+            return redirect(login_url)
+        user = db.execute('SELECT * FROM users WHERE email=?', [email]).fetchone()
+        # Create empty profile
+        try:
+            if role == 'candidate':
+                db.execute('INSERT INTO candidate_profiles (user_id) VALUES (?)', [user['id']])
+            else:
+                db.execute(
+                    'INSERT INTO recruiter_profiles (user_id, company) VALUES (?,?)',
+                    [user['id'], '']
+                )
+            db.commit()
+        except Exception:
+            pass
+
+    # Set session
+    if role == 'candidate':
+        try:
+            cp = db.execute(
+                'SELECT profile_photo, headline FROM candidate_profiles WHERE user_id=?',
+                [user['id']]
+            ).fetchone()
+        except Exception:
+            cp = None
+        session.update({
+            'user_id': user['id'], 'role': 'candidate', 'name': user['name'],
+            'email': user['email'],
+            'profile_photo': cp['profile_photo'] if cp else None,
+            'headline': (cp['headline'] or '') if cp else '',
+            'email_verified': True,
+        })
+        flash(f'Welcome, {user["name"]}!', 'success')
+        return redirect(url_for('jobs'))
+    else:
+        try:
+            rp = db.execute(
+                'SELECT profile_photo, company FROM recruiter_profiles WHERE user_id=?',
+                [user['id']]
+            ).fetchone()
+        except Exception:
+            rp = None
+        session.update({
+            'user_id': user['id'], 'role': 'recruiter', 'name': user['name'],
+            'email': user['email'],
+            'profile_photo': rp['profile_photo'] if rp else None,
+            'headline': (rp['company'] or '') if rp else '',
+            'email_verified': True,
+        })
+        flash(f'Welcome, {user["name"]}!', 'success')
+        return redirect(url_for('recruiter_dashboard'))
+
+
+# ── Resend OTP ───────────────────────────────────────────────────────────────
+
+@app.route('/candidate/resend-otp', methods=['POST'])
+@limiter.limit('5 per hour')
+@csrf.exempt
+def candidate_resend_otp():
+    data = request.get_json(silent=True) or {}
+    email = data.get('email', '').strip().lower()
+    if not email:
+        return jsonify({'ok': False, 'error': 'Please enter your email address first.'})
+    db = get_db()
+    user = db.execute("SELECT * FROM users WHERE email=? AND role='candidate'", [email]).fetchone()
+    if not user:
+        return jsonify({'ok': True, 'message': 'If this email is registered, a verification link has been sent.'})
+    if user.get('email_verified', 0):
+        return jsonify({'ok': True, 'message': 'Your email is already verified. You can log in now.'})
+    try:
+        sent_at = user['email_verification_sent_at']
+        if sent_at:
+            if isinstance(sent_at, str):
+                sent_at = datetime.strptime(sent_at[:19], '%Y-%m-%d %H:%M:%S')
+            seconds_ago = (datetime.utcnow() - sent_at).total_seconds()
+            if seconds_ago < 60:
+                wait = int(60 - seconds_ago)
+                return jsonify({'ok': False, 'error': f'Please wait {wait}s before requesting another OTP.', 'wait': wait})
+    except Exception:
+        pass
+    raw_token, token_hash, expires_at = _gen_email_token()
+    db.execute(
+        'UPDATE users SET email_verification_token_hash=?, email_verification_expires_at=?,'
+        ' email_verification_sent_at=? WHERE id=?',
+        [token_hash, expires_at, datetime.utcnow(), user['id']]
+    )
+    db.commit()
+    try:
+        send_verification_email(user['email'], user['name'], raw_token)
+        return jsonify({'ok': True, 'message': 'OTP has been resent to your registered email.'})
+    except Exception:
+        return jsonify({'ok': False, 'error': 'Unable to resend OTP. Please try again.'})
+
+
+@app.route('/recruiter/resend-otp', methods=['POST'])
+@limiter.limit('5 per hour')
+@csrf.exempt
+def recruiter_resend_otp():
+    data = request.get_json(silent=True) or {}
+    email = data.get('email', '').strip().lower()
+    if not email:
+        return jsonify({'ok': False, 'error': 'Please enter your email address first.'})
+    db = get_db()
+    user = db.execute("SELECT * FROM users WHERE email=? AND role='recruiter'", [email]).fetchone()
+    if not user:
+        return jsonify({'ok': True, 'message': 'If this email is registered, a verification link has been sent.'})
+    if user.get('email_verified', 0):
+        return jsonify({'ok': True, 'message': 'Your email is already verified. You can log in now.'})
+    try:
+        sent_at = user['email_verification_sent_at']
+        if sent_at:
+            if isinstance(sent_at, str):
+                sent_at = datetime.strptime(sent_at[:19], '%Y-%m-%d %H:%M:%S')
+            seconds_ago = (datetime.utcnow() - sent_at).total_seconds()
+            if seconds_ago < 60:
+                wait = int(60 - seconds_ago)
+                return jsonify({'ok': False, 'error': f'Please wait {wait}s before requesting another OTP.', 'wait': wait})
+    except Exception:
+        pass
+    raw_token, token_hash, expires_at = _gen_email_token()
+    db.execute(
+        'UPDATE users SET email_verification_token_hash=?, email_verification_expires_at=?,'
+        ' email_verification_sent_at=? WHERE id=?',
+        [token_hash, expires_at, datetime.utcnow(), user['id']]
+    )
+    db.commit()
+    try:
+        send_verification_email(user['email'], user['name'], raw_token)
+        return jsonify({'ok': True, 'message': 'OTP has been resent to your registered email.'})
+    except Exception:
+        return jsonify({'ok': False, 'error': 'Unable to resend OTP. Please try again.'})
+
+
+# ── Google OAuth ─────────────────────────────────────────────────────────────
+
+@app.route('/candidate/google-login')
+def candidate_google_login():
+    if not _GOOGLE_CLIENT_ID:
+        flash('Google login is not yet configured.', 'error')
+        return redirect(url_for('candidate_login'))
+    session['oauth_role'] = 'candidate'
+    return _oauth.google.authorize_redirect(url_for('google_callback', _external=True))
+
+
+@app.route('/recruiter/google-login')
+def recruiter_google_login():
+    if not _GOOGLE_CLIENT_ID:
+        flash('Google login is not yet configured.', 'error')
+        return redirect(url_for('recruiter_login'))
+    session['oauth_role'] = 'recruiter'
+    return _oauth.google.authorize_redirect(url_for('google_callback', _external=True))
+
+
+@app.route('/auth/google/callback')
+def google_callback():
+    role = session.pop('oauth_role', 'candidate')
+    try:
+        token     = _oauth.google.authorize_access_token()
+        user_info = token.get('userinfo') or {}
+        email     = user_info.get('email', '').strip().lower()
+        name      = user_info.get('name') or email.split('@')[0]
+        google_id = user_info.get('sub', '')
+    except Exception as exc:
+        app.logger.error('[GOOGLE_CB] %s', exc)
+        flash('Google login failed. Please try again.', 'error')
+        return redirect(url_for('candidate_login' if role == 'candidate' else 'recruiter_login'))
+    return _handle_social_login(email, name, google_id, None, role)
+
+
+# ── LinkedIn OAuth ───────────────────────────────────────────────────────────
+
+@app.route('/candidate/linkedin-login')
+def candidate_linkedin_login():
+    if not _LINKEDIN_CLIENT_ID:
+        flash('LinkedIn login is not yet configured.', 'error')
+        return redirect(url_for('candidate_login'))
+    session['oauth_role'] = 'candidate'
+    return _oauth.linkedin.authorize_redirect(url_for('linkedin_callback', _external=True))
+
+
+@app.route('/recruiter/linkedin-login')
+def recruiter_linkedin_login():
+    if not _LINKEDIN_CLIENT_ID:
+        flash('LinkedIn login is not yet configured.', 'error')
+        return redirect(url_for('recruiter_login'))
+    session['oauth_role'] = 'recruiter'
+    return _oauth.linkedin.authorize_redirect(url_for('linkedin_callback', _external=True))
+
+
+@app.route('/auth/linkedin/callback')
+def linkedin_callback():
+    role = session.pop('oauth_role', 'candidate')
+    try:
+        token     = _oauth.linkedin.authorize_access_token()
+        import requests as _requests
+        resp      = _requests.get(
+            'https://api.linkedin.com/v2/userinfo',
+            headers={'Authorization': f'Bearer {token["access_token"]}'},
+            timeout=10,
+        )
+        user_info   = resp.json()
+        email       = user_info.get('email', '').strip().lower()
+        name        = user_info.get('name') or email.split('@')[0]
+        linkedin_id = user_info.get('sub', '')
+    except Exception as exc:
+        app.logger.error('[LINKEDIN_CB] %s', exc)
+        flash('LinkedIn login failed. Please try again.', 'error')
+        return redirect(url_for('candidate_login' if role == 'candidate' else 'recruiter_login'))
+    return _handle_social_login(email, name, None, linkedin_id, role)
 
 
 @app.route('/candidate/login', methods=['GET', 'POST'])

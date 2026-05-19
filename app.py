@@ -2225,12 +2225,8 @@ def candidate_google_login():
 
 @app.route('/recruiter/google-login')
 def recruiter_google_login():
-    if not _GOOGLE_CLIENT_ID:
-        return redirect(url_for('recruiter_login') + '?social_error=google')
-    state = _oauth_state('recruiter')
-    session['oauth_role'] = 'recruiter'
-    app.logger.info('[OAUTH] initiating google login role=recruiter')
-    return _oauth.google.authorize_redirect(url_for('google_callback', _external=True), state=state)
+    app.logger.warning('[AUTH_ROLE_CHECK] recruiter Google OAuth blocked — social login disabled for recruiters')
+    return redirect(url_for('recruiter_login'))
 
 
 @app.route('/auth/google/callback')
@@ -2239,6 +2235,11 @@ def google_callback():
     raw_state = request.args.get('state', '')
     role = _role_from_state(raw_state, fallback=session.pop('oauth_role', 'candidate'))
     app.logger.info('[OAUTH] google_callback state=%r role=%s', raw_state, role)
+    # Social login is disabled for recruiters — block at callback level too
+    if role == 'recruiter':
+        app.logger.warning('[AUTH_ROLE_CHECK] recruiter role in Google callback blocked email=unknown')
+        flash('Social login is not available for recruiters. Please use email and password.', 'error')
+        return redirect(url_for('recruiter_login'))
     try:
         token     = _oauth.google.authorize_access_token()
         user_info = token.get('userinfo') or {}
@@ -2280,10 +2281,8 @@ def candidate_linkedin_login():
 
 @app.route('/recruiter/linkedin-login')
 def recruiter_linkedin_login():
-    if not _LINKEDIN_CLIENT_ID:
-        return redirect(url_for('recruiter_login') + '?social_error=linkedin')
-    app.logger.info('[OAUTH] initiating linkedin login role=recruiter')
-    return redirect(_linkedin_auth_url('recruiter'))
+    app.logger.warning('[AUTH_ROLE_CHECK] recruiter LinkedIn OAuth blocked — social login disabled for recruiters')
+    return redirect(url_for('recruiter_login'))
 
 
 @app.route('/auth/linkedin/callback')
@@ -2296,6 +2295,11 @@ def linkedin_callback():
     login_url    = url_for('candidate_login' if role == 'candidate' else 'recruiter_login')
 
     app.logger.info('[OAUTH] linkedin_callback state=%r role=%s', raw_state, role)
+    # Social login is disabled for recruiters — block at callback level too
+    if role == 'recruiter':
+        app.logger.warning('[AUTH_ROLE_CHECK] recruiter role in LinkedIn callback blocked email=unknown')
+        flash('Social login is not available for recruiters. Please use email and password.', 'error')
+        return redirect(url_for('recruiter_login'))
 
     # CSRF state check
     if not raw_state or raw_state != expected:

@@ -1989,23 +1989,30 @@ def candidate_login():
     email = ''
     mismatch = None
     if request.method == 'POST':
-        email = request.form.get('email', '').strip().lower()
-        password = request.form.get('password', '')
+        is_ajax = request.is_json
+        if is_ajax:
+            _d    = request.get_json(silent=True) or {}
+            email = _d.get('email', '').strip().lower()
+            password = _d.get('password', '')
+        else:
+            email    = request.form.get('email', '').strip().lower()
+            password = request.form.get('password', '')
+
         _any = get_db().execute("SELECT role FROM users WHERE email=?", [email]).fetchone()
-        if _any and _any['role'] != 'candidate':
-            return render_template('candidate_login.html', user=None, email=email, mismatch=_any['role'])
+        actual_role = _any['role'] if _any else None
+        app.logger.info('[LOGIN:candidate] email=%r login_type=candidate actual_role=%r', email, actual_role)
+
+        if _any and actual_role != 'candidate':
+            app.logger.info('[LOGIN:candidate] role_mismatch=True actual_role=%r', actual_role)
+            if is_ajax:
+                return jsonify({'success': False, 'role_mismatch': True, 'actual_role': actual_role})
+            mismatch = actual_role
+            return render_template('candidate_login.html', user=None, email=email, mismatch=mismatch)
+
         user = get_db().execute(
             "SELECT * FROM users WHERE email=? AND role='candidate'", [email]
         ).fetchone()
-        app.logger.info(
-            '[LOGIN:candidate] email=%r user_found=%s role=%s '
-            'email_verified=%s has_password_hash=%s',
-            email,
-            user is not None,
-            user['role'] if user else 'N/A',
-            user.get('email_verified', 'N/A') if user else 'N/A',
-            bool(user.get('password_hash')) if user else False,
-        )
+        app.logger.info('[LOGIN:candidate] user_found=%s', user is not None)
         pw_ok = bool(user) and check_password_hash(user['password_hash'], password)
         app.logger.info('[LOGIN:candidate] password_check=%s', pw_ok)
         if pw_ok:
@@ -2022,10 +2029,17 @@ def candidate_login():
                             'profile_photo': cp['profile_photo'] if cp else None,
                             'headline': (cp['headline'] or '') if cp else '',
                             'email_verified': bool(user.get('email_verified', 0))})
+            if is_ajax:
+                return jsonify({'success': True, 'redirect': url_for('jobs')})
             flash(f'Welcome back, {user["name"]}!', 'success')
             return redirect(url_for('jobs'))
+
+        if is_ajax:
+            return jsonify({'success': False, 'error': 'Invalid email or password.'})
         flash('Invalid email or password.', 'error')
 
+    if not email:
+        email = request.args.get('email', '')
     return render_template('candidate_login.html', user=None, email=email, mismatch=mismatch)
 
 
@@ -3068,23 +3082,30 @@ def recruiter_login():
     email = ''
     mismatch = None
     if request.method == 'POST':
-        email = request.form.get('email', '').strip().lower()
-        password = request.form.get('password', '')
+        is_ajax = request.is_json
+        if is_ajax:
+            _d    = request.get_json(silent=True) or {}
+            email = _d.get('email', '').strip().lower()
+            password = _d.get('password', '')
+        else:
+            email    = request.form.get('email', '').strip().lower()
+            password = request.form.get('password', '')
+
         _any = get_db().execute("SELECT role FROM users WHERE email=?", [email]).fetchone()
-        if _any and _any['role'] != 'recruiter':
-            return render_template('recruiter_login.html', user=None, email=email, mismatch=_any['role'])
+        actual_role = _any['role'] if _any else None
+        app.logger.info('[LOGIN:recruiter] email=%r login_type=recruiter actual_role=%r', email, actual_role)
+
+        if _any and actual_role != 'recruiter':
+            app.logger.info('[LOGIN:recruiter] role_mismatch=True actual_role=%r', actual_role)
+            if is_ajax:
+                return jsonify({'success': False, 'role_mismatch': True, 'actual_role': actual_role})
+            mismatch = actual_role
+            return render_template('recruiter_login.html', user=None, email=email, mismatch=mismatch)
+
         user = get_db().execute(
             "SELECT * FROM users WHERE email=? AND role='recruiter'", [email]
         ).fetchone()
-        app.logger.info(
-            '[LOGIN:recruiter] email=%r user_found=%s role=%s '
-            'email_verified=%s has_password_hash=%s',
-            email,
-            user is not None,
-            user['role'] if user else 'N/A',
-            user.get('email_verified', 'N/A') if user else 'N/A',
-            bool(user.get('password_hash')) if user else False,
-        )
+        app.logger.info('[LOGIN:recruiter] user_found=%s', user is not None)
         pw_ok = bool(user) and check_password_hash(user['password_hash'], password)
         app.logger.info('[LOGIN:recruiter] password_check=%s', pw_ok)
         if pw_ok:
@@ -3101,10 +3122,17 @@ def recruiter_login():
                             'profile_photo': rp['profile_photo'] if rp else None,
                             'headline': (rp['company'] or '') if rp else '',
                             'email_verified': bool(user.get('email_verified', 0))})
+            if is_ajax:
+                return jsonify({'success': True, 'redirect': url_for('recruiter_dashboard')})
             flash(f'Welcome back, {user["name"]}!', 'success')
             return redirect(url_for('recruiter_dashboard'))
+
+        if is_ajax:
+            return jsonify({'success': False, 'error': 'Invalid email or password.'})
         flash('Invalid email or password.', 'error')
 
+    if not email:
+        email = request.args.get('email', '')
     return render_template('recruiter_login.html', user=None, email=email, mismatch=mismatch)
 
 

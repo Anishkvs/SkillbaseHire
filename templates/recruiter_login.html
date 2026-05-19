@@ -19,7 +19,7 @@
     <h1 class="auth-title">Welcome back</h1>
     <p class="auth-subtitle">Log in to your recruiter account</p>
 
-    <form method="post" action="{{ url_for('recruiter_login') }}" id="loginForm">
+    <form id="loginForm" novalidate>
       <div class="form-group">
         <label class="form-label" for="email">Email Address</label>
         <input class="form-control" type="email" id="email" name="email"
@@ -31,10 +31,11 @@
                placeholder="Your password" required autocomplete="current-password">
       </div>
 
-      <button type="submit" class="btn btn-primary btn-full" style="margin-top:.5rem">
+      <button type="submit" id="loginBtn" class="btn btn-primary btn-full" style="margin-top:.5rem">
         Log In as Recruiter
       </button>
     </form>
+    <div id="loginErrMsg" class="auth-resend-msg error" style="display:none;margin-top:.625rem"></div>
 
     <!-- Resend OTP -->
     <div class="auth-resend-wrap">
@@ -85,8 +86,8 @@
   </div>
 </div>
 
-{% if mismatch == 'candidate' %}
-<div class="auth-mm-overlay" id="authMismatchOverlay">
+<!-- Role mismatch popup (always in DOM, shown by JS) -->
+<div class="auth-mm-overlay" id="authMismatchOverlay" style="display:none">
   <div class="auth-mm-card">
     <div class="auth-mm-icon">
       <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -94,13 +95,12 @@
     <div class="auth-mm-title">Wrong login page</div>
     <p class="auth-mm-msg">This email is registered as a candidate account. Please log in as a candidate.</p>
     <div class="auth-mm-actions">
-      <a href="{{ url_for('candidate_login') }}" class="btn btn-primary btn-full">Log in as Candidate</a>
+      <a id="authMismatchBtn" href="{{ url_for('candidate_login') }}" class="btn btn-primary btn-full">Log in as Candidate</a>
       <button type="button" class="btn btn-outline btn-full"
-              onclick="document.getElementById('authMismatchOverlay').remove()">Cancel</button>
+              onclick="document.getElementById('authMismatchOverlay').style.display='none'">Cancel</button>
     </div>
   </div>
 </div>
-{% endif %}
 
 <script>
 (function () {
@@ -173,6 +173,73 @@
     btn.style.pointerEvents = 'none';
     btn.setAttribute('aria-busy', 'true');
   };
+})();
+
+// ── Login AJAX ────────────────────────────────────────────────
+(function () {
+  var form = document.getElementById('loginForm');
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email    = document.getElementById('email').value.trim();
+    var password = document.getElementById('password').value;
+    var btn      = document.getElementById('loginBtn');
+
+    console.log('[SBH LOGIN] email:', email, '| login_type: recruiter');
+    _hideErr();
+    btn.disabled = true;
+    btn.textContent = 'Logging in…';
+
+    fetch('/recruiter/login', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({email: email, password: password})
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      console.log('[SBH LOGIN] response:', JSON.stringify(data));
+      if (data.role_mismatch) {
+        console.log('[SBH LOGIN] role_mismatch=true | actual_role:', data.actual_role);
+        _showMismatch(email);
+        btn.disabled = false;
+        btn.textContent = 'Log In as Recruiter';
+      } else if (data.success) {
+        window.location.href = data.redirect;
+      } else {
+        console.log('[SBH LOGIN] error:', data.error);
+        _showErr(data.error || 'Invalid email or password.');
+        btn.disabled = false;
+        btn.textContent = 'Log In as Recruiter';
+      }
+    })
+    .catch(function (err) {
+      console.error('[SBH LOGIN] fetch error:', err);
+      _showErr('Something went wrong. Please try again.');
+      btn.disabled = false;
+      btn.textContent = 'Log In as Recruiter';
+    });
+  });
+
+  function _showMismatch(email) {
+    var mmBtn = document.getElementById('authMismatchBtn');
+    if (mmBtn) mmBtn.href = '/candidate/login?email=' + encodeURIComponent(email);
+    var overlay = document.getElementById('authMismatchOverlay');
+    if (overlay) overlay.style.display = 'flex';
+  }
+
+  function _showErr(text) {
+    var el = document.getElementById('loginErrMsg');
+    if (el) { el.textContent = text; el.style.display = 'block'; }
+  }
+
+  function _hideErr() {
+    var el = document.getElementById('loginErrMsg');
+    if (el) el.style.display = 'none';
+  }
+
+  // Server-rendered mismatch fallback (non-JS form POST)
+  {% if mismatch %}
+  _showMismatch({{ email | tojson }});
+  {% endif %}
 })();
 </script>
 {% endblock %}

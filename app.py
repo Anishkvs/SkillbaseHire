@@ -811,10 +811,17 @@ def _send_email(to_email, subject, html_body):
     """Central email dispatcher. Returns True on success, False on failure."""
     smtp_user = os.environ.get('SMTP_USER')
     smtp_pass = os.environ.get('SMTP_PASS')
+    smtp_host = os.environ.get('SMTP_HOST', 'smtp.gmail.com')
+    smtp_port = int(os.environ.get('SMTP_PORT', 587))
     from_header = f'{_SMTP_FROM_NAME} <{_SMTP_FROM_EMAIL}>'
 
-    if not smtp_user or not smtp_pass:
-        app.logger.info('[EMAIL_DEV] SMTP not configured — skipping "%s" to %s', subject, to_email)
+    missing = [v for v, val in [('SMTP_USER', smtp_user), ('SMTP_PASS', smtp_pass)] if not val]
+    if missing:
+        app.logger.warning(
+            '[EMAIL_SMTP] Missing env vars: %s — email "%s" to %s NOT sent. '
+            'Set SMTP_USER, SMTP_PASS, SMTP_HOST, SMTP_PORT in environment.',
+            ', '.join(missing), subject, to_email
+        )
         return False
 
     msg = MIMEMultipart('alternative')
@@ -823,8 +830,7 @@ def _send_email(to_email, subject, html_body):
     msg['To']      = to_email
     msg.attach(MIMEText(html_body, 'html'))
 
-    smtp_host = os.environ.get('SMTP_HOST', 'smtp.gmail.com')
-    smtp_port = int(os.environ.get('SMTP_PORT', 587))
+    app.logger.info('[EMAIL_SMTP] Connecting to %s:%s as %s', smtp_host, smtp_port, smtp_user)
     try:
         with smtplib.SMTP(smtp_host, smtp_port) as server:
             server.starttls()
@@ -833,7 +839,8 @@ def _send_email(to_email, subject, html_body):
         app.logger.info('[EMAIL] sent "%s" to %s', subject, to_email)
         return True
     except Exception as exc:
-        app.logger.error('[EMAIL_ERROR] failed "%s" to %s: %s', subject, to_email, exc)
+        app.logger.error('[EMAIL_ERROR] failed "%s" to %s via %s:%s — %s',
+                         subject, to_email, smtp_host, smtp_port, exc)
         return False
 
 
@@ -920,16 +927,21 @@ def send_verification_email(to_email, name, raw_token):
 def send_password_reset_email(to_email, name, reset_url):
     subject = 'Reset your SkillBaseHire password'
     content = (
-        f'<h2 style="font-size:1.25rem;font-weight:700;color:#1e293b;margin:0 0 8px">Hi {name},</h2>'
-        f'<p style="color:#475569;margin:0 0 24px">We received a request to reset your password. Click the button below to create a new password.</p>'
+        f'<p style="color:#1e293b;margin:0 0 8px">Hi,</p>'
+        f'<p style="color:#475569;margin:0 0 24px">We received a request to reset your SkillBaseHire password.</p>'
+        f'<p style="color:#475569;margin:0 0 16px">Click below to reset your password:</p>'
         f'<div style="text-align:center;margin:28px 0">'
         f'<a href="{reset_url}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-weight:600;padding:12px 32px;border-radius:8px">Reset Password</a>'
         f'</div>'
-        f'<p style="color:#94a3b8;font-size:.8125rem;margin:0">This link expires in 1 hour. If you didn\'t request a password reset, you can safely ignore this email.</p>'
+        f'<p style="color:#94a3b8;font-size:.8125rem;margin:0 0 8px">This link will expire in 15 minutes.</p>'
+        f'<p style="color:#94a3b8;font-size:.8125rem;margin:0">If you did not request this, please ignore this email.</p>'
     )
     sent = _send_email(to_email, subject, _email_wrap(content))
     if not sent:
-        app.logger.info('[EMAIL_DEV] Password reset link for %s: %s', to_email, reset_url)
+        if _is_staging:
+            app.logger.info('[FORGOT_PW_STAGING] SMTP not configured. Password reset link generated but email not sent. Link: %s', reset_url)
+        else:
+            app.logger.warning('[FORGOT_PW] SMTP not configured. Password reset link generated but email not sent.')
 
 
 def parse_skills_data(raw):
@@ -4326,7 +4338,7 @@ def resend_verification():
 @app.route('/forgot-password', methods=['GET', 'POST'])
 @limiter.limit('6 per minute')
 def forgot_password():
-    role = request.args.get('role', 'candidate')
+    role = request.args.get('role', request.form.get('role', 'candidate'))
     if role not in ('candidate', 'recruiter'):
         role = 'candidate'
 
@@ -4338,58 +4350,69 @@ def forgot_password():
                 'SELECT id, name, email FROM users WHERE email=? AND role=?', [email, role]
             ).fetchone()
             if user:
-                raw, h, expires = _gen_email_token()
-                # reset token expires in 1 hour (override the 24h default)
-                expires = datetime.utcnow() + timedelta(hours=1)
+                raw = secrets.token_urlsafe(32)
+                h   = hashlib.sha256(raw.encode()).hexdigest()
+                expires = datetime.utcnow() + timedelta(minutes=15)
+                reset_route = 'candidate_reset_password' if role == 'candidate' else 'recruiter_reset_password'
                 try:
                     db.execute(
                         'UPDATE users SET password_reset_token_hash=?, password_reset_expires_at=? WHERE id=?',
                         [h, expires, user['id']]
                     )
                     db.commit()
-                    reset_url = url_for('reset_password', token=raw, _external=True)
+                    reset_url = url_for(reset_route, token=raw, _external=True)
+                    app.logger.info('[FORGOT_PW] token generated for user_id=%s role=%s', user['id'], role)
                     send_password_reset_email(user['email'], user['name'], reset_url)
                 except Exception as exc:
                     app.logger.error('[FORGOT_PW] DB/email error: %s', exc)
-        # Always show success to prevent email enumeration
+            else:
+                app.logger.info('[FORGOT_PW] no %s account found for email=%r', role, email)
+        # Always show success — never reveal whether email exists
         return render_template('forgot_password.html', sent=True, role=role)
 
     return render_template('forgot_password.html', sent=False, role=role)
 
 
-@app.route('/reset-password/<token>', methods=['GET', 'POST'])
-def reset_password(token):
+def _handle_reset_password(role):
+    """Shared reset-password handler for candidate and recruiter routes."""
+    token = request.args.get('token', '') if request.method == 'GET' else request.form.get('token', '')
+    login_route = 'candidate_login' if role == 'candidate' else 'recruiter_login'
+
+    if not token:
+        return render_template('reset_password.html', invalid=True, role=role, login_route=login_route)
+
     token_hash = hashlib.sha256(token.encode()).hexdigest()
     db = get_db()
     user = db.execute(
         'SELECT id, name, email, password_reset_token_hash, password_reset_expires_at'
-        ' FROM users WHERE password_reset_token_hash=?', [token_hash]
+        ' FROM users WHERE password_reset_token_hash=? AND role=?', [token_hash, role]
     ).fetchone()
 
     now = datetime.utcnow()
     if not user:
-        return render_template('reset_password.html', invalid=True, token=token)
+        return render_template('reset_password.html', invalid=True, role=role, login_route=login_route)
 
     expires_raw = user['password_reset_expires_at']
     if isinstance(expires_raw, str):
         try:
             expires_dt = datetime.fromisoformat(expires_raw)
         except ValueError:
-            expires_dt = now  # treat unparseable as expired
+            expires_dt = now
     else:
         expires_dt = expires_raw or now
 
     if expires_dt < now:
-        return render_template('reset_password.html', expired=True, token=token)
+        return render_template('reset_password.html', expired=True, role=role, login_route=login_route)
 
     if request.method == 'POST':
         new_pw  = request.form.get('password', '')
         confirm = request.form.get('confirm_password', '')
         pw_err  = validate_password(new_pw)
         if pw_err:
-            return render_template('reset_password.html', token=token, error=pw_err)
+            return render_template('reset_password.html', token=token, role=role, login_route=login_route, error=pw_err)
         if new_pw != confirm:
-            return render_template('reset_password.html', token=token, error='Passwords do not match.')
+            return render_template('reset_password.html', token=token, role=role, login_route=login_route,
+                                   error='Passwords do not match.')
         try:
             db.execute(
                 'UPDATE users SET password_hash=?, password_reset_token_hash=NULL,'
@@ -4397,12 +4420,24 @@ def reset_password(token):
                 [generate_password_hash(new_pw), user['id']]
             )
             db.commit()
+            app.logger.info('[RESET_PW] password updated for user_id=%s role=%s', user['id'], role)
         except Exception as exc:
             app.logger.error('[RESET_PW] DB error: %s', exc)
-            return render_template('reset_password.html', token=token, error='Something went wrong. Please try again.')
-        return render_template('reset_password.html', success=True)
+            return render_template('reset_password.html', token=token, role=role, login_route=login_route,
+                                   error='Something went wrong. Please try again.')
+        return render_template('reset_password.html', success=True, role=role, login_route=login_route)
 
-    return render_template('reset_password.html', token=token)
+    return render_template('reset_password.html', token=token, role=role, login_route=login_route)
+
+
+@app.route('/candidate/reset-password', methods=['GET', 'POST'])
+def candidate_reset_password():
+    return _handle_reset_password('candidate')
+
+
+@app.route('/recruiter/reset-password', methods=['GET', 'POST'])
+def recruiter_reset_password():
+    return _handle_reset_password('recruiter')
 
 
 # ── Logout ────────────────────────────────────────────────────────────────────

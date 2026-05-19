@@ -681,6 +681,39 @@ def salary_filter(job):
 
 # ── Auth helpers ─────────────────────────────────────────────────────────────
 
+def _auth_role_check(required_role):
+    """Verify session AND database agree on the user's role.
+    Returns (allowed: bool, db_role: str|None).
+    Caches the DB lookup on g for the duration of the request.
+    """
+    area  = request.endpoint or request.path
+    uid   = session.get('user_id')
+    email = session.get('email', 'unknown')
+
+    if not uid:
+        app.logger.warning('[AUTH_ROLE_CHECK] email=%s stored_role=none requested_area=%s allowed=false',
+                           email, area)
+        return False, None
+
+    if not hasattr(g, '_auth_db_user'):
+        try:
+            g._auth_db_user = get_db().execute(
+                'SELECT id, role, email FROM users WHERE id=?', [uid]
+            ).fetchone()
+        except Exception as exc:
+            app.logger.error('[AUTH_ROLE_CHECK] DB lookup failed uid=%s: %s', uid, exc)
+            g._auth_db_user = None
+
+    db_user  = g._auth_db_user
+    db_role  = db_user['role'] if db_user else 'none'
+    db_email = (db_user['email'] if db_user else None) or email
+    allowed  = db_user is not None and db_role == required_role
+
+    app.logger.info('[AUTH_ROLE_CHECK] email=%s stored_role=%s requested_area=%s allowed=%s',
+                    db_email, db_role, area, 'true' if allowed else 'false')
+    return allowed, db_role
+
+
 def login_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -695,11 +728,12 @@ def candidate_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if 'user_id' not in session:
-            flash('Please log in to continue.', 'error')
             return redirect(url_for('candidate_login'))
-        if session.get('role') != 'candidate':
-            flash('This page is for candidates only.', 'error')
-            return redirect(url_for('home'))
+        allowed, db_role = _auth_role_check('candidate')
+        if not allowed:
+            session.clear()
+            flash('Access denied. This area is for candidates only.', 'error')
+            return redirect(url_for('candidate_login'))
         return f(*args, **kwargs)
     return decorated
 
@@ -708,11 +742,12 @@ def recruiter_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if 'user_id' not in session:
-            flash('Please log in to continue.', 'error')
             return redirect(url_for('recruiter_login'))
-        if session.get('role') != 'recruiter':
-            flash('This page is for recruiters only.', 'error')
-            return redirect(url_for('home'))
+        allowed, db_role = _auth_role_check('recruiter')
+        if not allowed:
+            session.clear()
+            flash('Access denied. This area is for recruiters only.', 'error')
+            return redirect(url_for('recruiter_login'))
         return f(*args, **kwargs)
     return decorated
 
@@ -726,12 +761,18 @@ def admin_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         if 'user_id' not in session:
-            flash('Please log in to continue.', 'error')
             return redirect(url_for('recruiter_login'))
-        if session.get('role') != 'recruiter':
+        allowed, db_role = _auth_role_check('recruiter')
+        if not allowed:
+            session.clear()
+            app.logger.warning('[AUTH_ROLE_CHECK] admin_required blocked email=%s db_role=%s',
+                               session.get('email'), db_role)
             flash('Access denied.', 'error')
-            return redirect(url_for('home'))
+            return redirect(url_for('recruiter_login'))
         if session.get('email', '').lower() != _SUPER_ADMIN_EMAIL:
+            area = request.endpoint or request.path
+            app.logger.warning('[AUTH_ROLE_CHECK] admin_required non-admin email=%s requested_area=%s allowed=false',
+                               session.get('email'), area)
             flash('You do not have permission to access this page.', 'error')
             return redirect(url_for('recruiter_dashboard'))
         return f(*args, **kwargs)
@@ -1965,9 +2006,11 @@ def _handle_social_login(email, name, google_id, linkedin_id, role):
     app.logger.info('[OAUTH] existing_user=%s', bool(user))
 
     if user:
+        # Strict role enforcement: block cross-role OAuth login
         if user['role'] != role:
-            app.logger.info('[OAUTH] role_mismatch: db_role=%s requested_role=%s email=%r',
-                            user['role'], role, email)
+            app.logger.warning(
+                '[AUTH_ROLE_CHECK] email=%s stored_role=%s requested_area=oauth_%s_login allowed=false reason=role_mismatch',
+                email, user['role'], role)
             qs = urlencode({'oauth_mismatch': user['role'], 'oauth_email': email})
             return redirect(f'{login_url}?{qs}')
 
@@ -1988,14 +2031,24 @@ def _handle_social_login(email, name, google_id, linkedin_id, role):
                 app.logger.warning('[OAUTH] could not link linkedin_id: %s', exc)
 
     else:
-        # Auto-create account; social users get a random unusable password
+        # New user: only candidates may be auto-created via OAuth.
+        # Recruiter accounts must be created through the registration form.
+        if role == 'recruiter':
+            app.logger.warning(
+                '[AUTH_ROLE_CHECK] email=%s stored_role=none requested_area=oauth_recruiter_login '
+                'allowed=false reason=no_recruiter_oauth_signup', email)
+            flash('No recruiter account found for this email. '
+                  'Please register as a recruiter or log in with your email and password.', 'error')
+            return redirect(url_for('recruiter_login'))
+
+        # Auto-create candidate account
         placeholder_hash = generate_password_hash(secrets.token_hex(32))
-        app.logger.info('[OAUTH] creating new user email=%r role=%s', email, role)
+        app.logger.info('[OAUTH] creating new candidate user email=%r', email)
         try:
             db.execute(
                 'INSERT INTO users (name, email, password_hash, role, email_verified, google_id, linkedin_id)'
                 ' VALUES (?,?,?,?,1,?,?)',
-                [name or email.split('@')[0], email, placeholder_hash, role, google_id, linkedin_id]
+                [name or email.split('@')[0], email, placeholder_hash, 'candidate', google_id, linkedin_id]
             )
             db.commit()
         except Exception as exc:
@@ -2009,21 +2062,26 @@ def _handle_social_login(email, name, google_id, linkedin_id, role):
             flash('Social login failed. Please try again.', 'error')
             return redirect(login_url)
 
-        app.logger.info('[OAUTH] user_created=True user_id=%s', user['id'])
+        app.logger.info('[OAUTH] user_created=True user_id=%s role=candidate', user['id'])
 
-        # Create empty profile (ignore duplicate-insert errors)
         try:
-            if role == 'candidate':
-                db.execute('INSERT INTO candidate_profiles (user_id) VALUES (?)', [user['id']])
-            else:
-                db.execute(
-                    'INSERT INTO recruiter_profiles (user_id, company) VALUES (?,?)',
-                    [user['id'], '']
-                )
+            db.execute('INSERT INTO candidate_profiles (user_id) VALUES (?)', [user['id']])
             db.commit()
-            app.logger.info('[OAUTH] profile row created for user_id=%s role=%s', user['id'], role)
+            app.logger.info('[OAUTH] candidate_profile created for user_id=%s', user['id'])
         except Exception as exc:
             app.logger.warning('[OAUTH] profile insert skipped (may already exist): %s', exc)
+
+    # Final DB role verification — belt-and-suspenders before session write
+    db_role = user['role']
+    if db_role != role:
+        app.logger.error(
+            '[AUTH_ROLE_CHECK] email=%s stored_role=%s requested_area=oauth_%s_login '
+            'allowed=false reason=db_role_mismatch_at_session_write', email, db_role, role)
+        flash('Access denied.', 'error')
+        return redirect(login_url)
+
+    app.logger.info('[AUTH_ROLE_CHECK] email=%s stored_role=%s requested_area=oauth_%s_login allowed=true',
+                    email, db_role, role)
 
     # Set session
     app.logger.info('[OAUTH] setting session for user_id=%s role=%s', user['id'], role)

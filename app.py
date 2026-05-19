@@ -20,6 +20,11 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from functools import wraps
 from urllib.parse import urlencode
+try:
+    import openpyxl
+    _OPENPYXL_OK = True
+except ImportError:
+    _OPENPYXL_OK = False
 
 # ── Environment bootstrap ─────────────────────────────────────────────────────
 # Three environments: development | staging | production
@@ -621,6 +626,7 @@ def init_db():
             "ALTER TABLE user_skills ADD COLUMN time_taken_secs INTEGER",
             "ALTER TABLE users ADD COLUMN google_id TEXT DEFAULT NULL",
             "ALTER TABLE users ADD COLUMN linkedin_id TEXT DEFAULT NULL",
+            "ALTER TABLE skill_questions ADD COLUMN experience_level TEXT DEFAULT 'All'",
         ]:
             try:
                 db.execute(stmt)
@@ -1607,6 +1613,215 @@ def manage_skill_questions(skill_id):
     return render_template('manage_questions.html', skill=skill, questions=questions,
                            skills=skills, user=get_current_user(),
                            profile=_get_recruiter_profile())
+
+
+_EXCEL_REQUIRED_COLS = [
+    'Skill Name', 'Question', 'Option A', 'Option B', 'Option C', 'Option D',
+    'Correct Answer', 'Difficulty Level', 'Experience Level',
+]
+_VALID_DIFFICULTIES = {'easy', 'medium', 'hard'}
+_VALID_ANSWERS      = {'a', 'b', 'c', 'd'}
+_VALID_EXPERIENCE   = {'fresher', 'junior', 'mid', 'senior', 'all'}
+
+
+def _parse_excel_rows(file_stream):
+    """Return (rows, error_string). rows is list of dicts with keys matching _EXCEL_REQUIRED_COLS."""
+    if not _OPENPYXL_OK:
+        return None, 'openpyxl is not installed on this server.'
+    try:
+        wb = openpyxl.load_workbook(file_stream, read_only=True, data_only=True)
+        ws = wb.active
+        raw_headers = [str(c.value).strip() if c.value is not None else '' for c in next(ws.iter_rows(min_row=1, max_row=1))]
+    except Exception as exc:
+        return None, f'Could not read Excel file: {exc}'
+
+    missing = [h for h in _EXCEL_REQUIRED_COLS if h not in raw_headers]
+    if missing:
+        return None, f'Missing required columns: {", ".join(missing)}'
+
+    col_idx = {h: raw_headers.index(h) for h in _EXCEL_REQUIRED_COLS}
+    rows = []
+    for i, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+        if all(v is None or str(v).strip() == '' for v in row):
+            continue
+        r = {h: (str(row[col_idx[h]]).strip() if row[col_idx[h]] is not None else '') for h in _EXCEL_REQUIRED_COLS}
+        r['_row'] = i
+        rows.append(r)
+    return rows, None
+
+
+def _validate_excel_row(r, skill_name_to_id, existing_questions):
+    errors = []
+    skill_id = skill_name_to_id.get(r['Skill Name'].lower())
+    if not skill_id:
+        errors.append(f'Unknown skill "{r["Skill Name"]}"')
+    if not r['Question']:
+        errors.append('Question is empty')
+    for opt in ('Option A', 'Option B', 'Option C', 'Option D'):
+        if not r[opt]:
+            errors.append(f'{opt} is empty')
+    if r['Correct Answer'].upper() not in ('A', 'B', 'C', 'D'):
+        errors.append(f'Correct Answer must be A/B/C/D, got "{r["Correct Answer"]}"')
+    if r['Difficulty Level'].lower() not in _VALID_DIFFICULTIES:
+        errors.append(f'Difficulty must be Easy/Medium/Hard, got "{r["Difficulty Level"]}"')
+    exp = r['Experience Level'].lower() if r['Experience Level'] else 'all'
+    if exp not in _VALID_EXPERIENCE:
+        errors.append(f'Experience Level must be Fresher/Junior/Mid/Senior/All, got "{r["Experience Level"]}"')
+
+    is_dup = False
+    if skill_id and r['Question']:
+        key = (skill_id, r['Question'].lower())
+        if key in existing_questions:
+            is_dup = True
+
+    return skill_id, errors, is_dup
+
+
+@app.route('/recruiter/questions/upload-excel', methods=['POST'])
+@admin_required
+@csrf.exempt
+def upload_questions_excel():
+    if not _OPENPYXL_OK:
+        return jsonify({'ok': False, 'error': 'openpyxl not installed on server.'}), 500
+
+    f = request.files.get('file')
+    if not f or not f.filename:
+        return jsonify({'ok': False, 'error': 'No file uploaded.'}), 400
+    ext = os.path.splitext(f.filename)[1].lower()
+    if ext not in ('.xlsx', '.xls'):
+        return jsonify({'ok': False, 'error': 'Only .xlsx and .xls files are accepted.'}), 400
+
+    rows, err = _parse_excel_rows(f.stream)
+    if err:
+        return jsonify({'ok': False, 'error': err}), 400
+
+    if not rows:
+        return jsonify({'ok': False, 'error': 'The file contains no data rows.'}), 400
+
+    db = get_db()
+    skill_rows = db.execute('SELECT id, name FROM skills').fetchall()
+    skill_name_to_id = {s['name'].lower(): s['id'] for s in skill_rows}
+
+    existing = db.execute(
+        'SELECT skill_id, LOWER(question_text) as qt FROM skill_questions'
+    ).fetchall()
+    existing_questions = {(e['skill_id'], e['qt']) for e in existing}
+
+    preview = []
+    for r in rows:
+        skill_id, errors, is_dup = _validate_excel_row(r, skill_name_to_id, existing_questions)
+        status = 'dup' if (not errors and is_dup) else ('error' if errors else 'ok')
+        preview.append({
+            'row':        r['_row'],
+            'skill':      r['Skill Name'],
+            'question':   r['Question'],
+            'option_a':   r['Option A'],
+            'option_b':   r['Option B'],
+            'option_c':   r['Option C'],
+            'option_d':   r['Option D'],
+            'correct':    r['Correct Answer'].upper() if r['Correct Answer'] else '',
+            'difficulty': r['Difficulty Level'],
+            'experience': r['Experience Level'] or 'All',
+            'status':     status,
+            'errors':     errors,
+        })
+
+    return jsonify({'ok': True, 'rows': preview})
+
+
+@app.route('/recruiter/questions/import-excel', methods=['POST'])
+@admin_required
+@csrf.exempt
+def import_questions_excel():
+    payload = request.get_json(silent=True) or {}
+    rows = payload.get('rows', [])
+    if not rows:
+        return jsonify({'ok': False, 'error': 'No rows provided.'}), 400
+
+    db = get_db()
+    skill_rows = db.execute('SELECT id, name FROM skills').fetchall()
+    skill_name_to_id = {s['name'].lower(): s['id'] for s in skill_rows}
+
+    existing = db.execute(
+        'SELECT skill_id, LOWER(question_text) as qt FROM skill_questions'
+    ).fetchall()
+    existing_questions = {(e['skill_id'], e['qt']) for e in existing}
+
+    imported = 0
+    skipped  = 0
+    for r in rows:
+        r_norm = {
+            'Skill Name':      r.get('skill', ''),
+            'Question':        r.get('question', ''),
+            'Option A':        r.get('option_a', ''),
+            'Option B':        r.get('option_b', ''),
+            'Option C':        r.get('option_c', ''),
+            'Option D':        r.get('option_d', ''),
+            'Correct Answer':  r.get('correct', ''),
+            'Difficulty Level': r.get('difficulty', 'Medium'),
+            'Experience Level': r.get('experience', 'All'),
+            '_row': 0,
+        }
+        skill_id, errors, is_dup = _validate_excel_row(r_norm, skill_name_to_id, existing_questions)
+        if errors or is_dup or not skill_id:
+            skipped += 1
+            continue
+        exp = r_norm['Experience Level'].strip() or 'All'
+        db.execute(
+            '''INSERT INTO skill_questions
+               (skill_id, question_text, option_a, option_b, option_c, option_d,
+                correct_option, marks, difficulty, experience_level, created_by)
+               VALUES (?,?,?,?,?,?,?,1,?,?,?)''',
+            [skill_id, r_norm['Question'], r_norm['Option A'], r_norm['Option B'],
+             r_norm['Option C'], r_norm['Option D'], r_norm['Correct Answer'].upper(),
+             r_norm['Difficulty Level'].capitalize(), exp, session['user_id']]
+        )
+        existing_questions.add((skill_id, r_norm['Question'].lower()))
+        imported += 1
+    db.commit()
+    return jsonify({'ok': True, 'imported': imported, 'skipped': skipped})
+
+
+@app.route('/recruiter/questions/download-template')
+@admin_required
+def download_questions_template():
+    if not _OPENPYXL_OK:
+        flash('openpyxl is not installed on this server.', 'error')
+        return redirect(url_for('manage_questions'))
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = 'Questions'
+    headers = _EXCEL_REQUIRED_COLS[:]
+    ws.append(headers)
+    ws.append([
+        'Python', 'What is the output of print(type([]))?',
+        "<class 'list'>", "<class 'tuple'>", "<class 'dict'>", "<class 'set'>",
+        'A', 'Easy', 'All',
+    ])
+    ws.append([
+        'JavaScript', 'Which keyword declares a block-scoped variable?',
+        'var', 'let', 'const', 'function',
+        'B', 'Medium', 'Junior',
+    ])
+
+    from openpyxl.styles import Font, PatternFill
+    hdr_fill = PatternFill(start_color='4F46E5', end_color='4F46E5', fill_type='solid')
+    hdr_font = Font(bold=True, color='FFFFFF')
+    for cell in ws[1]:
+        cell.fill = hdr_fill
+        cell.font = hdr_font
+        ws.column_dimensions[cell.column_letter].width = max(18, len(str(cell.value)) + 4)
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return send_file(
+        buf,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name='skill_questions_template.xlsx',
+    )
 
 
 def _get_recruiter_profile():

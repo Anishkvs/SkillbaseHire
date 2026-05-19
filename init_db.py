@@ -339,6 +339,8 @@ MIGRATION_STMTS = [
     "ALTER TABLE candidate_projects ADD COLUMN IF NOT EXISTS year TEXT DEFAULT ''",
     # notifications
     "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS redirect_url TEXT DEFAULT ''",
+    # skill_questions — experience level filter
+    "ALTER TABLE skill_questions ADD COLUMN IF NOT EXISTS experience_level TEXT DEFAULT 'All'",
 ]
 
 

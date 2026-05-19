@@ -146,6 +146,66 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
 .empty-state p{font-size:13px}
 .delete-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600;background:var(--coral-light);color:var(--coral);border:none;cursor:pointer;transition:background .15s}
 .delete-btn:hover{background:#f5d3c8}
+
+/* ── Excel upload modal ───────────────────────────────────── */
+.xl-overlay{position:fixed;inset:0;background:rgba(15,23,42,.55);display:flex;align-items:center;justify-content:center;z-index:9999}
+.xl-card{background:#fff;border-radius:16px;width:min(96vw,860px);max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 72px rgba(0,0,0,.18)}
+.xl-header{display:flex;align-items:center;justify-content:space-between;padding:18px 24px 14px;border-bottom:.5px solid var(--line);flex-shrink:0}
+.xl-title{font-family:'Syne',sans-serif;font-weight:800;font-size:16px;color:var(--ink)}
+.xl-close{background:none;border:none;cursor:pointer;color:var(--ink-3);font-size:20px;line-height:1;padding:2px 6px;border-radius:6px}
+.xl-close:hover{background:var(--surface);color:var(--ink)}
+.xl-body{padding:24px;overflow-y:auto;flex:1}
+.xl-footer{padding:14px 24px;border-top:.5px solid var(--line);display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0}
+
+/* Step indicators */
+.xl-steps{display:flex;align-items:center;gap:0;margin-bottom:24px}
+.xl-step{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--ink-4)}
+.xl-step-num{width:24px;height:24px;border-radius:50%;border:2px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.xl-step.active .xl-step-num{border-color:var(--accent);background:var(--accent);color:#fff}
+.xl-step.active{color:var(--ink)}
+.xl-step.done .xl-step-num{border-color:var(--green);background:var(--green);color:#fff}
+.xl-step.done{color:var(--ink-3)}
+.xl-step-line{flex:1;height:1px;background:var(--line);margin:0 10px}
+
+/* Dropzone */
+.xl-dropzone{border:2px dashed var(--line);border-radius:12px;padding:36px 24px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;position:relative}
+.xl-dropzone:hover,.xl-dropzone.drag{border-color:var(--accent);background:var(--accent-light)}
+.xl-dropzone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.xl-dropzone-icon{margin-bottom:10px;color:var(--ink-4)}
+.xl-dropzone-label{font-size:14px;font-weight:600;color:var(--ink-2)}
+.xl-dropzone-hint{font-size:12px;color:var(--ink-4);margin-top:4px}
+.xl-file-name{margin-top:12px;font-size:13px;color:var(--accent);font-weight:600}
+
+/* Preview table */
+.xl-summary{display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap}
+.xl-sum-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:var(--rpill);font-size:12px;font-weight:600}
+.xl-sum-ok{background:var(--green-light);color:var(--green)}
+.xl-sum-dup{background:var(--amber-light);color:var(--amber)}
+.xl-sum-err{background:var(--coral-light);color:var(--coral)}
+.xl-tbl-wrap{overflow-x:auto;border:.5px solid var(--line);border-radius:10px}
+.xl-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.xl-tbl th{background:var(--surface);padding:8px 12px;text-align:left;font-weight:700;font-size:11px;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-3);border-bottom:.5px solid var(--line);white-space:nowrap}
+.xl-tbl td{padding:9px 12px;border-bottom:.5px solid var(--line-2);vertical-align:top;color:var(--ink)}
+.xl-tbl tr:last-child td{border-bottom:none}
+.xl-row-ok{background:#fff}
+.xl-row-dup{background:#fffbeb}
+.xl-row-err{background:#fff5f5}
+.xl-badge-ok{background:var(--green-light);color:var(--green);padding:2px 8px;border-radius:var(--rpill);font-size:10px;font-weight:700}
+.xl-badge-dup{background:var(--amber-light);color:var(--amber);padding:2px 8px;border-radius:var(--rpill);font-size:10px;font-weight:700}
+.xl-badge-err{background:var(--coral-light);color:var(--coral);padding:2px 8px;border-radius:var(--rpill);font-size:10px;font-weight:700}
+.xl-err-list{font-size:11px;color:var(--coral);margin-top:3px}
+
+/* Success step */
+.xl-success{text-align:center;padding:32px 16px}
+.xl-success-icon{width:56px;height:56px;border-radius:50%;background:var(--green-light);display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+.xl-success-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--ink);margin-bottom:8px}
+.xl-success-msg{font-size:14px;color:var(--ink-3)}
+
+/* Spinner inside button */
+.btn-spinner{display:none;width:14px;height:14px;border:2px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn.loading .btn-spinner{display:inline-block}
+.btn.loading .btn-label{opacity:.6}
 </style>
 </head>
 <body>
@@ -254,6 +314,16 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
             {{ questions|length }} question{{ 's' if questions|length != 1 else '' }} in the bank
             &nbsp;·&nbsp; <a href="{{ url_for('manage_questions') }}" style="color:var(--accent)">← All Skills</a>
           </div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <a href="{{ url_for('download_questions_template') }}" class="btn btn-ghost" style="font-size:12px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Template
+          </a>
+          <button class="btn btn-primary" onclick="openXlModal()" style="font-size:12px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10" transform="rotate(180 12 12)"/><line x1="12" y1="9" x2="12" y2="21" transform="rotate(180 12 12)"/></svg>
+            Upload Excel
+          </button>
         </div>
       </div>
 
@@ -411,6 +481,16 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
           <div class="page-title syne">Manage Questions</div>
           <div class="page-sub">Add and manage exam questions for each skill. Click a skill to get started.</div>
         </div>
+        <div style="display:flex;gap:8px">
+          <a href="{{ url_for('download_questions_template') }}" class="btn btn-ghost" style="font-size:12px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Template
+          </a>
+          <button class="btn btn-primary" onclick="openXlModal()" style="font-size:12px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10" transform="rotate(180 12 12)"/><line x1="12" y1="9" x2="12" y2="21" transform="rotate(180 12 12)"/></svg>
+            Upload Excel
+          </button>
+        </div>
       </div>
 
       {% set categories = skills | map(attribute='category') | unique | list %}
@@ -438,6 +518,74 @@ select.form-control{appearance:none;background-image:url("data:image/svg+xml,%3C
   </div><!-- /main -->
 </div><!-- /app -->
 
+<!-- ── Excel Upload Modal ──────────────────────────────────── -->
+<div class="xl-overlay" id="xlOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="xlTitle">
+  <div class="xl-card">
+    <div class="xl-header">
+      <div class="xl-title" id="xlTitle">Upload Questions via Excel</div>
+      <button class="xl-close" onclick="closeXlModal()" aria-label="Close">×</button>
+    </div>
+    <div class="xl-body" id="xlBody">
+      <!-- Steps -->
+      <div class="xl-steps">
+        <div class="xl-step active" id="xlStep1"><div class="xl-step-num">1</div><span>Upload File</span></div>
+        <div class="xl-step-line"></div>
+        <div class="xl-step" id="xlStep2"><div class="xl-step-num">2</div><span>Review &amp; Import</span></div>
+        <div class="xl-step-line"></div>
+        <div class="xl-step" id="xlStep3"><div class="xl-step-num">3</div><span>Done</span></div>
+      </div>
+
+      <!-- Step 1: File pick -->
+      <div id="xlPane1">
+        <div class="xl-dropzone" id="xlDropzone">
+          <input type="file" id="xlFileInput" accept=".xlsx,.xls" onchange="xlFileChosen(this)"/>
+          <div class="xl-dropzone-icon">
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+          </div>
+          <div class="xl-dropzone-label">Drag &amp; drop your Excel file here</div>
+          <div class="xl-dropzone-hint">or click to browse — .xlsx / .xls accepted</div>
+          <div class="xl-file-name" id="xlFileName" style="display:none"></div>
+        </div>
+        <p style="font-size:12px;color:var(--ink-3);margin-top:14px">
+          Required columns: <strong>Skill Name, Question, Option A, Option B, Option C, Option D, Correct Answer, Difficulty Level, Experience Level</strong>.
+          Download the <a href="{{ url_for('download_questions_template') }}" style="color:var(--accent)">template</a> for the exact format.
+        </p>
+      </div>
+
+      <!-- Step 2: Preview (hidden initially) -->
+      <div id="xlPane2" style="display:none">
+        <div class="xl-summary" id="xlSummary"></div>
+        <div class="xl-tbl-wrap">
+          <table class="xl-tbl">
+            <thead>
+              <tr>
+                <th>Row</th><th>Skill</th><th>Question</th><th>Options</th>
+                <th>Correct</th><th>Difficulty</th><th>Experience</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="xlTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Step 3: Success (hidden initially) -->
+      <div id="xlPane3" style="display:none">
+        <div class="xl-success">
+          <div class="xl-success-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0F6E56" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="xl-success-title">Import Complete</div>
+          <div class="xl-success-msg" id="xlSuccessMsg"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="xl-footer" id="xlFooter">
+      <!-- Buttons injected by JS -->
+    </div>
+  </div>
+</div>
+
 <script>
 function filterSlp(val) {
   var v = val.toLowerCase();
@@ -459,6 +607,190 @@ function filterSlp(val) {
       f.appendChild(inp);
     }
   });
+})();
+</script>
+
+<script>
+(function () {
+  var _csrf = (document.querySelector('meta[name="csrf-token"]') || {}).content || '';
+  var _previewRows = [];
+  var _step = 1;
+  var _chosenFile = null;
+
+  window.openXlModal = function () {
+    _reset();
+    document.getElementById('xlOverlay').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  };
+
+  window.closeXlModal = function () {
+    document.getElementById('xlOverlay').style.display = 'none';
+    document.body.style.overflow = '';
+    _reset();
+  };
+
+  document.getElementById('xlOverlay').addEventListener('click', function (e) {
+    if (e.target === this) closeXlModal();
+  });
+
+  function _reset() {
+    _step = 1; _previewRows = []; _chosenFile = null;
+    document.getElementById('xlFileInput').value = '';
+    document.getElementById('xlFileName').style.display = 'none';
+    document.getElementById('xlFileName').textContent = '';
+    document.getElementById('xlDropzone').classList.remove('drag');
+    _setStep(1);
+  }
+
+  function _setStep(n) {
+    _step = n;
+    [1,2,3].forEach(function(i) {
+      var s = document.getElementById('xlStep' + i);
+      s.classList.remove('active','done');
+      if (i < n) s.classList.add('done');
+      else if (i === n) s.classList.add('active');
+      document.getElementById('xlPane' + i).style.display = (i === n) ? '' : 'none';
+    });
+    _renderFooter();
+  }
+
+  function _renderFooter() {
+    var f = document.getElementById('xlFooter');
+    if (_step === 1) {
+      f.innerHTML = '<button class="btn btn-ghost" onclick="closeXlModal()">Cancel</button>' +
+        '<button class="btn btn-primary" id="xlPreviewBtn" onclick="xlDoPreview()" disabled>' +
+        '<span class="btn-spinner"></span><span class="btn-label">Preview</span></button>';
+      _syncPreviewBtn();
+    } else if (_step === 2) {
+      var okCount = _previewRows.filter(function(r){return r.status==='ok';}).length;
+      f.innerHTML = '<button class="btn btn-ghost" onclick="_setStep(1)">← Back</button>' +
+        '<button class="btn btn-primary" id="xlImportBtn" onclick="xlDoImport()" ' +
+        (okCount === 0 ? 'disabled' : '') + '>' +
+        '<span class="btn-spinner"></span><span class="btn-label">Import ' + okCount + ' Row' + (okCount===1?'':'s') + '</span></button>';
+    } else {
+      f.innerHTML = '<button class="btn btn-primary" onclick="closeXlModal();window.location.reload()">Close &amp; Refresh</button>';
+    }
+  }
+
+  function _syncPreviewBtn() {
+    var btn = document.getElementById('xlPreviewBtn');
+    if (btn) btn.disabled = !_chosenFile;
+  }
+
+  window.xlFileChosen = function (input) {
+    _chosenFile = input.files[0] || null;
+    var nameEl = document.getElementById('xlFileName');
+    if (_chosenFile) {
+      nameEl.textContent = _chosenFile.name;
+      nameEl.style.display = 'block';
+    } else {
+      nameEl.style.display = 'none';
+    }
+    _syncPreviewBtn();
+  };
+
+  var dz = document.getElementById('xlDropzone');
+  dz.addEventListener('dragover', function(e){ e.preventDefault(); dz.classList.add('drag'); });
+  dz.addEventListener('dragleave', function(){ dz.classList.remove('drag'); });
+  dz.addEventListener('drop', function(e){
+    e.preventDefault(); dz.classList.remove('drag');
+    var files = e.dataTransfer.files;
+    if (files.length) {
+      var inp = document.getElementById('xlFileInput');
+      inp.files = files;
+      xlFileChosen(inp);
+    }
+  });
+
+  window.xlDoPreview = function () {
+    if (!_chosenFile) return;
+    var btn = document.getElementById('xlPreviewBtn');
+    btn.classList.add('loading'); btn.disabled = true;
+
+    var fd = new FormData();
+    fd.append('file', _chosenFile);
+    fetch('/recruiter/questions/upload-excel', {
+      method: 'POST',
+      headers: {'X-CSRFToken': _csrf},
+      body: fd,
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      btn.classList.remove('loading'); btn.disabled = false;
+      if (!data.ok) { alert(data.error || 'Upload failed.'); return; }
+      _previewRows = data.rows;
+      _renderPreview(data.rows);
+      _setStep(2);
+    })
+    .catch(function(){ btn.classList.remove('loading'); btn.disabled = false; alert('Upload failed. Please try again.'); });
+  };
+
+  function _renderPreview(rows) {
+    var okC=0, dupC=0, errC=0;
+    rows.forEach(function(r){ if(r.status==='ok') okC++; else if(r.status==='dup') dupC++; else errC++; });
+    var sum = document.getElementById('xlSummary');
+    sum.innerHTML =
+      '<span class="xl-sum-chip xl-sum-ok">✓ ' + okC + ' valid</span>' +
+      (dupC ? '<span class="xl-sum-chip xl-sum-dup">⚠ ' + dupC + ' duplicate' + (dupC>1?'s':'') + '</span>' : '') +
+      (errC ? '<span class="xl-sum-chip xl-sum-err">✕ ' + errC + ' error' + (errC>1?'s':'') + '</span>' : '');
+
+    var tb = document.getElementById('xlTbody');
+    tb.innerHTML = '';
+    rows.forEach(function(r) {
+      var cls = r.status === 'ok' ? 'xl-row-ok' : r.status === 'dup' ? 'xl-row-dup' : 'xl-row-err';
+      var badge = r.status === 'ok'
+        ? '<span class="xl-badge-ok">Valid</span>'
+        : r.status === 'dup'
+        ? '<span class="xl-badge-dup">Duplicate</span>'
+        : '<span class="xl-badge-err">Error</span>';
+      var errHtml = r.errors && r.errors.length
+        ? '<div class="xl-err-list">' + r.errors.map(function(e){ return '• ' + _esc(e); }).join('<br>') + '</div>'
+        : '';
+      var qCell = '<div style="max-width:240px;font-weight:500">' + _esc(r.question) + '</div>' + errHtml;
+      var opts = '<div style="font-size:11px;color:var(--ink-3)">' +
+        'A: ' + _esc(r.option_a) + '<br>B: ' + _esc(r.option_b) + '<br>C: ' + _esc(r.option_c) + '<br>D: ' + _esc(r.option_d) + '</div>';
+      tb.insertAdjacentHTML('beforeend',
+        '<tr class="' + cls + '">' +
+        '<td>' + r.row + '</td>' +
+        '<td>' + _esc(r.skill) + '</td>' +
+        '<td>' + qCell + '</td>' +
+        '<td>' + opts + '</td>' +
+        '<td style="font-weight:700;color:var(--accent)">' + _esc(r.correct) + '</td>' +
+        '<td>' + _esc(r.difficulty) + '</td>' +
+        '<td>' + _esc(r.experience) + '</td>' +
+        '<td>' + badge + '</td>' +
+        '</tr>'
+      );
+    });
+  }
+
+  window.xlDoImport = function () {
+    var okRows = _previewRows.filter(function(r){ return r.status === 'ok'; });
+    if (!okRows.length) return;
+    var btn = document.getElementById('xlImportBtn');
+    btn.classList.add('loading'); btn.disabled = true;
+
+    fetch('/recruiter/questions/import-excel', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': _csrf},
+      body: JSON.stringify({rows: okRows}),
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      btn.classList.remove('loading'); btn.disabled = false;
+      if (!data.ok) { alert(data.error || 'Import failed.'); return; }
+      document.getElementById('xlSuccessMsg').textContent =
+        data.imported + ' question' + (data.imported === 1 ? '' : 's') + ' imported successfully.' +
+        (data.skipped ? ' ' + data.skipped + ' row' + (data.skipped===1?'':'s') + ' skipped.' : '');
+      _setStep(3);
+    })
+    .catch(function(){ btn.classList.remove('loading'); btn.disabled = false; alert('Import failed. Please try again.'); });
+  };
+
+  function _esc(s) {
+    if (s == null) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
 })();
 </script>
 </body>

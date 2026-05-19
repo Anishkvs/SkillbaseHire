@@ -96,17 +96,8 @@ if _GOOGLE_CLIENT_ID and _GOOGLE_CLIENT_SECRET:
         client_kwargs={'scope': 'openid email profile'},
     )
 
-if _LINKEDIN_CLIENT_ID and _LINKEDIN_CLIENT_SECRET:
-    _oauth.register(
-        'linkedin',
-        client_id=_LINKEDIN_CLIENT_ID,
-        client_secret=_LINKEDIN_CLIENT_SECRET,
-        server_metadata_url='https://www.linkedin.com/.well-known/openid-configuration',
-        client_kwargs={
-            'scope': 'openid profile email',
-            'token_endpoint_auth_method': 'client_secret_post',
-        },
-    )
+# LinkedIn is handled with raw HTTP calls (no Authlib OIDC) to avoid
+# server_metadata_url fetch failures and ID-token validation issues.
 
 DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'skillbasehire.db')
 
@@ -2206,55 +2197,101 @@ def google_callback():
 
 # ── LinkedIn OAuth ───────────────────────────────────────────────────────────
 
+def _linkedin_auth_url(role):
+    """Build LinkedIn authorization redirect URL with role encoded in state."""
+    state = _oauth_state(role)
+    session['_li_state'] = state
+    session['oauth_role'] = role
+    params = urlencode({
+        'response_type': 'code',
+        'client_id':     _LINKEDIN_CLIENT_ID,
+        'redirect_uri':  url_for('linkedin_callback', _external=True),
+        'state':         state,
+        'scope':         'openid profile email',
+    })
+    return f'https://www.linkedin.com/oauth/v2/authorization?{params}'
+
+
 @app.route('/candidate/linkedin-login')
 def candidate_linkedin_login():
     if not _LINKEDIN_CLIENT_ID:
         return redirect(url_for('candidate_login') + '?social_error=linkedin')
-    state = _oauth_state('candidate')
-    session['oauth_role'] = 'candidate'
     app.logger.info('[OAUTH] initiating linkedin login role=candidate')
-    return _oauth.linkedin.authorize_redirect(url_for('linkedin_callback', _external=True), state=state)
+    return redirect(_linkedin_auth_url('candidate'))
 
 
 @app.route('/recruiter/linkedin-login')
 def recruiter_linkedin_login():
     if not _LINKEDIN_CLIENT_ID:
         return redirect(url_for('recruiter_login') + '?social_error=linkedin')
-    state = _oauth_state('recruiter')
-    session['oauth_role'] = 'recruiter'
     app.logger.info('[OAUTH] initiating linkedin login role=recruiter')
-    return _oauth.linkedin.authorize_redirect(url_for('linkedin_callback', _external=True), state=state)
+    return redirect(_linkedin_auth_url('recruiter'))
 
 
 @app.route('/auth/linkedin/callback')
 def linkedin_callback():
-    raw_state = request.args.get('state', '')
-    role = _role_from_state(raw_state, fallback=session.pop('oauth_role', 'candidate'))
+    import requests as _req
+
+    raw_state    = request.args.get('state', '')
+    role         = _role_from_state(raw_state, fallback=session.pop('oauth_role', 'candidate'))
+    expected     = session.pop('_li_state', None)
+    login_url    = url_for('candidate_login' if role == 'candidate' else 'recruiter_login')
+
     app.logger.info('[OAUTH] linkedin_callback state=%r role=%s', raw_state, role)
+
+    # CSRF state check
+    if not raw_state or raw_state != expected:
+        app.logger.error('[OAUTH_ERROR] linkedin state mismatch expected=%r got=%r', expected, raw_state)
+        flash('LinkedIn login failed: security check failed. Please try again.', 'error')
+        return redirect(login_url)
+
+    code = request.args.get('code')
+    if not code:
+        app.logger.error('[OAUTH_ERROR] linkedin no code in callback error=%r', request.args.get('error'))
+        flash('LinkedIn login failed. Please try again.', 'error')
+        return redirect(login_url)
+
     try:
-        token     = _oauth.linkedin.authorize_access_token()
-        # Primary: Authlib populates userinfo via OIDC discovery
-        user_info = token.get('userinfo') or {}
-        app.logger.info('[OAUTH] linkedin userinfo_from_token keys=%s', list(user_info.keys()))
-        if not user_info.get('email'):
-            # Fallback: fetch directly from userinfo endpoint
-            import requests as _req
-            resp = _req.get(
-                'https://api.linkedin.com/v2/userinfo',
-                headers={'Authorization': f'Bearer {token["access_token"]}'},
-                timeout=10,
-            )
-            app.logger.info('[OAUTH] linkedin userinfo fallback HTTP %s body=%s',
-                            resp.status_code, resp.text[:300])
-            user_info = resp.json()
+        # Step 1: exchange code for access token
+        tok_resp = _req.post(
+            'https://www.linkedin.com/oauth/v2/accessToken',
+            data={
+                'grant_type':   'authorization_code',
+                'code':         code,
+                'redirect_uri': url_for('linkedin_callback', _external=True),
+                'client_id':    _LINKEDIN_CLIENT_ID,
+                'client_secret': _LINKEDIN_CLIENT_SECRET,
+            },
+            timeout=15,
+        )
+        tok_data     = tok_resp.json()
+        access_token = tok_data.get('access_token', '')
+        app.logger.info('[OAUTH] linkedin token exchange HTTP=%s has_token=%s',
+                        tok_resp.status_code, bool(access_token))
+        if not access_token:
+            raise ValueError(f'No access_token in response: {tok_data}')
+
+        # Step 2: fetch userinfo from LinkedIn OIDC endpoint
+        ui_resp   = _req.get(
+            'https://api.linkedin.com/v2/userinfo',
+            headers={'Authorization': f'Bearer {access_token}'},
+            timeout=10,
+        )
+        user_info   = ui_resp.json()
+        app.logger.info('[OAUTH] linkedin userinfo HTTP=%s keys=%s',
+                        ui_resp.status_code, list(user_info.keys()))
+
         email       = user_info.get('email', '').strip().lower()
         name        = user_info.get('name') or email.split('@')[0]
         linkedin_id = user_info.get('sub', '')
-        app.logger.info('[OAUTH] linkedin resolved email=%r linkedin_id=%r name=%r', email, linkedin_id, name)
+        app.logger.info('[OAUTH] linkedin resolved email=%r linkedin_id=%r name=%r',
+                        email, linkedin_id, name)
+
     except Exception as exc:
-        app.logger.error('[OAUTH_ERROR] linkedin callback failed: %s', exc, exc_info=True)
+        app.logger.error('[OAUTH_ERROR] linkedin flow failed: %s', exc, exc_info=True)
         flash('LinkedIn login failed. Please try again.', 'error')
-        return redirect(url_for('candidate_login' if role == 'candidate' else 'recruiter_login'))
+        return redirect(login_url)
+
     return _handle_social_login(email, name, None, linkedin_id, role)
 
 

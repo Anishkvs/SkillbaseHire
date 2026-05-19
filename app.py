@@ -615,6 +615,8 @@ def init_db():
             "ALTER TABLE users ADD COLUMN google_id TEXT DEFAULT NULL",
             "ALTER TABLE users ADD COLUMN linkedin_id TEXT DEFAULT NULL",
             "ALTER TABLE skill_questions ADD COLUMN experience_level TEXT DEFAULT 'All'",
+            "ALTER TABLE users ADD COLUMN password_reset_token_hash TEXT DEFAULT NULL",
+            "ALTER TABLE users ADD COLUMN password_reset_expires_at TIMESTAMP DEFAULT NULL",
         ]:
             try:
                 db.execute(stmt)
@@ -755,6 +757,10 @@ def recruiter_required(f):
 _SUPER_ADMIN_EMAIL = 'admin@skillbasehire.com'
 _ADMIN_TOKEN       = os.environ.get('ADMIN_MANAGE_QUESTIONS_TOKEN', '')
 
+# ── Email sender identity ─────────────────────────────────────────────────────
+_SMTP_FROM_EMAIL = os.environ.get('SMTP_FROM_EMAIL', 'noreply@skillbasehire.com')
+_SMTP_FROM_NAME  = os.environ.get('SMTP_FROM_NAME',  'SkillBaseHire')
+
 
 def admin_required(f):
     """Restricts access to the super-admin recruiter account only."""
@@ -779,46 +785,82 @@ def admin_required(f):
     return decorated
 
 
-def _send_security_alert(attempted_email, ip, user_agent, page):
+_EMAIL_FOOTER = (
+    '<div style="margin-top:32px;padding-top:16px;border-top:1px solid #e2e8f0;text-align:center">'
+    '<p style="font-size:.75rem;color:#94a3b8;margin:0">'
+    'This is an automated email from SkillBaseHire. Please do not reply.'
+    '</p></div>'
+)
+
+
+def _email_wrap(content_html):
+    """Wrap email content in branded SkillBaseHire container."""
+    return (
+        '<div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;'
+        'padding:32px 24px;background:#fff;border-radius:12px">'
+        '<div style="text-align:center;margin-bottom:28px">'
+        '<span style="font-size:1.25rem;font-weight:800;color:#0f172a;letter-spacing:-.3px">'
+        'SkillBaseHire</span></div>'
+        + content_html
+        + _EMAIL_FOOTER
+        + '</div>'
+    )
+
+
+def _send_email(to_email, subject, html_body):
+    """Central email dispatcher. Returns True on success, False on failure."""
     smtp_user = os.environ.get('SMTP_USER')
     smtp_pass = os.environ.get('SMTP_PASS')
-    now = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
-    subject = 'Security Alert: Invalid Manage Questions Token Attempt'
-    html_body = f'''
-    <div style="font-family:Inter,sans-serif;max-width:540px;margin:0 auto;padding:32px 24px;background:#fff">
-      <div style="text-align:center;margin-bottom:20px">
-        <span style="font-size:1.2rem;font-weight:800;color:#1e293b">SkillBaseHire</span>
-      </div>
-      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:20px 24px;margin-bottom:20px">
-        <h2 style="font-size:1.1rem;font-weight:700;color:#dc2626;margin:0 0 4px">⚠ Security Alert</h2>
-        <p style="color:#7f1d1d;margin:0;font-size:.9rem">An invalid admin token was used on SkillBaseHire.</p>
-      </div>
-      <table style="width:100%;border-collapse:collapse;font-size:.875rem;color:#334155">
-        <tr><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-weight:600;width:160px">Attempted by</td><td style="padding:8px 0;border-bottom:1px solid #f1f5f9">{attempted_email}</td></tr>
-        <tr><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-weight:600">Date &amp; Time</td><td style="padding:8px 0;border-bottom:1px solid #f1f5f9">{now}</td></tr>
-        <tr><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-weight:600">IP Address</td><td style="padding:8px 0;border-bottom:1px solid #f1f5f9">{ip or 'Unknown'}</td></tr>
-        <tr><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-weight:600">Browser/Device</td><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;word-break:break-all">{user_agent or 'Unknown'}</td></tr>
-        <tr><td style="padding:8px 0;font-weight:600">Page Attempted</td><td style="padding:8px 0">{page}</td></tr>
-      </table>
-      <p style="margin-top:20px;font-size:.8rem;color:#94a3b8;text-align:center">The user has been automatically logged out. This is an automated alert from SkillBaseHire.</p>
-    </div>'''
+    from_header = f'{_SMTP_FROM_NAME} <{_SMTP_FROM_EMAIL}>'
+
     if not smtp_user or not smtp_pass:
-        app.logger.warning('[SECURITY_ALERT] SMTP not configured — alert not sent. %s attempted %s at %s from %s', attempted_email, page, now, ip)
-        return
+        app.logger.info('[EMAIL_DEV] SMTP not configured — skipping "%s" to %s', subject, to_email)
+        return False
+
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = subject
+    msg['From']    = from_header
+    msg['To']      = to_email
+    msg.attach(MIMEText(html_body, 'html'))
+
+    smtp_host = os.environ.get('SMTP_HOST', 'smtp.gmail.com')
+    smtp_port = int(os.environ.get('SMTP_PORT', 587))
     try:
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From']    = smtp_user
-        msg['To']      = _SUPER_ADMIN_EMAIL
-        msg.attach(MIMEText(html_body, 'html'))
-        smtp_host = os.environ.get('SMTP_HOST', 'smtp.gmail.com')
-        smtp_port = int(os.environ.get('SMTP_PORT', 587))
         with smtplib.SMTP(smtp_host, smtp_port) as server:
             server.starttls()
             server.login(smtp_user, smtp_pass)
-            server.sendmail(smtp_user, _SUPER_ADMIN_EMAIL, msg.as_string())
+            server.sendmail(_SMTP_FROM_EMAIL, to_email, msg.as_string())
+        app.logger.info('[EMAIL] sent "%s" to %s', subject, to_email)
+        return True
     except Exception as exc:
-        app.logger.error('[SECURITY_ALERT] Email send failed: %s', exc)
+        app.logger.error('[EMAIL_ERROR] failed "%s" to %s: %s', subject, to_email, exc)
+        return False
+
+
+def _send_security_alert(attempted_email, ip, user_agent, page):
+    now     = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
+    subject = 'Security Alert: Invalid Manage Questions Token Attempt'
+    content = (
+        '<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;'
+        'padding:20px 24px;margin-bottom:20px">'
+        '<h2 style="font-size:1.1rem;font-weight:700;color:#dc2626;margin:0 0 4px">Security Alert</h2>'
+        '<p style="color:#7f1d1d;margin:0;font-size:.9rem">An invalid admin token was used on SkillBaseHire.</p>'
+        '</div>'
+        '<table style="width:100%;border-collapse:collapse;font-size:.875rem;color:#334155">'
+        f'<tr><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-weight:600;width:160px">Attempted by</td><td style="padding:8px 0;border-bottom:1px solid #f1f5f9">{attempted_email}</td></tr>'
+        f'<tr><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-weight:600">Date &amp; Time</td><td style="padding:8px 0;border-bottom:1px solid #f1f5f9">{now}</td></tr>'
+        f'<tr><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-weight:600">IP Address</td><td style="padding:8px 0;border-bottom:1px solid #f1f5f9">{ip or "Unknown"}</td></tr>'
+        f'<tr><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-weight:600">Browser/Device</td><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;word-break:break-all">{user_agent or "Unknown"}</td></tr>'
+        f'<tr><td style="padding:8px 0;font-weight:600">Page Attempted</td><td style="padding:8px 0">{page}</td></tr>'
+        '</table>'
+    )
+    smtp_user = os.environ.get('SMTP_USER')
+    smtp_pass = os.environ.get('SMTP_PASS')
+    if not smtp_user or not smtp_pass:
+        app.logger.warning('[SECURITY_ALERT] SMTP not configured — alert not sent. %s attempted %s at %s from %s',
+                           attempted_email, page, now, ip)
+        return
+    _send_email(_SUPER_ADMIN_EMAIL, subject, _email_wrap(content))
 
 
 def get_current_user():
@@ -862,39 +904,32 @@ def _gen_email_token():
 def send_verification_email(to_email, name, raw_token):
     verify_url = url_for('verify_email', token=raw_token, _external=True)
     subject = 'Verify your SkillBaseHire account'
-    html_body = f'''
-    <div style="font-family:Inter,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px;background:#fff">
-      <div style="text-align:center;margin-bottom:24px">
-        <span style="font-size:1.25rem;font-weight:800;color:#1e293b">SkillBaseHire</span>
-      </div>
-      <h2 style="font-size:1.25rem;font-weight:700;color:#1e293b;margin:0 0 8px">Hi {name},</h2>
-      <p style="color:#475569;margin:0 0 24px">Click the button below to verify your email address and activate your account.</p>
-      <div style="text-align:center;margin:28px 0">
-        <a href="{verify_url}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-weight:600;padding:12px 32px;border-radius:8px">Verify Email Address</a>
-      </div>
-      <p style="color:#94a3b8;font-size:.8125rem;margin:0">This link expires in 24 hours. If you didn't create an account, you can ignore this email.</p>
-    </div>
-    '''
-    smtp_user = os.environ.get('SMTP_USER')
-    smtp_pass = os.environ.get('SMTP_PASS')
-    if not smtp_user or not smtp_pass:
-        print(f'[DEV] Verification link for {to_email}: {verify_url}')
-        return
-    msg = MIMEMultipart('alternative')
-    msg['Subject'] = subject
-    msg['From'] = smtp_user
-    msg['To'] = to_email
-    msg.attach(MIMEText(html_body, 'html'))
-    smtp_host = os.environ.get('SMTP_HOST', 'smtp.gmail.com')
-    smtp_port = int(os.environ.get('SMTP_PORT', 587))
-    try:
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_pass)
-            server.sendmail(smtp_user, to_email, msg.as_string())
-    except Exception as e:
-        print(f'[EMAIL ERROR] {e}')
-        print(f'[DEV] Verification link for {to_email}: {verify_url}')
+    content = (
+        f'<h2 style="font-size:1.25rem;font-weight:700;color:#1e293b;margin:0 0 8px">Hi {name},</h2>'
+        f'<p style="color:#475569;margin:0 0 24px">Click the button below to verify your email address and activate your account.</p>'
+        f'<div style="text-align:center;margin:28px 0">'
+        f'<a href="{verify_url}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-weight:600;padding:12px 32px;border-radius:8px">Verify Email Address</a>'
+        f'</div>'
+        f'<p style="color:#94a3b8;font-size:.8125rem;margin:0">This link expires in 24 hours. If you didn\'t create an account, you can ignore this email.</p>'
+    )
+    sent = _send_email(to_email, subject, _email_wrap(content))
+    if not sent:
+        app.logger.info('[EMAIL_DEV] Verification link for %s: %s', to_email, verify_url)
+
+
+def send_password_reset_email(to_email, name, reset_url):
+    subject = 'Reset your SkillBaseHire password'
+    content = (
+        f'<h2 style="font-size:1.25rem;font-weight:700;color:#1e293b;margin:0 0 8px">Hi {name},</h2>'
+        f'<p style="color:#475569;margin:0 0 24px">We received a request to reset your password. Click the button below to create a new password.</p>'
+        f'<div style="text-align:center;margin:28px 0">'
+        f'<a href="{reset_url}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-weight:600;padding:12px 32px;border-radius:8px">Reset Password</a>'
+        f'</div>'
+        f'<p style="color:#94a3b8;font-size:.8125rem;margin:0">This link expires in 1 hour. If you didn\'t request a password reset, you can safely ignore this email.</p>'
+    )
+    sent = _send_email(to_email, subject, _email_wrap(content))
+    if not sent:
+        app.logger.info('[EMAIL_DEV] Password reset link for %s: %s', to_email, reset_url)
 
 
 def parse_skills_data(raw):
@@ -2393,6 +2428,15 @@ def candidate_login():
         pw_ok = bool(user) and check_password_hash(user['password_hash'], password)
         app.logger.info('[LOGIN:candidate] password_check=%s', pw_ok)
         if pw_ok:
+            if not user.get('email_verified', 0):
+                app.logger.info('[LOGIN:candidate] email_verified=false — blocking login')
+                if is_ajax:
+                    return jsonify({'success': False, 'verification_required': True,
+                                    'email_verified': False,
+                                    'error': 'Please verify your email before logging in.'})
+                flash('Please verify your email before logging in. Check your inbox or resend the verification link.', 'error')
+                return render_template('candidate_login.html', user=None, email=email,
+                                       mismatch=None, verification_required=True)
             try:
                 cp = get_db().execute(
                     'SELECT profile_photo, headline FROM candidate_profiles WHERE user_id=?',
@@ -3488,6 +3532,15 @@ def recruiter_login():
         pw_ok = bool(user) and check_password_hash(user['password_hash'], password)
         app.logger.info('[LOGIN:recruiter] password_check=%s', pw_ok)
         if pw_ok:
+            if not user.get('email_verified', 0):
+                app.logger.info('[LOGIN:recruiter] email_verified=false — blocking login')
+                if is_ajax:
+                    return jsonify({'success': False, 'verification_required': True,
+                                    'email_verified': False,
+                                    'error': 'Please verify your email before logging in.'})
+                flash('Please verify your email before logging in. Check your inbox or resend the verification link.', 'error')
+                return render_template('recruiter_login.html', user=None, email=email,
+                                       mismatch=None, verification_required=True)
             try:
                 rp = get_db().execute(
                     'SELECT profile_photo, company FROM recruiter_profiles WHERE user_id=?',
@@ -4266,6 +4319,90 @@ def resend_verification():
     session['pending_email'] = user['email']
     session['pending_name'] = user['name']
     return redirect(url_for('email_sent'))
+
+
+# ── Forgot / Reset Password ───────────────────────────────────────────────────
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+@limiter.limit('6 per minute')
+def forgot_password():
+    role = request.args.get('role', 'candidate')
+    if role not in ('candidate', 'recruiter'):
+        role = 'candidate'
+
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        if email:
+            db = get_db()
+            user = db.execute(
+                'SELECT id, name, email FROM users WHERE email=? AND role=?', [email, role]
+            ).fetchone()
+            if user:
+                raw, h, expires = _gen_email_token()
+                # reset token expires in 1 hour (override the 24h default)
+                expires = datetime.utcnow() + timedelta(hours=1)
+                try:
+                    db.execute(
+                        'UPDATE users SET password_reset_token_hash=?, password_reset_expires_at=? WHERE id=?',
+                        [h, expires, user['id']]
+                    )
+                    db.commit()
+                    reset_url = url_for('reset_password', token=raw, _external=True)
+                    send_password_reset_email(user['email'], user['name'], reset_url)
+                except Exception as exc:
+                    app.logger.error('[FORGOT_PW] DB/email error: %s', exc)
+        # Always show success to prevent email enumeration
+        return render_template('forgot_password.html', sent=True, role=role)
+
+    return render_template('forgot_password.html', sent=False, role=role)
+
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    db = get_db()
+    user = db.execute(
+        'SELECT id, name, email, password_reset_token_hash, password_reset_expires_at'
+        ' FROM users WHERE password_reset_token_hash=?', [token_hash]
+    ).fetchone()
+
+    now = datetime.utcnow()
+    if not user:
+        return render_template('reset_password.html', invalid=True, token=token)
+
+    expires_raw = user['password_reset_expires_at']
+    if isinstance(expires_raw, str):
+        try:
+            expires_dt = datetime.fromisoformat(expires_raw)
+        except ValueError:
+            expires_dt = now  # treat unparseable as expired
+    else:
+        expires_dt = expires_raw or now
+
+    if expires_dt < now:
+        return render_template('reset_password.html', expired=True, token=token)
+
+    if request.method == 'POST':
+        new_pw  = request.form.get('password', '')
+        confirm = request.form.get('confirm_password', '')
+        pw_err  = validate_password(new_pw)
+        if pw_err:
+            return render_template('reset_password.html', token=token, error=pw_err)
+        if new_pw != confirm:
+            return render_template('reset_password.html', token=token, error='Passwords do not match.')
+        try:
+            db.execute(
+                'UPDATE users SET password_hash=?, password_reset_token_hash=NULL,'
+                ' password_reset_expires_at=NULL WHERE id=?',
+                [generate_password_hash(new_pw), user['id']]
+            )
+            db.commit()
+        except Exception as exc:
+            app.logger.error('[RESET_PW] DB error: %s', exc)
+            return render_template('reset_password.html', token=token, error='Something went wrong. Please try again.')
+        return render_template('reset_password.html', success=True)
+
+    return render_template('reset_password.html', token=token)
 
 
 # ── Logout ────────────────────────────────────────────────────────────────────

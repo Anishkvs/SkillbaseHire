@@ -809,17 +809,20 @@ def _email_wrap(content_html):
 
 def _send_email(to_email, subject, html_body):
     """Central email dispatcher. Returns True on success, False on failure."""
-    smtp_user = os.environ.get('SMTP_USER')
-    smtp_pass = os.environ.get('SMTP_PASS')
-    smtp_host = os.environ.get('SMTP_HOST', 'smtp.gmail.com')
+    smtp_user = os.environ.get('SMTP_USER', '').strip()
+    smtp_pass = os.environ.get('SMTP_PASS', '').strip()
+    smtp_host = os.environ.get('SMTP_HOST', 'smtp.gmail.com').strip()
     smtp_port = int(os.environ.get('SMTP_PORT', 587))
-    from_header = f'{_SMTP_FROM_NAME} <{_SMTP_FROM_EMAIL}>'
+    # Gmail requires the envelope sender to match the authenticated account.
+    # Use smtp_user as envelope sender; display name/address is set in From header.
+    envelope_from = smtp_user or _SMTP_FROM_EMAIL
+    from_header   = f'{_SMTP_FROM_NAME} <{envelope_from}>'
 
     missing = [v for v, val in [('SMTP_USER', smtp_user), ('SMTP_PASS', smtp_pass)] if not val]
     if missing:
         app.logger.warning(
             '[EMAIL_SMTP] Missing env vars: %s — email "%s" to %s NOT sent. '
-            'Set SMTP_USER, SMTP_PASS, SMTP_HOST, SMTP_PORT in environment.',
+            'Set SMTP_USER, SMTP_PASS (and optionally SMTP_HOST, SMTP_PORT) in environment.',
             ', '.join(missing), subject, to_email
         )
         return False
@@ -832,12 +835,17 @@ def _send_email(to_email, subject, html_body):
 
     app.logger.info('[EMAIL_SMTP] Connecting to %s:%s as %s', smtp_host, smtp_port, smtp_user)
     try:
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=15) as server:
+            server.ehlo()
             server.starttls()
+            server.ehlo()
             server.login(smtp_user, smtp_pass)
-            server.sendmail(_SMTP_FROM_EMAIL, to_email, msg.as_string())
+            server.sendmail(envelope_from, to_email, msg.as_string())
         app.logger.info('[EMAIL] sent "%s" to %s', subject, to_email)
         return True
+    except smtplib.SMTPAuthenticationError as exc:
+        app.logger.error('[EMAIL_ERROR] SMTP authentication failed for %s — wrong password or App Password not used: %s', smtp_user, exc)
+        return False
     except Exception as exc:
         app.logger.error('[EMAIL_ERROR] failed "%s" to %s via %s:%s — %s',
                          subject, to_email, smtp_host, smtp_port, exc)

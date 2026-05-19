@@ -240,6 +240,23 @@
   {% if mismatch %}
   _showMismatch({{ email | tojson }});
   {% endif %}
+
+  // Social error / OAuth mismatch from URL params (after redirect)
+  (function () {
+    var _p = new URLSearchParams(window.location.search);
+    var _se = _p.get('social_error');
+    var _om = _p.get('oauth_mismatch');
+    var _oe = _p.get('oauth_email');
+    if (_om && _oe) {
+      _showMismatch(decodeURIComponent(_oe));
+    } else if (_se) {
+      var _msgs = {
+        google: 'Google login is not yet configured. Please use email and password to sign in.',
+        linkedin: 'LinkedIn login is not yet configured. Please use email and password to sign in.'
+      };
+      _showErr(_msgs[_se] || 'Social login is unavailable right now. Please use email login.');
+    }
+  })();
 })();
 </script>
 {% endblock %}

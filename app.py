@@ -19,6 +19,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from functools import wraps
+from urllib.parse import urlencode
 
 # ── Environment bootstrap ─────────────────────────────────────────────────────
 # Three environments: development | staging | production
@@ -97,7 +98,12 @@ if _LINKEDIN_CLIENT_ID and _LINKEDIN_CLIENT_SECRET:
         client_secret=_LINKEDIN_CLIENT_SECRET,
         authorize_url='https://www.linkedin.com/oauth/v2/authorization',
         access_token_url='https://www.linkedin.com/oauth/v2/accessToken',
-        client_kwargs={'scope': 'openid profile email'},
+        jwks_uri='https://www.linkedin.com/oauth/openid/jwks',
+        userinfo_endpoint='https://api.linkedin.com/v2/userinfo',
+        client_kwargs={
+            'scope': 'openid profile email',
+            'token_endpoint_auth_method': 'client_secret_post',
+        },
     )
 
 DATABASE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'skillbasehire.db')
@@ -1738,12 +1744,8 @@ def _handle_social_login(email, name, google_id, linkedin_id, role):
 
     if user:
         if user['role'] != role:
-            flash(
-                f'This email is registered as a {user["role"]} account. '
-                f'Please use the {user["role"]} login page.',
-                'error'
-            )
-            return redirect(login_url)
+            qs = urlencode({'oauth_mismatch': user['role'], 'oauth_email': email})
+            return redirect(f'{login_url}?{qs}')
         # Update social ID if not already stored
         if google_id and not user.get('google_id'):
             try:
@@ -1802,7 +1804,7 @@ def _handle_social_login(email, name, google_id, linkedin_id, role):
             'email_verified': True,
         })
         flash(f'Welcome, {user["name"]}!', 'success')
-        return redirect(url_for('jobs'))
+        return redirect(url_for('candidate_dashboard'))
     else:
         try:
             rp = db.execute(
@@ -1907,8 +1909,7 @@ def recruiter_resend_otp():
 @app.route('/candidate/google-login')
 def candidate_google_login():
     if not _GOOGLE_CLIENT_ID:
-        flash('Google login is not yet configured.', 'error')
-        return redirect(url_for('candidate_login'))
+        return redirect(url_for('candidate_login') + '?social_error=google')
     session['oauth_role'] = 'candidate'
     return _oauth.google.authorize_redirect(url_for('google_callback', _external=True))
 
@@ -1916,8 +1917,7 @@ def candidate_google_login():
 @app.route('/recruiter/google-login')
 def recruiter_google_login():
     if not _GOOGLE_CLIENT_ID:
-        flash('Google login is not yet configured.', 'error')
-        return redirect(url_for('recruiter_login'))
+        return redirect(url_for('recruiter_login') + '?social_error=google')
     session['oauth_role'] = 'recruiter'
     return _oauth.google.authorize_redirect(url_for('google_callback', _external=True))
 
@@ -1943,8 +1943,7 @@ def google_callback():
 @app.route('/candidate/linkedin-login')
 def candidate_linkedin_login():
     if not _LINKEDIN_CLIENT_ID:
-        flash('LinkedIn login is not yet configured.', 'error')
-        return redirect(url_for('candidate_login'))
+        return redirect(url_for('candidate_login') + '?social_error=linkedin')
     session['oauth_role'] = 'candidate'
     return _oauth.linkedin.authorize_redirect(url_for('linkedin_callback', _external=True))
 
@@ -1952,8 +1951,7 @@ def candidate_linkedin_login():
 @app.route('/recruiter/linkedin-login')
 def recruiter_linkedin_login():
     if not _LINKEDIN_CLIENT_ID:
-        flash('LinkedIn login is not yet configured.', 'error')
-        return redirect(url_for('recruiter_login'))
+        return redirect(url_for('recruiter_login') + '?social_error=linkedin')
     session['oauth_role'] = 'recruiter'
     return _oauth.linkedin.authorize_redirect(url_for('linkedin_callback', _external=True))
 
@@ -2039,7 +2037,9 @@ def candidate_login():
         flash('Invalid email or password.', 'error')
 
     if not email:
-        email = request.args.get('email', '')
+        email = request.args.get('email', request.args.get('oauth_email', ''))
+    if mismatch is None:
+        mismatch = request.args.get('oauth_mismatch')
     return render_template('candidate_login.html', user=None, email=email, mismatch=mismatch)
 
 
@@ -3132,7 +3132,9 @@ def recruiter_login():
         flash('Invalid email or password.', 'error')
 
     if not email:
-        email = request.args.get('email', '')
+        email = request.args.get('email', request.args.get('oauth_email', ''))
+    if mismatch is None:
+        mismatch = request.args.get('oauth_mismatch')
     return render_template('recruiter_login.html', user=None, email=email, mismatch=mismatch)
 
 

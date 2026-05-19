@@ -79,6 +79,8 @@ TABLE_STMTS = [
         email_verification_token_hash     TEXT,
         email_verification_expires_at     TIMESTAMP,
         email_verification_sent_at        TIMESTAMP,
+        google_id                         TEXT      DEFAULT NULL,
+        linkedin_id                       TEXT      DEFAULT NULL,
         created_at                        TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """,
@@ -341,6 +343,9 @@ MIGRATION_STMTS = [
     "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS redirect_url TEXT DEFAULT ''",
     # skill_questions — experience level filter
     "ALTER TABLE skill_questions ADD COLUMN IF NOT EXISTS experience_level TEXT DEFAULT 'All'",
+    # users — social OAuth IDs
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id   TEXT DEFAULT NULL",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS linkedin_id TEXT DEFAULT NULL",
 ]
 
 

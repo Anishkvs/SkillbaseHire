@@ -1946,50 +1946,84 @@ def candidate_signup():
 
 # ── Social login helper ──────────────────────────────────────────────────────
 
+def _oauth_state(role):
+    """Return a state string that embeds the role for recovery after redirect."""
+    return f'{role}:{secrets.token_urlsafe(16)}'
+
+
+def _role_from_state(state_str, fallback='candidate'):
+    """Extract role from a state string like 'candidate:abc123'."""
+    try:
+        part = (state_str or '').split(':', 1)[0]
+        return part if part in ('candidate', 'recruiter') else fallback
+    except Exception:
+        return fallback
+
+
 def _handle_social_login(email, name, google_id, linkedin_id, role):
     """Find or create user from social OAuth, set session, redirect."""
+    provider = 'google' if google_id else 'linkedin'
+    app.logger.info('[OAUTH] provider=%s email=%r role=%r name=%r', provider, email, role, name)
+
     db = get_db()
     login_url = url_for('candidate_login') if role == 'candidate' else url_for('recruiter_login')
 
     if not email:
-        flash('Social login failed: no email returned. Please try again.', 'error')
+        app.logger.error('[OAUTH_ERROR] provider=%s no email returned from provider', provider)
+        flash('Social login failed: could not retrieve your email. Please try again.', 'error')
         return redirect(login_url)
 
     user = db.execute('SELECT * FROM users WHERE email=?', [email]).fetchone()
+    app.logger.info('[OAUTH] existing_user=%s', bool(user))
 
     if user:
         if user['role'] != role:
+            app.logger.info('[OAUTH] role_mismatch: db_role=%s requested_role=%s email=%r',
+                            user['role'], role, email)
             qs = urlencode({'oauth_mismatch': user['role'], 'oauth_email': email})
             return redirect(f'{login_url}?{qs}')
+
         # Update social ID if not already stored
-        if google_id and not user.get('google_id'):
+        if google_id and not user['google_id']:
             try:
                 db.execute('UPDATE users SET google_id=? WHERE id=?', [google_id, user['id']])
                 db.commit()
-            except Exception:
-                pass
-        if linkedin_id and not user.get('linkedin_id'):
+                app.logger.info('[OAUTH] google_id linked for user_id=%s', user['id'])
+            except Exception as exc:
+                app.logger.warning('[OAUTH] could not link google_id: %s', exc)
+        if linkedin_id and not user['linkedin_id']:
             try:
                 db.execute('UPDATE users SET linkedin_id=? WHERE id=?', [linkedin_id, user['id']])
                 db.commit()
-            except Exception:
-                pass
+                app.logger.info('[OAUTH] linkedin_id linked for user_id=%s', user['id'])
+            except Exception as exc:
+                app.logger.warning('[OAUTH] could not link linkedin_id: %s', exc)
+
     else:
-        # Auto-create account; social users have no password
+        # Auto-create account; social users get a random unusable password
         placeholder_hash = generate_password_hash(secrets.token_hex(32))
+        app.logger.info('[OAUTH] creating new user email=%r role=%s', email, role)
         try:
             db.execute(
                 'INSERT INTO users (name, email, password_hash, role, email_verified, google_id, linkedin_id)'
                 ' VALUES (?,?,?,?,1,?,?)',
-                [name, email, placeholder_hash, role, google_id, linkedin_id]
+                [name or email.split('@')[0], email, placeholder_hash, role, google_id, linkedin_id]
             )
             db.commit()
         except Exception as exc:
-            app.logger.error('[SOCIAL_LOGIN] insert user failed: %s', exc)
+            app.logger.error('[OAUTH_ERROR] INSERT users failed email=%r: %s', email, exc)
             flash('Social login failed. Please try again.', 'error')
             return redirect(login_url)
+
         user = db.execute('SELECT * FROM users WHERE email=?', [email]).fetchone()
-        # Create empty profile
+        if not user:
+            app.logger.error('[OAUTH_ERROR] user not found after INSERT email=%r', email)
+            flash('Social login failed. Please try again.', 'error')
+            return redirect(login_url)
+
+        app.logger.info('[OAUTH] user_created=True user_id=%s', user['id'])
+
+        # Create empty profile (ignore duplicate-insert errors)
         try:
             if role == 'candidate':
                 db.execute('INSERT INTO candidate_profiles (user_id) VALUES (?)', [user['id']])
@@ -1999,25 +2033,32 @@ def _handle_social_login(email, name, google_id, linkedin_id, role):
                     [user['id'], '']
                 )
             db.commit()
-        except Exception:
-            pass
+            app.logger.info('[OAUTH] profile row created for user_id=%s role=%s', user['id'], role)
+        except Exception as exc:
+            app.logger.warning('[OAUTH] profile insert skipped (may already exist): %s', exc)
 
     # Set session
+    app.logger.info('[OAUTH] setting session for user_id=%s role=%s', user['id'], role)
     if role == 'candidate':
         try:
             cp = db.execute(
                 'SELECT profile_photo, headline FROM candidate_profiles WHERE user_id=?',
                 [user['id']]
             ).fetchone()
-        except Exception:
+        except Exception as exc:
+            app.logger.warning('[OAUTH] candidate_profiles fetch failed: %s', exc)
             cp = None
+        session.clear()
         session.update({
-            'user_id': user['id'], 'role': 'candidate', 'name': user['name'],
-            'email': user['email'],
+            'user_id':       user['id'],
+            'role':          'candidate',
+            'name':          user['name'],
+            'email':         user['email'],
             'profile_photo': cp['profile_photo'] if cp else None,
-            'headline': (cp['headline'] or '') if cp else '',
+            'headline':      (cp.get('headline') or '') if cp else '',
             'email_verified': True,
         })
+        app.logger.info('[OAUTH] login_success=True redirect=/candidate/dashboard')
         flash(f'Welcome, {user["name"]}!', 'success')
         return redirect(url_for('candidate_dashboard'))
     else:
@@ -2026,15 +2067,20 @@ def _handle_social_login(email, name, google_id, linkedin_id, role):
                 'SELECT profile_photo, company FROM recruiter_profiles WHERE user_id=?',
                 [user['id']]
             ).fetchone()
-        except Exception:
+        except Exception as exc:
+            app.logger.warning('[OAUTH] recruiter_profiles fetch failed: %s', exc)
             rp = None
+        session.clear()
         session.update({
-            'user_id': user['id'], 'role': 'recruiter', 'name': user['name'],
-            'email': user['email'],
+            'user_id':       user['id'],
+            'role':          'recruiter',
+            'name':          user['name'],
+            'email':         user['email'],
             'profile_photo': rp['profile_photo'] if rp else None,
-            'headline': (rp['company'] or '') if rp else '',
+            'headline':      (rp.get('company') or '') if rp else '',
             'email_verified': True,
         })
+        app.logger.info('[OAUTH] login_success=True redirect=/recruiter/dashboard')
         flash(f'Welcome, {user["name"]}!', 'success')
         return redirect(url_for('recruiter_dashboard'))
 
@@ -2125,29 +2171,37 @@ def recruiter_resend_otp():
 def candidate_google_login():
     if not _GOOGLE_CLIENT_ID:
         return redirect(url_for('candidate_login') + '?social_error=google')
+    state = _oauth_state('candidate')
     session['oauth_role'] = 'candidate'
-    return _oauth.google.authorize_redirect(url_for('google_callback', _external=True))
+    app.logger.info('[OAUTH] initiating google login role=candidate')
+    return _oauth.google.authorize_redirect(url_for('google_callback', _external=True), state=state)
 
 
 @app.route('/recruiter/google-login')
 def recruiter_google_login():
     if not _GOOGLE_CLIENT_ID:
         return redirect(url_for('recruiter_login') + '?social_error=google')
+    state = _oauth_state('recruiter')
     session['oauth_role'] = 'recruiter'
-    return _oauth.google.authorize_redirect(url_for('google_callback', _external=True))
+    app.logger.info('[OAUTH] initiating google login role=recruiter')
+    return _oauth.google.authorize_redirect(url_for('google_callback', _external=True), state=state)
 
 
 @app.route('/auth/google/callback')
 def google_callback():
-    role = session.pop('oauth_role', 'candidate')
+    # Extract role from state param first (doesn't depend on session)
+    raw_state = request.args.get('state', '')
+    role = _role_from_state(raw_state, fallback=session.pop('oauth_role', 'candidate'))
+    app.logger.info('[OAUTH] google_callback state=%r role=%s', raw_state, role)
     try:
         token     = _oauth.google.authorize_access_token()
         user_info = token.get('userinfo') or {}
         email     = user_info.get('email', '').strip().lower()
         name      = user_info.get('name') or email.split('@')[0]
         google_id = user_info.get('sub', '')
+        app.logger.info('[OAUTH] google userinfo email=%r google_id=%r name=%r', email, google_id, name)
     except Exception as exc:
-        app.logger.error('[GOOGLE_CB] %s', exc)
+        app.logger.error('[OAUTH_ERROR] google authorize_access_token failed: %s', exc)
         flash('Google login failed. Please try again.', 'error')
         return redirect(url_for('candidate_login' if role == 'candidate' else 'recruiter_login'))
     return _handle_social_login(email, name, google_id, None, role)
@@ -2159,35 +2213,43 @@ def google_callback():
 def candidate_linkedin_login():
     if not _LINKEDIN_CLIENT_ID:
         return redirect(url_for('candidate_login') + '?social_error=linkedin')
+    state = _oauth_state('candidate')
     session['oauth_role'] = 'candidate'
-    return _oauth.linkedin.authorize_redirect(url_for('linkedin_callback', _external=True))
+    app.logger.info('[OAUTH] initiating linkedin login role=candidate')
+    return _oauth.linkedin.authorize_redirect(url_for('linkedin_callback', _external=True), state=state)
 
 
 @app.route('/recruiter/linkedin-login')
 def recruiter_linkedin_login():
     if not _LINKEDIN_CLIENT_ID:
         return redirect(url_for('recruiter_login') + '?social_error=linkedin')
+    state = _oauth_state('recruiter')
     session['oauth_role'] = 'recruiter'
-    return _oauth.linkedin.authorize_redirect(url_for('linkedin_callback', _external=True))
+    app.logger.info('[OAUTH] initiating linkedin login role=recruiter')
+    return _oauth.linkedin.authorize_redirect(url_for('linkedin_callback', _external=True), state=state)
 
 
 @app.route('/auth/linkedin/callback')
 def linkedin_callback():
-    role = session.pop('oauth_role', 'candidate')
+    raw_state = request.args.get('state', '')
+    role = _role_from_state(raw_state, fallback=session.pop('oauth_role', 'candidate'))
+    app.logger.info('[OAUTH] linkedin_callback state=%r role=%s', raw_state, role)
     try:
-        token     = _oauth.linkedin.authorize_access_token()
+        token = _oauth.linkedin.authorize_access_token()
         import requests as _requests
-        resp      = _requests.get(
+        resp  = _requests.get(
             'https://api.linkedin.com/v2/userinfo',
             headers={'Authorization': f'Bearer {token["access_token"]}'},
             timeout=10,
         )
+        app.logger.info('[OAUTH] linkedin userinfo HTTP %s', resp.status_code)
         user_info   = resp.json()
         email       = user_info.get('email', '').strip().lower()
         name        = user_info.get('name') or email.split('@')[0]
         linkedin_id = user_info.get('sub', '')
+        app.logger.info('[OAUTH] linkedin userinfo email=%r linkedin_id=%r name=%r', email, linkedin_id, name)
     except Exception as exc:
-        app.logger.error('[LINKEDIN_CB] %s', exc)
+        app.logger.error('[OAUTH_ERROR] linkedin authorize_access_token failed: %s', exc)
         flash('LinkedIn login failed. Please try again.', 'error')
         return redirect(url_for('candidate_login' if role == 'candidate' else 'recruiter_login'))
     return _handle_social_login(email, name, None, linkedin_id, role)

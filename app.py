@@ -718,6 +718,7 @@ def recruiter_required(f):
 
 
 _SUPER_ADMIN_EMAIL = 'admin@skillbasehire.com'
+_ADMIN_TOKEN       = os.environ.get('ADMIN_MANAGE_QUESTIONS_TOKEN', '')
 
 
 def admin_required(f):
@@ -735,6 +736,48 @@ def admin_required(f):
             return redirect(url_for('recruiter_dashboard'))
         return f(*args, **kwargs)
     return decorated
+
+
+def _send_security_alert(attempted_email, ip, user_agent, page):
+    smtp_user = os.environ.get('SMTP_USER')
+    smtp_pass = os.environ.get('SMTP_PASS')
+    now = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')
+    subject = 'Security Alert: Invalid Manage Questions Token Attempt'
+    html_body = f'''
+    <div style="font-family:Inter,sans-serif;max-width:540px;margin:0 auto;padding:32px 24px;background:#fff">
+      <div style="text-align:center;margin-bottom:20px">
+        <span style="font-size:1.2rem;font-weight:800;color:#1e293b">SkillBaseHire</span>
+      </div>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:20px 24px;margin-bottom:20px">
+        <h2 style="font-size:1.1rem;font-weight:700;color:#dc2626;margin:0 0 4px">⚠ Security Alert</h2>
+        <p style="color:#7f1d1d;margin:0;font-size:.9rem">An invalid admin token was used on SkillBaseHire.</p>
+      </div>
+      <table style="width:100%;border-collapse:collapse;font-size:.875rem;color:#334155">
+        <tr><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-weight:600;width:160px">Attempted by</td><td style="padding:8px 0;border-bottom:1px solid #f1f5f9">{attempted_email}</td></tr>
+        <tr><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-weight:600">Date &amp; Time</td><td style="padding:8px 0;border-bottom:1px solid #f1f5f9">{now}</td></tr>
+        <tr><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-weight:600">IP Address</td><td style="padding:8px 0;border-bottom:1px solid #f1f5f9">{ip or 'Unknown'}</td></tr>
+        <tr><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;font-weight:600">Browser/Device</td><td style="padding:8px 0;border-bottom:1px solid #f1f5f9;word-break:break-all">{user_agent or 'Unknown'}</td></tr>
+        <tr><td style="padding:8px 0;font-weight:600">Page Attempted</td><td style="padding:8px 0">{page}</td></tr>
+      </table>
+      <p style="margin-top:20px;font-size:.8rem;color:#94a3b8;text-align:center">The user has been automatically logged out. This is an automated alert from SkillBaseHire.</p>
+    </div>'''
+    if not smtp_user or not smtp_pass:
+        app.logger.warning('[SECURITY_ALERT] SMTP not configured — alert not sent. %s attempted %s at %s from %s', attempted_email, page, now, ip)
+        return
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From']    = smtp_user
+        msg['To']      = _SUPER_ADMIN_EMAIL
+        msg.attach(MIMEText(html_body, 'html'))
+        smtp_host = os.environ.get('SMTP_HOST', 'smtp.gmail.com')
+        smtp_port = int(os.environ.get('SMTP_PORT', 587))
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_pass)
+            server.sendmail(smtp_user, _SUPER_ADMIN_EMAIL, msg.as_string())
+    except Exception as exc:
+        app.logger.error('[SECURITY_ALERT] Email send failed: %s', exc)
 
 
 def get_current_user():
@@ -1449,11 +1492,40 @@ def exam_ended(skill_id):
     return render_template('exam_ended.html', data=data, user=get_current_user())
 
 
+# ── Recruiter: Admin token verification ──────────────────────────────────────
+
+@app.route('/recruiter/verify-admin-token', methods=['POST'])
+@admin_required
+def verify_admin_token():
+    data  = request.get_json(silent=True) or {}
+    token = data.get('token', '').strip()
+
+    if not _ADMIN_TOKEN:
+        return jsonify({'ok': False, 'error': 'Admin token is not configured on this server.'})
+
+    if token == _ADMIN_TOKEN:
+        session['admin_token_verified'] = True
+        return jsonify({'ok': True})
+
+    # Wrong token — send alert, log out, respond
+    _send_security_alert(
+        attempted_email=session.get('email', 'Unknown'),
+        ip=request.headers.get('X-Forwarded-For', request.remote_addr),
+        user_agent=request.headers.get('User-Agent', ''),
+        page='Manage Questions',
+    )
+    session.clear()
+    return jsonify({'ok': False, 'logout': True})
+
+
 # ── Recruiter: Skill Question Management ─────────────────────────────────────
 
 @app.route('/recruiter/questions')
 @admin_required
 def manage_questions():
+    if not session.get('admin_token_verified'):
+        flash('Admin token verification required.', 'error')
+        return redirect(url_for('recruiter_dashboard') + '?verify=questions')
     db = get_db()
     skills = db.execute(
         '''SELECT s.id, s.name, s.category,
@@ -1471,6 +1543,9 @@ def manage_questions():
 @app.route('/recruiter/questions/<int:skill_id>', methods=['GET', 'POST'])
 @admin_required
 def manage_skill_questions(skill_id):
+    if not session.get('admin_token_verified'):
+        flash('Admin token verification required.', 'error')
+        return redirect(url_for('recruiter_dashboard') + '?verify=questions')
     db = get_db()
     skill = db.execute('SELECT * FROM skills WHERE id=?', [skill_id]).fetchone()
     if not skill:

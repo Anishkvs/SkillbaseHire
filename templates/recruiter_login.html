@@ -29,6 +29,9 @@
         <label class="form-label" for="password">Password</label>
         <input class="form-control" type="password" id="password" name="password"
                placeholder="Your password" required autocomplete="current-password">
+        <div style="display:flex;justify-content:flex-end;margin-top:.35rem">
+          <a href="/forgot-password?role=recruiter" style="font-size:.8125rem;color:#4F46E5;text-decoration:none">Forgot password?</a>
+        </div>
       </div>
 
       <button type="submit" id="loginBtn" class="btn btn-primary btn-full" style="margin-top:.5rem">
@@ -37,12 +40,12 @@
     </form>
     <div id="loginErrMsg" class="auth-resend-msg error" style="display:none;margin-top:.625rem"></div>
 
-    <!-- Resend OTP -->
-    <div class="auth-resend-wrap">
-      <span>Didn't receive OTP?</span>
+    <!-- Resend OTP — hidden by default; shown only when login blocked on unverified email -->
+    <div class="auth-resend-wrap" id="resendOtpWrap" style="display:none">
+      <span>Didn't receive the verification email?</span>
       <button type="button" class="auth-resend-btn" id="resendOtpBtn"
-              onclick="handleResendOtp()" aria-label="Resend OTP">
-        Resend OTP
+              onclick="handleResendOtp()" aria-label="Resend verification email">
+        Resend Email
       </button>
     </div>
     <div id="resendOtpMsg" class="auth-resend-msg" style="display:none" role="status" aria-live="polite"></div>
@@ -175,6 +178,12 @@
         btn.textContent = 'Log In as Recruiter';
       } else if (data.success) {
         window.location.href = data.redirect;
+      } else if (data.verification_required && data.email_verified === false) {
+        console.log('[SBH LOGIN] verification_required=true — showing resend section');
+        _showErr(data.error || 'Please verify your email before logging in.');
+        _showResend();
+        btn.disabled = false;
+        btn.textContent = 'Log In as Recruiter';
       } else {
         console.log('[SBH LOGIN] error:', data.error);
         _showErr(data.error || 'Invalid email or password.');
@@ -205,11 +214,19 @@
   function _hideErr() {
     var el = document.getElementById('loginErrMsg');
     if (el) el.style.display = 'none';
+    document.getElementById('resendOtpWrap').style.display = 'none';
   }
 
-  // Server-rendered mismatch fallback (non-JS form POST)
+  function _showResend() {
+    document.getElementById('resendOtpWrap').style.display = '';
+  }
+
+  // Server-rendered fallbacks (non-JS form POST)
   {% if mismatch %}
   _showMismatch({{ email | tojson }});
+  {% endif %}
+  {% if verification_required %}
+  _showResend();
   {% endif %}
 
   // Social error / OAuth mismatch from URL params (after redirect)

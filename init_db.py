@@ -346,6 +346,9 @@ MIGRATION_STMTS = [
     # users — social OAuth IDs
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id   TEXT DEFAULT NULL",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS linkedin_id TEXT DEFAULT NULL",
+    # users — password reset
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token_hash TEXT DEFAULT NULL",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires_at TIMESTAMP DEFAULT NULL",
 ]
 
 

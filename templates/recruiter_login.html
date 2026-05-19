@@ -11,7 +11,11 @@
       </a>
     </div>
 
-    <div class="auth-role-badge">For Recruiters</div>
+    <div class="auth-role-switcher">
+      <a href="{{ url_for('candidate_login') }}" class="auth-role-btn">Candidate Login</a>
+      <a href="{{ url_for('recruiter_login') }}" class="auth-role-btn active">Recruiter Login</a>
+    </div>
+
     <h1 class="auth-title">Welcome back</h1>
     <p class="auth-subtitle">Log in to your recruiter account</p>
 
@@ -80,6 +84,23 @@
     </p>
   </div>
 </div>
+
+{% if mismatch == 'candidate' %}
+<div class="auth-mm-overlay" id="authMismatchOverlay">
+  <div class="auth-mm-card">
+    <div class="auth-mm-icon">
+      <svg width="22" height="22" fill="none" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="auth-mm-title">Wrong login page</div>
+    <p class="auth-mm-msg">This email is registered as a candidate account. Please log in as a candidate.</p>
+    <div class="auth-mm-actions">
+      <a href="{{ url_for('candidate_login') }}" class="btn btn-primary btn-full">Log in as Candidate</a>
+      <button type="button" class="btn btn-outline btn-full"
+              onclick="document.getElementById('authMismatchOverlay').remove()">Cancel</button>
+    </div>
+  </div>
+</div>
+{% endif %}
 
 <script>
 (function () {

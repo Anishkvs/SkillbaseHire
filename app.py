@@ -1987,9 +1987,13 @@ def candidate_login():
         return redirect(url_for('jobs'))
 
     email = ''
+    mismatch = None
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
+        _any = get_db().execute("SELECT role FROM users WHERE email=?", [email]).fetchone()
+        if _any and _any['role'] != 'candidate':
+            return render_template('candidate_login.html', user=None, email=email, mismatch=_any['role'])
         user = get_db().execute(
             "SELECT * FROM users WHERE email=? AND role='candidate'", [email]
         ).fetchone()
@@ -2022,7 +2026,7 @@ def candidate_login():
             return redirect(url_for('jobs'))
         flash('Invalid email or password.', 'error')
 
-    return render_template('candidate_login.html', user=None, email=email)
+    return render_template('candidate_login.html', user=None, email=email, mismatch=mismatch)
 
 
 # ── Candidate notifications ──────────────────────────────────────────────────
@@ -3062,9 +3066,13 @@ def recruiter_login():
         return redirect(url_for('recruiter_dashboard'))
 
     email = ''
+    mismatch = None
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
+        _any = get_db().execute("SELECT role FROM users WHERE email=?", [email]).fetchone()
+        if _any and _any['role'] != 'recruiter':
+            return render_template('recruiter_login.html', user=None, email=email, mismatch=_any['role'])
         user = get_db().execute(
             "SELECT * FROM users WHERE email=? AND role='recruiter'", [email]
         ).fetchone()
@@ -3097,7 +3105,7 @@ def recruiter_login():
             return redirect(url_for('recruiter_dashboard'))
         flash('Invalid email or password.', 'error')
 
-    return render_template('recruiter_login.html', user=None, email=email)
+    return render_template('recruiter_login.html', user=None, email=email, mismatch=mismatch)
 
 
 # ── Recruiter dashboard ───────────────────────────────────────────────────────

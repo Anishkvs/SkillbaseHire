@@ -717,6 +717,26 @@ def recruiter_required(f):
     return decorated
 
 
+_SUPER_ADMIN_EMAIL = 'admin@skillbasehire.com'
+
+
+def admin_required(f):
+    """Restricts access to the super-admin recruiter account only."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'user_id' not in session:
+            flash('Please log in to continue.', 'error')
+            return redirect(url_for('recruiter_login'))
+        if session.get('role') != 'recruiter':
+            flash('Access denied.', 'error')
+            return redirect(url_for('home'))
+        if session.get('email', '').lower() != _SUPER_ADMIN_EMAIL:
+            flash('You do not have permission to access this page.', 'error')
+            return redirect(url_for('recruiter_dashboard'))
+        return f(*args, **kwargs)
+    return decorated
+
+
 def get_current_user():
     if 'user_id' not in session:
         return None
@@ -1432,7 +1452,7 @@ def exam_ended(skill_id):
 # ── Recruiter: Skill Question Management ─────────────────────────────────────
 
 @app.route('/recruiter/questions')
-@recruiter_required
+@admin_required
 def manage_questions():
     db = get_db()
     skills = db.execute(
@@ -1449,7 +1469,7 @@ def manage_questions():
 
 
 @app.route('/recruiter/questions/<int:skill_id>', methods=['GET', 'POST'])
-@recruiter_required
+@admin_required
 def manage_skill_questions(skill_id):
     db = get_db()
     skill = db.execute('SELECT * FROM skills WHERE id=?', [skill_id]).fetchone()

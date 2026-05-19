@@ -570,10 +570,12 @@ button{font-family:inherit;cursor:pointer;border:none;background:none;color:inhe
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
       Skill Assessments
     </a>
+    {% if session.get('email','').lower() == 'admin@skillbasehire.com' %}
     <a href="{{ url_for('manage_questions') }}" class="nav-item">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       Manage Questions
     </a>
+    {% endif %}
 
     <div class="side-section">Account</div>
     <a href="{{ url_for('recruiter_detail', recruiter_id=user.id) }}" class="nav-item">
